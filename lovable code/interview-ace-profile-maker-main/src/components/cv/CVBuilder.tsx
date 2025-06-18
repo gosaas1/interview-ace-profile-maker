@@ -32,6 +32,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
 
   useEffect(() => {
     checkAuth();
+    testDatabaseConnection();
     if (editingCV) {
       // Load existing CV data for editing
       setFormData({
@@ -54,6 +55,21 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
     if (!user) {
       toast.error('Please sign in to create a CV');
       navigate('/');
+    }
+  };
+
+  const testDatabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cvs')
+        .select('count')
+        .limit(1);
+      
+      if (error) {
+        console.error('Database connection test failed:', error);
+      }
+    } catch (error) {
+      console.error('Database connection failed:', error);
     }
   };
 
@@ -116,33 +132,46 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
 
     setLoading(true);
     try {
+      // Test with a simple approach first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const cvData = {
+        user_id: user.id,
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        summary: formData.summary,
+        experiences: formData.experiences,
+        education: formData.education,
+        skills: formData.skills,
+        certifications: formData.certifications
+      };
+
       if (editingCV) {
         // Update existing CV
-        await cvOperations.updateCV(editingCV.id, {
-          full_name: formData.full_name,
-          email: formData.email,
-          phone: formData.phone,
-          location: formData.location,
-          summary: formData.summary,
-          experiences: formData.experiences,
-          education: formData.education,
-          skills: formData.skills,
-          certifications: formData.certifications
-        });
+        const { data, error } = await supabase
+          .from('cvs')
+          .update(cvData)
+          .eq('id', editingCV.id)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        if (error) throw error;
         toast.success('CV updated successfully!');
       } else {
         // Create new CV
-        await cvOperations.createCV({
-          full_name: formData.full_name,
-          email: formData.email,
-          phone: formData.phone,
-          location: formData.location,
-          summary: formData.summary,
-          experiences: formData.experiences,
-          education: formData.education,
-          skills: formData.skills,
-          certifications: formData.certifications
-        });
+        const { data, error } = await supabase
+          .from('cvs')
+          .insert([cvData])
+          .select()
+          .single();
+
+        if (error) throw error;
         toast.success('CV created successfully!');
       }
       
