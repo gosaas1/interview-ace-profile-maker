@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { cvOperations, CVData } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +14,6 @@ interface CVBuilderProps {
 }
 
 export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editingCV }) => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,7 +30,6 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
 
   useEffect(() => {
     checkAuth();
-    testDatabaseConnection();
     if (editingCV) {
       // Load existing CV data for editing
       setFormData({
@@ -54,22 +51,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
     setIsAuthenticated(!!user);
     if (!user) {
       toast.error('Please sign in to create a CV');
-      navigate('/');
-    }
-  };
-
-  const testDatabaseConnection = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('cvs')
-        .select('count')
-        .limit(1);
-      
-      if (error) {
-        console.error('Database connection test failed:', error);
-      }
-    } catch (error) {
-      console.error('Database connection failed:', error);
+      onClose(); // Close modal instead of navigating
     }
   };
 
@@ -126,7 +108,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
     e.preventDefault();
     if (!isAuthenticated) {
       toast.error('Please sign in to create a CV');
-      navigate('/');
+      onClose(); // Close modal instead of navigating
       return;
     }
 
@@ -190,21 +172,22 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
   };
 
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="container mx-auto py-8 max-w-4xl">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
+          <p className="text-gray-600 mb-6">Please sign in to create or edit CVs.</p>
+          <Button onClick={onClose} variant="outline">
+            Close
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {editingCV ? 'Edit CV' : 'Create New CV'}
-          </h1>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </div>
-
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -389,7 +372,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onClose, onSuccess, editin
           </CardContent>
         </Card>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-6 border-t">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
