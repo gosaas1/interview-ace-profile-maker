@@ -79,11 +79,11 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/50 flex">
       {/* Premium Sidebar */}
-      <div className="w-72 bg-white shadow-xl border-r border-slate-200/60">
+      <div className="w-72 bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-xl border-r border-blue-200/60">
         {/* Logo & Branding */}
         <div className="p-8 border-b border-slate-100">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-200 rounded-xl flex items-center justify-center">
               <FileText className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -93,7 +93,7 @@ const Dashboard = () => {
           </div>
           
           {/* User Profile */}
-          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+          <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <User className="h-4 w-4 text-white" />
             </div>
@@ -113,10 +113,10 @@ const Dashboard = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-transform duration-300 hover:scale-105 hover:shadow-lg ${
                 activeTab === item.id
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
-                  : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-blue-200 text-slate-900 shadow-lg shadow-blue-200/25'
+                  : 'text-slate-700 hover:bg-blue-50 hover:text-slate-900'
               }`}
             >
               <item.icon className="h-5 w-5" />
@@ -149,7 +149,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
         {/* Premium Header */}
         <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-8 py-6">
           <div className="flex items-center justify-between">

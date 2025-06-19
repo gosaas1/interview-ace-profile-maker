@@ -54,6 +54,7 @@ export interface CVData {
   file_name?: string;
   file_size?: number;
   type?: 'file' | 'text';
+  content?: string;
   created_at: string;
   updated_at: string;
 }

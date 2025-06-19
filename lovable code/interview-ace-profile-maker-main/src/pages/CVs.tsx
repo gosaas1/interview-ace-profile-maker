@@ -77,6 +77,11 @@ export const CVs = () => {
     setPreviewCV(cv);
     setShowPreviewModal(true);
     console.log('State should now be updated');
+    
+    // Add a timeout to check state after update
+    setTimeout(() => {
+      console.log('After timeout - showPreviewModal should be true');
+    }, 100);
   };
 
   const handleDownloadCV = (cv: CVData) => {
@@ -90,6 +95,9 @@ export const CVs = () => {
       </div>
     );
   }
+
+  // Debug current state
+  console.log('CVs render - showPreviewModal:', showPreviewModal, 'previewCV:', previewCV);
 
   return (
     <div className="flex h-screen bg-gray-50">

@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CVData } from '@/lib/supabase';
 import { FileText, Download, ExternalLink } from 'lucide-react';
+import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from 'pdfjs-dist';
+
+// Use the installed version for the workerSrc
+GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
 interface CVPreviewModalProps {
   open: boolean;
@@ -13,6 +17,8 @@ interface CVPreviewModalProps {
 const CVPreviewModal: React.FC<CVPreviewModalProps> = ({ open, onClose, cv }) => {
   const [fileContent, setFileContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Debug logging
   console.log('CVPreviewModal render - open:', open, 'cv:', cv);
@@ -21,24 +27,35 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({ open, onClose, cv }) =>
     console.log('CVPreviewModal useEffect - cv:', cv, 'open:', open);
     if (cv && open) {
       setLoading(true);
-      
-      // If this is an uploaded file CV, try to get the content
-      if (cv.file_url) {
-        // Try to fetch file content from storage
-        fetch(cv.file_url)
-          .then(response => response.text())
-          .then(content => {
-            setFileContent(content);
+      setPdfError(null);
+      // If PDF, try to render visually
+      if (cv.file_url && cv.file_name && cv.file_name.endsWith('.pdf')) {
+        const renderPDF = async () => {
+          try {
+            const loadingTask = getDocument(cv.file_url);
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = canvasRef.current;
+            if (canvas) {
+              const context = canvas.getContext('2d');
+              if (context) {
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: context, viewport }).promise;
+              }
+            }
             setLoading(false);
-          })
-          .catch(error => {
-            console.log('Could not fetch file from storage:', error);
-            // Fall back to summary if available
-            setFileContent(cv.summary || 'File content not available');
+          } catch (err) {
+            setPdfError('Failed to render PDF. Showing extracted text instead.');
             setLoading(false);
-          });
+          }
+        };
+        renderPDF();
+      } else if (cv.content) {
+        setFileContent(cv.content);
+        setLoading(false);
       } else {
-        // Use the summary/content from database
         setFileContent(cv.summary || 'No content available');
         setLoading(false);
       }
@@ -46,14 +63,21 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({ open, onClose, cv }) =>
   }, [cv, open]);
 
   // Don't render if no CV or not open
-  if (!cv || !open) return null;
+  if (!cv || !open) {
+    console.log('CVPreviewModal not rendering - cv:', cv, 'open:', open);
+    return null;
+  }
+
+  console.log('CVPreviewModal rendering with cv:', cv.full_name);
 
   // Check if this is a file-based CV (has file_url or file_name)
-  const isFileCV = cv.file_url || cv.file_name;
+  const isFileCV = cv.type === 'file' || cv.file_url || cv.file_name;
+  const isPDF = cv.file_name && cv.file_name.endsWith('.pdf');
+  const hasExtractedContent = !!(cv.content && cv.content.trim().length > 0);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-blue-50 rounded-xl shadow-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -74,64 +98,36 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({ open, onClose, cv }) =>
         
         <div className="space-y-6 p-2">
           {isFileCV ? (
-            // File-based CV display
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                  <div>
-                    <h3 className="font-semibold">{cv.full_name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {cv.file_name && `File: ${cv.file_name}`}
-                      {cv.file_size && ` • ${(cv.file_size / 1024 / 1024).toFixed(2)} MB`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {cv.file_url && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={cv.file_url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Open File
-                      </a>
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" onClick={() => {
-                    if (cv.file_url) {
-                      const link = document.createElement('a');
-                      link.href = cv.file_url;
-                      link.download = cv.file_name || 'cv';
-                      link.click();
-                    }
-                  }}>
-                    <Download className="h-4 w-4 mr-1" />
-                    Download
-                  </Button>
-                </div>
+            isPDF && cv.file_url && !pdfError ? (
+              <div className="flex flex-col items-center">
+                <canvas ref={canvasRef} className="border rounded shadow max-w-full" style={{ background: '#fff' }} />
+                <div className="text-xs text-gray-500 mt-2">First page of PDF shown. <a href={cv.file_url} target="_blank" rel="noopener noreferrer" className="underline">Open full PDF</a></div>
               </div>
-              
-              {loading ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2">Loading file content...</span>
-                </div>
-              ) : fileContent ? (
-                <div className="bg-white border rounded-lg p-6">
-                  <h3 className="font-semibold mb-4">File Content:</h3>
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded border overflow-auto max-h-96">
-                    {fileContent}
-                  </pre>
-                </div>
-              ) : (
-                <div className="text-center p-8 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No file content available for preview.</p>
-                  <p className="text-sm mt-2">
-                    {cv.file_url ? 'The file may not be accessible or may be in a format that cannot be displayed.' : 'This CV was saved without file content.'}
-                  </p>
-                </div>
-              )}
-            </div>
+            ) : hasExtractedContent ? (
+              <div className="bg-white border rounded-lg p-6">
+                <h3 className="font-semibold mb-4">File Content:</h3>
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded border overflow-auto max-h-96">
+                  {cv.content}
+                </pre>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-10 bg-blue-50 rounded-xl shadow-inner">
+                <FileText className="h-16 w-16 mb-6 text-blue-300" />
+                <p className="text-lg font-semibold text-slate-700 mb-2">No file content available for preview.</p>
+                <p className="text-base text-slate-500 mb-4">
+                  {cv.file_url ? 'The file may not be accessible or may be in a format that cannot be displayed.' : 'This CV was saved without file content.'}
+                </p>
+                {cv.file_url && (
+                  <a
+                    href={cv.file_url}
+                    download={cv.file_name}
+                    className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
+                  >
+                    Download File
+                  </a>
+                )}
+              </div>
+            )
           ) : (
             // Structured CV display
             <>

@@ -7,6 +7,7 @@ import { Upload, FileText, X, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { toast } from '@/hooks/use-toast';
+import mammoth from 'mammoth';
 
 interface CVUploadModalProps {
   onClose: () => void;
@@ -237,49 +238,50 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
 
       console.log('Initial cvData:', cvData);
 
+      let extractedText = '';
+
       if (uploadMethod === 'file' && uploadedFile) {
-        console.log('Processing file upload...');
-        try {
-          // Upload file to storage
-          const fileUrl = await uploadFileToStorage(uploadedFile);
-          console.log('File uploaded to:', fileUrl);
-          
-          cvData = {
-            ...cvData,
-            file_url: fileUrl,
-            file_name: uploadedFile.name,
-            file_size: uploadedFile.size,
-          };
-        } catch (uploadError) {
-          console.log('File upload failed, saving without file URL:', uploadError);
-          
-          // Try to extract content from file for database storage
-          let fileContent = '';
+        let fileContent = '';
+        if (uploadedFile.name.endsWith('.docx')) {
           try {
             fileContent = await extractFileContent(uploadedFile);
             console.log('Extracted file content length:', fileContent.length);
+            extractedText = fileContent;
           } catch (extractError) {
             console.log('Could not extract file content:', extractError);
-            fileContent = `[File: ${uploadedFile.name}] - Content could not be extracted. Please upload as text or ensure file is readable.`;
+            fileContent = '';
           }
-          
-          // Still save the CV data, but without file URL
-          cvData = {
-            ...cvData,
-            file_name: uploadedFile.name,
-            file_size: uploadedFile.size,
-            content: fileContent, // Add extracted content
-          };
         }
+        // Upload file to storage
+        let fileUrl = '';
+        try {
+          fileUrl = await uploadFileToStorage(uploadedFile);
+          console.log('File uploaded to:', fileUrl);
+        } catch (uploadError) {
+          console.log('File upload failed, saving without file URL:', uploadError);
+        }
+        cvData = {
+          ...cvData,
+          file_url: fileUrl || undefined,
+          file_name: uploadedFile.name,
+          file_size: uploadedFile.size,
+          content: fileContent || undefined,
+        };
       } else if (uploadMethod === 'text' && cvText.trim()) {
         console.log('Processing text content...');
         // Save text content
+        extractedText = cvText.trim();
         cvData = {
           ...cvData,
           content: cvText.trim(),
         };
       } else {
         throw new Error('No content to save');
+      }
+
+      // Always add extracted text to cvData if available
+      if (extractedText) {
+        cvData.content = extractedText;
       }
 
       console.log('Final cvData to save:', cvData);
@@ -324,28 +326,41 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
 
   // Extract text content from file
   const extractFileContent = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          resolve(content);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      
-      // For text files, read as text
-      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+    // DOCX
+    if (file.name.endsWith('.docx')) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const arrayBuffer = e.target?.result as ArrayBuffer;
+            const { value } = await mammoth.extractRawText({ arrayBuffer });
+            resolve(value);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read DOCX file'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+    // TXT
+    if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const content = e.target?.result as string;
+            resolve(content);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsText(file);
-      } else {
-        // For other files, try to read as text (might work for some formats)
-        reader.readAsText(file);
-      }
-    });
+      });
+    }
+    // Fallback
+    return Promise.resolve('[File preview not supported. Please download to view.]');
   };
 
   if (analysisComplete) {
