@@ -1,0 +1,263 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase, CVData } from '@/lib/supabase';
+import { HomeNavigation } from '@/components/navigation/HomeNavigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileText, Plus, Upload, Edit, Trash2, Eye, Download } from 'lucide-react';
+import CVUploadModal from '@/components/cv/CVUploadModal';
+import { toast } from 'sonner';
+import CVPreviewModal from '@/components/cv/CVPreviewModal';
+
+export const CVs = () => {
+  const navigate = useNavigate();
+  const [cvs, setCVs] = useState<CVData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [previewCV, setPreviewCV] = useState<CVData | undefined>(undefined);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  useEffect(() => {
+    fetchCVs();
+  }, []);
+
+  const fetchCVs = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from('cvs')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setCVs(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching CVs:', error);
+      toast.error('Failed to load CVs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditCV = (cv: CVData) => {
+    navigate(`/cv-builder/${cv.id}`, { state: { editingCV: cv } });
+  };
+
+  const handleCreateCV = () => {
+    navigate('/cv-builder');
+  };
+
+  const handleDeleteCV = async (cvId: string) => {
+    if (!confirm('Are you sure you want to delete this CV? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('cvs')
+        .delete()
+        .eq('id', cvId);
+
+      if (error) throw error;
+      setCVs(cvs.filter(cv => cv.id !== cvId));
+      toast.success('CV deleted successfully');
+    } catch (error) {
+      console.error('Error deleting CV:', error);
+      toast.error('Failed to delete CV');
+    }
+  };
+
+  const handleViewCV = (cv: CVData) => {
+    setPreviewCV(cv);
+    setShowPreviewModal(true);
+  };
+
+  const handleDownloadCV = (cv: CVData) => {
+    toast.info('PDF download feature coming soon!');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <div className="w-64">
+        <HomeNavigation />
+      </div>
+      
+      <main className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8 min-h-[80px]">
+            <div className="flex flex-col justify-center">
+              <h1 className="text-3xl font-bold text-gray-900">My CVs</h1>
+              <p className="mt-2 text-gray-600">
+                Create, manage, and update your professional CVs
+              </p>
+            </div>
+            <div className="flex space-x-4 items-center">
+              <Button 
+                onClick={handleCreateCV}
+                className="bg-blue-600 hover:bg-blue-700 text-white h-10"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New CV
+              </Button>
+              <Button 
+                onClick={() => setShowUploadModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white h-10"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload CV
+              </Button>
+            </div>
+          </div>
+
+          {cvs.length === 0 ? (
+            <Card className="p-8 text-center bg-gradient-to-br from-blue-50 to-indigo-50">
+              <FileText className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">No CVs yet</h3>
+              <p className="text-gray-600 mb-6">
+                Create your first CV or upload an existing one to get started.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <Button 
+                  onClick={handleCreateCV}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New CV
+                </Button>
+                <Button 
+                  onClick={() => setShowUploadModal(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload CV
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {cvs.map((cv) => (
+                <Card key={cv.id} className="p-6 hover:shadow-lg transition-shadow bg-gradient-to-br from-blue-50 to-indigo-50">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-900 truncate">
+                        {cv.full_name || 'Untitled CV'}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Last updated: {new Date(cv.updated_at).toLocaleDateString()}
+                      </p>
+                      {cv.email && (
+                        <p className="text-sm text-gray-600 truncate">{cv.email}</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleViewCV(cv)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                        title="View CV"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEditCV(cv)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-100"
+                        title="Edit CV"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteCV(cv.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-100"
+                        title="Delete CV"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    {cv.summary && (
+                      <p className="text-sm text-gray-700 line-clamp-2 mb-2">
+                        {cv.summary}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {cv.experiences && cv.experiences.length > 0 && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {cv.experiences.length} experience{cv.experiences.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {cv.education && cv.education.length > 0 && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          {cv.education.length} education{cv.education.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {cv.skills && (
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                          Skills
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50"
+                      onClick={() => handleViewCV(cv)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 border-green-200 text-green-600 hover:bg-green-50"
+                      onClick={() => handleDownloadCV(cv)}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Download
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {showUploadModal && (
+        <CVUploadModal 
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => {
+            fetchCVs();
+            setShowUploadModal(false);
+          }}
+        />
+      )}
+
+      {showPreviewModal && (
+        <CVPreviewModal 
+          open={showPreviewModal}
+          onClose={() => setShowPreviewModal(false)}
+          cv={previewCV}
+        />
+      )}
+    </div>
+  );
+}; 
