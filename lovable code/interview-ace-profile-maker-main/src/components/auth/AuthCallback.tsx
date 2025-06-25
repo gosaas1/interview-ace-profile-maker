@@ -1,90 +1,217 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, CheckCircle, XCircle, Home } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AuthCallback() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the session from the URL hash
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        setLoading(true);
+        setError(null);
+
+        // Check for error parameters in URL
+        const errorParam = searchParams.get('error');
+        const errorDescription = searchParams.get('error_description');
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          toast.error('Authentication failed. Please try again.');
-          navigate('/auth');
-          return;
+        if (errorParam) {
+          throw new Error(errorDescription || 'Authentication failed');
         }
 
-        if (!session) {
-          console.error('No session found');
-          toast.error('No active session found. Please sign in again.');
-          navigate('/auth');
-          return;
+        // Handle OAuth callback
+        const { data, error: authError } = await supabase.auth.getSession();
+        
+        if (authError) {
+          throw authError;
         }
 
-        console.log('User session:', session.user);
-
-        // Get the user profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Profile error:', profileError);
-          // If profile doesn't exist, create one
-          const newProfile = {
-            id: session.user.id,
-            full_name: session.user.user_metadata.full_name || ''
-          };
-
-          console.log('Creating new profile:', newProfile);
-
-          const { data: insertedProfile, error: insertError } = await supabase
-            .from('profiles')
-            .insert([newProfile])
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('Profile creation error:', insertError);
-            console.error('Error details:', {
-              code: insertError.code,
-              message: insertError.message,
-              details: insertError.details,
-              hint: insertError.hint
+        if (data.session) {
+          setSuccess(true);
+          toast.success('Successfully signed in!');
+          
+          // Wait a moment for the success state to show
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 1500);
+        } else {
+          // Check if this is a sign-up confirmation
+          const accessToken = searchParams.get('access_token');
+          const refreshToken = searchParams.get('refresh_token');
+          const tokenType = searchParams.get('token_type');
+          
+          if (accessToken && refreshToken) {
+            // Set the session manually for sign-up confirmation
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
             });
-            toast.error('Failed to create user profile. Please try again.');
-            navigate('/auth');
-            return;
+            
+            if (sessionError) {
+              throw sessionError;
+            }
+            
+            setSuccess(true);
+            toast.success('Email verified successfully!');
+            
+            setTimeout(() => {
+              navigate('/dashboard', { replace: true });
+            }, 1500);
+          } else {
+            throw new Error('No valid session found');
           }
-
-          console.log('Profile created successfully:', insertedProfile);
         }
-
-        toast.success('Successfully signed in!');
-        navigate('/dashboard');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Auth callback error:', error);
-        toast.error('An unexpected error occurred. Please try again.');
-        navigate('/auth');
+        setError(error.message || 'Authentication failed');
+        toast.error('Authentication failed: ' + (error.message || 'Unknown error'));
+      } finally {
+        setLoading(false);
       }
     };
 
-    handleAuthCallback();
-  }, [navigate]);
+    // Only run the callback handling if we're not already successful
+    if (!success) {
+      handleAuthCallback();
+    }
+  }, [navigate, searchParams, success]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-slate-600">Completing sign in...</p>
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    // Trigger re-auth by navigating to auth page
+    navigate('/auth', { replace: true });
+  };
+
+  const handleGoHome = () => {
+    navigate('/', { replace: true });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              Authenticating...
+            </CardTitle>
+            <CardDescription>
+              Please wait while we complete your sign-in
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="space-y-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+              </div>
+              <p className="text-sm text-slate-600">
+                This usually takes a few seconds...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              Success!
+            </CardTitle>
+            <CardDescription>
+              You have been successfully authenticated
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="space-y-4">
+              <div className="w-full bg-green-200 rounded-full h-2">
+                <div className="bg-green-600 h-2 rounded-full" style={{ width: '100%' }}></div>
+              </div>
+              <p className="text-sm text-slate-600">
+                Redirecting to your dashboard...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-red-600">
+              <XCircle className="h-6 w-6" />
+              Authentication Failed
+            </CardTitle>
+            <CardDescription>
+              We encountered an issue signing you in
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Button 
+                onClick={handleRetry} 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleGoHome} 
+                className="w-full"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-xs text-slate-500">
+                If the problem persists, please contact support
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Fallback - should not reach here
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle>Something went wrong</CardTitle>
+          <CardDescription>Please try again</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={handleGoHome} className="w-full">
+            <Home className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 } 

@@ -1,410 +1,282 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
+import { cvOperations, CVData } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, FileText, Briefcase, Users, BarChart3, Settings, LogOut, Search, Bell, User, Crown, Eye, Edit } from 'lucide-react';
-import CVUploadModal from '../cv/CVUploadModal';
-import JobFoldersList from '../folders/JobFoldersList';
-import { supabase, CVData } from '@/lib/supabase';
-import CVPreviewModal from '../cv/CVPreviewModal';
+import { Button } from '@/components/ui/button';
+import { HomeNavigation } from '@/components/navigation/HomeNavigation';
+import { FileText, Plus, Eye, Edit, Trash2, Calendar, TrendingUp, Award, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import CVPreviewModal from '../cv/CVPreviewModal';
+import { useNavigate } from 'react-router-dom';
 
-const Dashboard = () => {
+export default function Dashboard() {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [showCVUpload, setShowCVUpload] = useState(false);
-  const [cvs, setCVs] = useState<CVData[]>([]);
-  const [loadingCVs, setLoadingCVs] = useState(false);
-  const [previewCV, setPreviewCV] = useState<CVData | undefined>(undefined);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [cvs, setCvs] = useState<CVData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCV, setSelectedCV] = useState<CVData | null>(null);
 
   useEffect(() => {
-    if (activeTab === 'cvs') fetchCVs();
-  }, [activeTab]);
+    loadCVs();
+  }, []);
 
-  const fetchCVs = async () => {
-    setLoadingCVs(true);
+  const loadCVs = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from('cvs')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-        setCVs(data || []);
-      }
-    } catch (error) {
-      setCVs([]);
-    } finally {
-      setLoadingCVs(false);
-    }
-  };
-
-  const handleViewCV = (cv: CVData) => {
-    setPreviewCV(cv);
-    setShowPreviewModal(true);
-  };
-
-  const handleEditCV = (cv: CVData) => {
-    navigate(`/cv-builder/${cv.id}`);
-  };
-
-  const stats = [
-    { label: 'CVs Created', value: cvs.length.toString(), icon: FileText, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50', textColor: 'text-blue-700', change: `+${cvs.length} this month` },
-    { label: 'Applications Sent', value: '28', icon: Briefcase, color: 'from-emerald-500 to-emerald-600', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', change: '+8 this week' },
-    { label: 'Interviews Scheduled', value: '7', icon: Users, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50', textColor: 'text-purple-700', change: '+2 pending' },
-    { label: 'Success Rate', value: '89%', icon: BarChart3, color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-50', textColor: 'text-orange-700', change: '+12% vs avg' },
-  ];
-
-  const sidebarItems = [
-    { id: 'overview', label: 'Dashboard', icon: BarChart3 },
-    { id: 'cvs', label: 'CV Library', icon: FileText },
-    { id: 'jobs', label: 'Applications', icon: Briefcase },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast.success('Signed out successfully');
-      navigate('/');
+      const data = await cvOperations.getAllCVs();
+      setCvs(data);
     } catch (error: any) {
-      toast.error('Error signing out: ' + error.message);
+      toast.error('Failed to load CVs: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleDeleteCV = async (cvId: string) => {
+    try {
+      await cvOperations.deleteCV(cvId);
+      await loadCVs();
+      toast.success('CV deleted successfully');
+    } catch (error: any) {
+      toast.error('Failed to delete CV: ' + error.message);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <div className="w-64">
+          <HomeNavigation />
+        </div>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/50 flex">
-      {/* Premium Sidebar */}
-      <div className="w-72 bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-xl border-r border-blue-200/60">
-        {/* Logo & Branding */}
-        <div className="p-8 border-b border-slate-100">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-10 h-10 bg-blue-200 rounded-xl flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">CVCraft AI</h1>
-              <p className="text-sm text-slate-500 font-medium">Professional Suite</p>
-            </div>
-          </div>
-          
-          {/* User Profile */}
-          <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-slate-900 text-sm">John Smith</p>
-              <div className="flex items-center space-x-1">
-                <Crown className="h-3 w-3 text-amber-500" />
-                <span className="text-xs text-slate-600 font-medium">Pro Plan</span>
-              </div>
-            </div>
-          </div>
+    <>
+      <div className="flex h-screen bg-gray-50">
+        <div className="w-64">
+          <HomeNavigation />
         </div>
         
-        {/* Navigation */}
-        <nav className="px-6 py-4 space-y-2">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-transform duration-300 hover:scale-105 hover:shadow-lg ${
-                activeTab === item.id
-                  ? 'bg-blue-200 text-slate-900 shadow-lg shadow-blue-200/25'
-                  : 'text-slate-700 hover:bg-blue-50 hover:text-slate-900'
-              }`}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-        {/* Upgrade Button - between Settings and Sign Out */}
-        <div className="px-6 mt-10">
-          <a
-            href="/#pricing"
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold shadow transition-all duration-200 w-full animate-heartbeat hover:animate-float"
-            style={{ minWidth: 'fit-content' }}
-          >
-            <Crown className="h-4 w-4 text-amber-300" />
-            Upgrade
-          </a>
-        </div>
-        {/* Bottom Actions */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-3" />
-            Sign Out
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
-        {/* Premium Header */}
-        <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">
-                {activeTab === 'overview' && 'Dashboard Overview'}
-                {activeTab === 'cvs' && 'CV Library'}
-                {activeTab === 'jobs' && 'Job Applications'}
-                {activeTab === 'settings' && 'Account Settings'}
-              </h2>
-              <p className="text-slate-600 mt-1">
-                {activeTab === 'overview' && 'Monitor your career progress and optimize your job search strategy'}
-                {activeTab === 'cvs' && 'Create, customize, and manage your professional CV collection'}
-                {activeTab === 'jobs' && 'Track applications and manage tailored CVs for each opportunity'}
-                {activeTab === 'settings' && 'Customize your account preferences and subscription'}
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="mt-2 text-gray-600">
+                Welcome back, {user?.user_metadata?.full_name || user?.email}! Ready to advance your career?
               </p>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
-                />
-              </div>
-              
-              {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5 text-slate-600" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-              </Button>
-              
-              {/* Action Buttons */}
-              {(activeTab === 'overview' || activeTab === 'cvs') && (
-                <div className="flex space-x-3">
-                  {/* Disabled as per platform restructure - Upload CV only available on home page */}
-                  {/* <Button 
-                    variant="outline"
-                    onClick={() => setShowCVUpload(true)}
-                    className="border-slate-200 hover:bg-slate-50"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Upload CV
-                  </Button> */}
-                  <Button 
-                    onClick={() => navigate('/cv-builder')}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create CV
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto p-8">
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
-                  <Card key={index} className="hover-lift border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={`p-3 rounded-xl ${stat.bgColor}`}>
-                          <stat.icon className={`h-6 w-6 ${stat.textColor}`} />
-                        </div>
-                        <div className="text-right">
-                          <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-                          <p className="text-sm text-slate-600 mt-1">{stat.change}</p>
-                        </div>
-                      </div>
-                      <p className="font-semibold text-slate-700">{stat.label}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Recent Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-slate-900">Recent Activity</CardTitle>
-                    <CardDescription className="text-slate-600">Your latest CV updates and applications</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {[1, 2, 3].map((item) => (
-                      <div key={item} className="flex items-center space-x-4 p-4 bg-slate-50/50 rounded-xl">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                          <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-slate-900">CV optimized for Senior Developer</p>
-                          <p className="text-sm text-slate-600">TechCorp Inc. • 2 hours ago</p>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-slate-900">Performance Insights</CardTitle>
-                    <CardDescription className="text-slate-600">AI-powered recommendations</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-200/50">
-                      <p className="font-semibold text-emerald-800 mb-1">Excellent ATS Score</p>
-                      <p className="text-sm text-emerald-700">Your latest CV has a 94% ATS compatibility rating</p>
-                    </div>
-                    <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-200/50">
-                      <p className="font-semibold text-blue-800 mb-1">Keyword Optimization</p>
-                      <p className="text-sm text-blue-700">Consider adding "machine learning" to boost relevance</p>
-                    </div>
-                    <div className="p-4 bg-purple-50/50 rounded-xl border border-purple-200/50">
-                      <p className="font-semibold text-purple-800 mb-1">Interview Tips</p>
-                      <p className="text-sm text-purple-700">3 new interview questions available for your applications</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'cvs' && (
-            <div className="space-y-6">
-              <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-slate-900">CV Collection</CardTitle>
-                  <CardDescription className="text-slate-600">Manage your professional CV library and templates</CardDescription>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total CVs</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {loadingCVs ? (
-                    <div className="text-center py-8 text-slate-500">Loading CVs...</div>
-                  ) : cvs.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">No CVs found. Create or upload a CV to get started.</div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {cvs.map((cv) => (
-                        <Card key={cv.id} className="hover-lift border border-slate-200 bg-white">
-                          <CardContent className="p-6">
-                            <div className="flex items-center space-x-3 mb-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                <FileText className="h-6 w-6 text-white" />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-slate-900">{cv.full_name || 'Untitled CV'}</h3>
-                                <p className="text-sm text-slate-600">{cv.email}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2 text-sm text-slate-600">
-                              <p>Last updated: <span className="font-medium">{new Date(cv.updated_at).toLocaleDateString()}</span></p>
-                            </div>
-                            <div className="flex space-x-2 mt-4">
-                              <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewCV(cv)}>
-                                <Eye className="h-4 w-4 mr-1" /> View
-                              </Button>
-                              <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEditCV(cv)}>
-                                <Edit className="h-4 w-4 mr-1" /> Edit
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  <div className="text-2xl font-bold">{cvs.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {cvs.length > 0 ? '+1 from last month' : 'Start building your first CV'}
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Applications Sent</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-muted-foreground">
+                    Ready to start applying
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Interview Prep</CardTitle>
+                  <Award className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-muted-foreground">
+                    Practice sessions completed
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Job Matches</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-muted-foreground">
+                    Personalized matches available
+                  </p>
                 </CardContent>
               </Card>
             </div>
-          )}
 
-          {activeTab === 'jobs' && <JobFoldersList />}
-
-          {activeTab === 'settings' && (
-            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-900">Account Settings</CardTitle>
-                <CardDescription className="text-slate-600">Manage your preferences and subscription</CardDescription>
+            {/* CVs Section */}
+            <Card className="mb-8">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>My CVs</CardTitle>
+                  <CardDescription>
+                    Manage and optimize your CVs for different roles
+                  </CardDescription>
+                </div>
+                <div className="flex space-x-2">
+                  {/* Disabled as per platform restructure - Upload CV only available on home page
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowCVUpload(true)}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload CV
+                  </Button>
+                  */}
+                  <Button onClick={() => navigate('/cv-builder')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New CV
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Professional Plan</h3>
-                      <p className="text-sm text-slate-600">Unlimited CVs • Advanced AI • Priority Support</p>
-                      <p className="text-sm text-slate-500 mt-2">Next billing: March 15, 2025</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">$29<span className="text-base font-normal text-slate-600">/mo</span></p>
-                      <Button size="sm" variant="outline" className="mt-2">Manage Plan</Button>
-                    </div>
+              <CardContent>
+                {cvs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No CVs found</h3>
+                    <p className="text-slate-500 mb-6">
+                      Create your first CV to get started with your job search journey.
+                    </p>
+                    <Button onClick={() => navigate('/cv-builder')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your First CV
+                    </Button>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-slate-900">Profile Settings</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                        <input type="text" defaultValue="John Smith" className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                ) : (
+                  <div className="grid gap-4">
+                    {cvs.map((cv) => (
+                      <div key={cv.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-shrink-0">
+                            <FileText className="h-8 w-8 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900">
+                              {cv.full_name || 'Untitled CV'}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              <Calendar className="inline h-4 w-4 mr-1" />
+                              Created {formatDate(cv.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedCV(cv)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/cv-builder/${cv.id}`)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCV(cv.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                        <input type="email" defaultValue="john@company.com" className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-slate-900">Preferences</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <span className="text-sm font-medium text-slate-700">Email Notifications</span>
-                        <input type="checkbox" defaultChecked className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <span className="text-sm font-medium text-slate-700">Auto-save CVs</span>
-                        <input type="checkbox" defaultChecked className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <span className="text-sm font-medium text-slate-700">AI Suggestions</span>
-                        <input type="checkbox" defaultChecked className="w-4 h-4 text-blue-600" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
-          )}
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/jobs')}>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+                    Find Job Matches
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Discover personalized job opportunities based on your CV and preferences.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/interviews')}>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Award className="h-5 w-5 mr-2 text-green-600" />
+                    Practice Interviews
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Improve your interview skills with AI-powered practice sessions.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/cv-builder')}>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FileText className="h-5 w-5 mr-2 text-purple-600" />
+                    Optimize CVs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Create and optimize your CVs for specific job applications.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </main>
       </div>
 
-      {/* Modals */}
-      {showCVUpload && (
-        <CVUploadModal 
-          onClose={() => setShowCVUpload(false)} 
-          onSuccess={() => {
-            fetchCVs();
-            setActiveTab('cvs');
-          }}
+      {/* CV Preview Modal */}
+      {selectedCV && (
+        <CVPreviewModal
+          open={!!selectedCV}
+          cv={selectedCV}
+          onClose={() => setSelectedCV(null)}
         />
       )}
-      
-      {showPreviewModal && (
-        <CVPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)} cv={previewCV} />
-      )}
-    </div>
+    </>
   );
-};
-
-export default Dashboard;
+}
