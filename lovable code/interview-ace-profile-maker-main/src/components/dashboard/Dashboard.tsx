@@ -188,14 +188,15 @@ const Dashboard = () => {
               {/* Action Buttons */}
               {(activeTab === 'overview' || activeTab === 'cvs') && (
                 <div className="flex space-x-3">
-                  <Button 
+                  {/* Disabled as per platform restructure - Upload CV only available on home page */}
+                  {/* <Button 
                     variant="outline"
                     onClick={() => setShowCVUpload(true)}
                     className="border-slate-200 hover:bg-slate-50"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Upload CV
-                  </Button>
+                  </Button> */}
                   <Button 
                     onClick={() => navigate('/cv-builder')}
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"

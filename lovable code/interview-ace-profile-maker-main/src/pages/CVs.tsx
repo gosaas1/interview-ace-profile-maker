@@ -122,13 +122,14 @@ export const CVs = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Create New CV
               </Button>
-              <Button 
+              {/* Disabled as per platform restructure - Upload CV only available on home page */}
+              {/* <Button 
                 onClick={() => setShowUploadModal(true)}
                 className="bg-green-600 hover:bg-green-700 text-white h-10"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload CV
-              </Button>
+              </Button> */}
             </div>
           </div>
 
@@ -147,13 +148,14 @@ export const CVs = () => {
                   <Plus className="h-4 w-4 mr-2" />
                   Create New CV
                 </Button>
-                <Button 
+                {/* Disabled as per platform restructure - Upload CV only available on home page */}
+                {/* <Button 
                   onClick={() => setShowUploadModal(true)}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Upload CV
-                </Button>
+                </Button> */}
               </div>
             </Card>
           ) : (
