@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://iqikeltdqmpdsczakril.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaWtlbHRkcW1wZHNjemFrcmlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1ODExODksImV4cCI6MjA2NTE1NzE4OX0.o_c4yk6tKYM17uTXtdepkRWR4PUp71lflaciAcLB6i4';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tlddkfkoizeubctqjraf.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZGRrZmtvaXpldWJjdHFqcmFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTA3NzMsImV4cCI6MjA2NjI4Njc3M30.PF7q5znPXOecZzn7L0Vf05NnaOY2vVzQ4ltNWUL0Na0';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
 // Google OAuth Configuration
-export const GOOGLE_CLIENT_ID = '1094821547409-2k8q8q8q8q8q8q8q8q8q8q8q8q8q8q8q.apps.googleusercontent.com';
-export const GOOGLE_CLIENT_SECRET = 'GOCSPX-2k8q8q8q8q8q8q8q8q8q8q8q8q8q8q8q';
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+export const GOOGLE_CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
