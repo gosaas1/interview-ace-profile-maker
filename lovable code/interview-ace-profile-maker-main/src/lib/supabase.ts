@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Default Supabase configuration with fallbacks
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://iqikeltdqmpdsczakril.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaWtlbHRkcW1wZHNjemFrcmlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1ODExODksImV4cCI6MjA2NTE1NzE4OX0.o_c4yk6tKYM17uTXtdepkRWR4PUp71lflaciAcLB6i4';
 
+// Validate configuration (only log warning, don't throw error)
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.warn('Supabase environment variables not fully configured. Using default values.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -446,4 +448,4 @@ export const storageOperations = {
     if (error) throw error;
     return data;
   }
-}; 
+};
