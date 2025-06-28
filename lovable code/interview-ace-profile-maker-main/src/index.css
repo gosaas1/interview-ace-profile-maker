@@ -2661,7 +2661,7 @@ body {
   display: flex;
   align-items: center;
   position: relative;
-  padding: 10rem 0 6rem 0; /* Increased top padding significantly */
+  padding: 6rem 0 6rem 0; /* Reduced top padding */
 }
 
 .elite-crown-badge-spaced {
@@ -2962,7 +2962,7 @@ body {
   display: flex;
   align-items: center;
   position: relative;
-  padding: 10rem 0 6rem 0; /* Increased top padding significantly */
+  padding: 6rem 0 6rem 0; /* Reduced top padding */
 }
 
 .elite-crown-badge-spaced {
