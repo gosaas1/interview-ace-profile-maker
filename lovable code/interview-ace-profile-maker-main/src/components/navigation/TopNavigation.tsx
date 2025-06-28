@@ -14,7 +14,8 @@ import {
   X,
   Home,
   User,
-  ChevronDown
+  ChevronDown,
+  CreditCard
 } from 'lucide-react';
 
 const navigation = [
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Job Applications', href: '/jobs', icon: Briefcase },
   { name: 'Interview Coach', href: '/interviews', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Upgrade', href: '/pricing', icon: CreditCard },
 ];
 
 export function TopNavigation() {

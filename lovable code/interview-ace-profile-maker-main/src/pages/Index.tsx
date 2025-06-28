@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useEffect } from 'react';
 import Navigation from '@/components/homepage/Navigation';
@@ -10,16 +10,28 @@ import Footer from '@/components/homepage/Footer';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, loading } = useAuth();
   
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (!loading && isAuthenticated) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, loading, navigate]);
-  
   const handleAuthClick = () => navigate('/auth');
+  
+  // Auto-scroll to pricing section when navigating to /pricing
+  useEffect(() => {
+    if (location.pathname === '/pricing') {
+      // Small delay to ensure the page is fully rendered
+      const timer = setTimeout(() => {
+        const pricingSection = document.getElementById('pricing');
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname]);
   
   // Show loading while checking authentication
   if (loading) {
@@ -31,11 +43,6 @@ export default function HomePage() {
         </div>
       </div>
     );
-  }
-  
-  // Don't render if authenticated (will redirect)
-  if (isAuthenticated) {
-    return null;
   }
 
   return (

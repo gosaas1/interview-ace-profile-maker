@@ -4,7 +4,7 @@ import { cvOperations, CVData } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HomeNavigation } from '@/components/navigation/HomeNavigation';
-import { FileText, Upload, Plus, Eye, Edit, Trash2, Calendar, TrendingUp, Award, Users } from 'lucide-react';
+import { FileText, Upload, Plus, Eye, Edit, Trash2, Calendar, TrendingUp, Award, Users, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import CVPreviewModal from '../cv/CVPreviewModal';
 import CVUploadModal from '../cv/CVUploadModal';
@@ -182,6 +182,54 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               </FloatingCard>
+            </motion.div>
+
+            {/* Upgrade Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mb-8"
+            >
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <CreditCard className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl text-blue-900">Unlock Premium Features</CardTitle>
+                        <CardDescription className="text-blue-700">
+                          Get unlimited CV analyses, advanced AI features, and expert coaching
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => navigate('/pricing')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      View Plans
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center space-x-2 text-blue-700">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span>Unlimited CV analyses with GPT-4</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-blue-700">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span>Human expert review & coaching</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-blue-700">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span>Advanced job matching & analytics</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
 
             {/* Jobs Applied Carousel */}

@@ -18,6 +18,12 @@ import LinkedInDebug from '@/components/debug/LinkedInDebug';
 import LinkedInOAuthTest from '@/components/debug/LinkedInOAuthTest';
 import LinkedInMainAuthTest from '@/components/debug/LinkedInMainAuthTest';
 import { KeywordTest } from '@/components/debug/KeywordTest';
+import PaymentSuccess from '@/pages/PaymentSuccess';
+import PaymentFailed from '@/pages/PaymentFailed';
+import PaymentTest from '@/components/debug/PaymentTest';
+import StripeSetup from '@/components/debug/StripeSetup';
+import PaymentDebug from '@/components/debug/PaymentDebug';
+import EliteExecutive from '@/pages/EliteExecutive';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -108,10 +114,16 @@ function App() {
         <Routes>
           {/* Public routes without top navigation */}
           <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+          <Route path="/pricing" element={<AppLayout><Index /></AppLayout>} />
+          <Route path="/elite-executive" element={<AppLayout showTopNav={false}><EliteExecutive /></AppLayout>} />
           <Route path="/auth" element={<AppLayout showTopNav={false}><AuthForm /></AppLayout>} />
           <Route path="/auth/reset-password" element={<AppLayout showTopNav={false}><ResetPassword /></AppLayout>} />
           <Route path="/auth/verify" element={<AppLayout showTopNav={false}><VerifyEmail /></AppLayout>} />
           <Route path="/auth/callback" element={<AppLayout showTopNav={false}><AuthCallback /></AppLayout>} />
+          
+          {/* Payment routes */}
+          <Route path="/payment-success" element={<AppLayout showTopNav={false}><PaymentSuccess /></AppLayout>} />
+          <Route path="/payment-failed" element={<AppLayout showTopNav={false}><PaymentFailed /></AppLayout>} />
           
           {/* Protected Routes with top navigation */}
           <Route
@@ -243,6 +255,30 @@ function App() {
             element={
               <AppLayout>
                 <KeywordTest />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/debug/payments"
+            element={
+              <AppLayout>
+                <PaymentTest />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/debug/stripe-setup"
+            element={
+              <AppLayout>
+                <StripeSetup />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/debug/payment-debug"
+            element={
+              <AppLayout>
+                <PaymentDebug />
               </AppLayout>
             }
           />
