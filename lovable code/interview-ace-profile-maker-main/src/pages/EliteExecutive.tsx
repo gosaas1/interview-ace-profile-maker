@@ -1,37 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
-import { Crown, Shield, Eye, Lock, Zap, Target, Globe, Award, CheckCircle, Star, ArrowRight, Play, Users, TrendingUp, Brain, Briefcase, Sparkles } from 'lucide-react';
+import { Crown, Shield, Eye, Lock, Zap, Target, Globe, Award, CheckCircle, Star, ArrowRight, Play, Users, TrendingUp, Brain, Briefcase, Sparkles, ChevronLeft, ChevronRight, Layers, Database, Cpu, Cloud, BarChart, Settings } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
-// Landio-inspired cursor with mouse follower
+// Enhanced cursor with purple trail effect
 const EliteCursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const cursorOutlineRef = useRef<HTMLDivElement>(null);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const trailRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
-  const [mouseTrail, setMouseTrail] = useState<Array<{ x: number; y: number; id: number }>>([]);
+  const [trail, setTrail] = useState<Array<{x: number, y: number, id: number}>>([]);
 
   useEffect(() => {
-    let animationFrame: number | undefined;
     let trailId = 0;
-    
+
     const updateCursor = (e: MouseEvent) => {
-      const newPosition = { x: e.clientX, y: e.clientY };
-      setCursorPosition(newPosition);
-      
-      // Add to mouse trail
-      setMouseTrail(prev => {
-        const newTrail = [...prev, { ...newPosition, id: trailId++ }];
-        return newTrail.slice(-8); // Keep last 8 trail points
-      });
-      
       if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate(${e.clientX - 4}px, ${e.clientY - 4}px)`;
+        cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
       }
-      if (cursorOutlineRef.current) {
-        cursorOutlineRef.current.style.transform = `translate(${e.clientX - 16}px, ${e.clientY - 16}px)`;
-      }
+
+      // Add trail point
+      setTrail(prevTrail => {
+        const newPoint = { x: e.clientX, y: e.clientY, id: trailId++ };
+        const newTrail = [newPoint, ...prevTrail.slice(0, 8)]; // Keep last 8 points
+        return newTrail;
+      });
     };
 
     const handleMouseEnter = () => setIsHovering(true);
@@ -39,7 +32,6 @@ const EliteCursor = () => {
 
     document.addEventListener('mousemove', updateCursor);
     
-    // Add hover listeners to interactive elements
     const interactiveElements = document.querySelectorAll('button, a, [role="button"]');
     interactiveElements.forEach(el => {
       el.addEventListener('mouseenter', handleMouseEnter);
@@ -52,13 +44,25 @@ const EliteCursor = () => {
         el.removeEventListener('mouseenter', handleMouseEnter);
         el.removeEventListener('mouseleave', handleMouseLeave);
       });
-      if (animationFrame) cancelAnimationFrame(animationFrame);
     };
   }, []);
 
   return (
     <>
-      {/* Custom cursor dot */}
+      {/* Trail points */}
+      {trail.map((point, index) => (
+        <div
+          key={point.id}
+          className="elite-mouse-trail"
+          style={{
+            transform: `translate(${point.x}px, ${point.y}px)`,
+            opacity: (1 - index / trail.length) * 0.6,
+            animationDelay: `${index * 0.05}s`,
+          }}
+        />
+      ))}
+      
+      {/* Main cursor */}
       <div
         ref={cursorRef}
         className="elite-cursor-dot"
@@ -66,76 +70,313 @@ const EliteCursor = () => {
           transform: isHovering ? 'scale(1.5)' : 'scale(1)',
         }}
       />
-      
-      {/* Cursor outline ring */}
-      <div
-        ref={cursorOutlineRef}
-        className="elite-cursor-outline"
-        style={{
-          transform: isHovering ? 'scale(1.5)' : 'scale(1)',
-        }}
-      />
-      
-      {/* Mouse trail particles */}
-      {mouseTrail.map((point, index) => (
-        <div
-          key={point.id}
-          className="elite-mouse-trail"
-          style={{
-            left: point.x - 2,
-            top: point.y - 2,
-            opacity: (index + 1) / mouseTrail.length * 0.6,
-            transform: `scale(${(index + 1) / mouseTrail.length})`,
-          }}
-        />
-      ))}
     </>
   );
 };
 
-// Floating 3D elements with mouse tracking
-const Floating3DElement = ({ 
-  icon: Icon, 
-  initialX, 
-  initialY, 
-  mousePosition 
-}: { 
-  icon: any; 
-  initialX: number; 
-  initialY: number; 
-  mousePosition: { x: number; y: number } 
-}) => {
-  const elementRef = useRef<HTMLDivElement>(null);
-  
+// Counter animation hook
+const useCounter = (end: number, duration: number = 2000, suffix: string = '') => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const countRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (elementRef.current) {
-      const element = elementRef.current;
-      const rect = element.getBoundingClientRect();
-      const elementCenterX = rect.left + rect.width / 2;
-      const elementCenterY = rect.top + rect.height / 2;
-      
-      const deltaX = (mousePosition.x - elementCenterX) * 0.02;
-      const deltaY = (mousePosition.y - elementCenterY) * 0.02;
-      
-      element.style.transform = `
-        translate3d(${deltaX}px, ${deltaY}px, 0)
-        rotateX(${deltaY * 0.5}deg)
-        rotateY(${deltaX * 0.5}deg)
-      `;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
     }
-  }, [mousePosition]);
+
+    return () => observer.disconnect();
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(end * easeOutCubic));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isVisible, end, duration]);
+
+  return { count, countRef, suffix };
+};
+
+// Counter component for elite stats
+const CounterStat = ({ end, suffix, label, delay, prefix = '', isDecimal = false }: { 
+  end: number; 
+  suffix: string; 
+  label: string; 
+  delay: string; 
+  prefix?: string;
+  isDecimal?: boolean;
+}) => {
+  const { count, countRef } = useCounter(end, 2500);
+  
+  const displayValue = isDecimal ? (count / 10).toFixed(1) : count;
+  
+  return (
+    <div className="elite-stat-card elite-fade-in" style={{ animationDelay: delay }} ref={countRef}>
+      <div className="elite-stat-number">{prefix}{displayValue}{suffix}</div>
+      <div className="elite-stat-label">{label}</div>
+    </div>
+  );
+};
+
+// Executive Network Integration - 3 rows with meaningful icons and descriptions
+const ExecutiveNetworkIntegration = () => {
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  const firstRowIcons = [
+    { icon: Shield, name: "Private Equity" },
+    { icon: Crown, name: "Investment Banking" },
+    { icon: Target, name: "Executive Search" },
+    { icon: Award, name: "Board Networks" }
+  ];
+  
+  const secondRowIcons = [
+    { icon: Globe, name: "Venture Capital" },
+    { icon: Briefcase, name: "Consulting Firms" },
+    { icon: Users, name: "C-Suite Networks" },
+    { icon: TrendingUp, name: "Growth Equity" }
+  ];
+
+  const thirdRowIcons = [
+    { icon: Brain, name: "Think Tanks" },
+    { icon: Zap, name: "Tech Unicorns" },
+    { icon: Database, name: "Family Offices" },
+    { icon: Settings, name: "Hedge Funds" }
+  ];
+
+  // Counter animation effect
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            setHasAnimated(true);
+            animateCounters();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasAnimated]);
+
+  const animateCounters = () => {
+    const counters = document.querySelectorAll('.counter-animate');
+    counters.forEach((counter) => {
+      const target = parseInt(counter.getAttribute('data-target') || '0');
+      const duration = 2000; // 2 seconds
+      const increment = target / (duration / 16); // 60fps
+      let current = 0;
+
+      const updateCounter = () => {
+        current += increment;
+        if (current < target) {
+          counter.textContent = Math.floor(current).toString();
+          requestAnimationFrame(updateCounter);
+        } else {
+          counter.textContent = target.toString();
+        }
+      };
+
+      updateCounter();
+    });
+  };
 
   return (
-    <div
-      ref={elementRef}
-      className="elite-floating-element"
-      style={{
-        position: 'absolute',
-        left: `${initialX}%`,
-        top: `${initialY}%`,
-      }}
-    >
-      <Icon className="w-8 h-8 text-white/20" />
+    <div ref={sectionRef} className="executive-network-section">
+      <div className="executive-network-content">
+        <h3 className="network-title">Exclusive Access to Hidden Executive Markets</h3>
+        <p className="network-description">
+          Our AI continuously monitors and connects with 500+ elite networks, private equity firms, 
+          and executive search consultancies to surface opportunities before they become public.
+        </p>
+        
+        <div className="seamless-integration-window">
+          <div className="seamless-integration-container">
+            {/* First Row - Left to Right */}
+            <div className="seamless-integration-row move-left-to-right">
+              {firstRowIcons.map((item, iconIndex) => (
+                <div key={iconIndex} className="seamless-integration-icon" title={item.name}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {firstRowIcons.map((item, iconIndex) => (
+                <div key={`dup-${iconIndex}`} className="seamless-integration-icon" title={item.name}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+              ))}
+            </div>
+            
+            {/* Second Row - Right to Left */}
+            <div className="seamless-integration-row move-right-to-left">
+              {secondRowIcons.map((item, iconIndex) => (
+                <div key={iconIndex} className="seamless-integration-icon" title={item.name}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {secondRowIcons.map((item, iconIndex) => (
+                <div key={`dup-${iconIndex}`} className="seamless-integration-icon" title={item.name}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+              ))}
+            </div>
+
+            {/* Third Row - Left to Right */}
+            <div className="seamless-integration-row move-left-to-right">
+              {thirdRowIcons.map((item, iconIndex) => (
+                <div key={iconIndex} className="seamless-integration-icon" title={item.name}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {thirdRowIcons.map((item, iconIndex) => (
+                <div key={`dup-${iconIndex}`} className="seamless-integration-icon" title={item.name}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="network-stats">
+          <div className="network-stat">
+            <span className="stat-number counter-animate" data-target="500">0</span>
+            <span className="stat-plus">+</span>
+            <span className="stat-label">Elite Networks</span>
+          </div>
+          <div className="network-stat">
+            <span className="stat-number counter-animate" data-target="80">0</span>
+            <span className="stat-plus">%</span>
+            <span className="stat-label">Hidden Opportunities</span>
+          </div>
+          <div className="network-stat">
+            <span className="stat-number">24</span>
+            <span className="stat-plus">/7</span>
+            <span className="stat-label">Market Monitoring</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Landio-style Stacked Cards Carousel
+const SuccessStoriesCarousel = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const testimonials = [
+    {
+      id: 1,
+      quote: "ApplyAce secured my transition from FTSE 100 CEO to Private Equity Partner with complete discretion.",
+      author: "Sarah M.",
+      position: "Former FTSE 100 CEO → PE Partner",
+      company: "Blackstone Group"
+    },
+    {
+      id: 2,
+      quote: "The AI identified a Chairman role that wasn't even on the market yet. Three weeks later, I had the position with a £1.8M package.",
+      author: "James R.",
+      position: "Chairman, Tech Unicorn", 
+      company: "Revolut"
+    },
+    {
+      id: 3,
+      quote: "Complete confidentiality during my transition from Global MD to CEO. The executive narrative positioning was so precise.",
+      author: "Michael K.",
+      position: "CEO, Global Manufacturing",
+      company: "Rolls-Royce"
+    }
+  ];
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  return (
+    <div className="landio-carousel">
+      <div className="stacked-cards-container">
+        {testimonials.map((testimonial, index) => (
+          <div
+            key={testimonial.id}
+            className={`stacked-card ${
+              index === currentSlide ? 'active' : 
+              index < currentSlide ? 'prev' : 'next'
+            }`}
+            style={{
+              zIndex: testimonials.length - Math.abs(index - currentSlide),
+              transform: `
+                translateX(${(index - currentSlide) * 20}px) 
+                translateY(${Math.abs(index - currentSlide) * 10}px)
+                scale(${1 - Math.abs(index - currentSlide) * 0.05})
+              `,
+            }}
+            onClick={() => goToSlide(index)}
+          >
+            <div className="testimonial-stars">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-current text-yellow-400" />
+              ))}
+            </div>
+            <p className="testimonial-quote">"{testimonial.quote}"</p>
+            <div className="testimonial-author">
+              <div className="author-avatar">{testimonial.author.charAt(0)}</div>
+              <div className="author-info">
+                <h4>{testimonial.author}</h4>
+                <p>{testimonial.position}</p>
+                <span>{testimonial.company}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="carousel-dots">
+        {testimonials.map((_, index) => (
+          <button
+            key={index}
+            className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+            onClick={() => goToSlide(index)}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -171,6 +412,151 @@ const BackgroundOrbs = ({ mousePosition }: { mousePosition: { x: number; y: numb
   );
 };
 
+// Crown animation component with circles instead of semi-circles
+const CrownWithCircles: React.FC = () => {
+  const [showCircles, setShowCircles] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCircles(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="crown-container">
+      {/* Pulsating circles around crown */}
+      {showCircles && (
+        <div className="crown-circles">
+          <div className="crown-circle crown-circle-1"></div>
+          <div className="crown-circle crown-circle-2"></div>
+          <div className="crown-circle crown-circle-3"></div>
+        </div>
+      )}
+      
+      {/* Crown icon */}
+      <Crown className="crown-icon" size={64} />
+    </div>
+  );
+};
+
+// Simplified Professional Hero Background with Crown Animation
+const HolographicHero: React.FC = () => {
+  return (
+    <div className="hero-container">
+      {/* Crown with circles */}
+      <CrownWithCircles />
+      
+      {/* Minimal particles */}
+      <div className="hero-particles">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="hero-particle"
+            style={{
+              left: `${20 + (i * 10)}%`,
+              animationDelay: `${i * 0.8}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Ambient lighting */}
+      <div className="hero-ambient-light hero-ambient-1"></div>
+      <div className="hero-ambient-light hero-ambient-2"></div>
+    </div>
+  );
+};
+
+// Elite Executive Arsenal section with scroll-triggered animation
+const EliteExecutiveArsenal: React.FC = () => {
+  const [visibleCards, setVisibleCards] = useState<number[]>([]);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    cardRefs.current.forEach((ref, index) => {
+      if (ref) {
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              setVisibleCards(prev => [...prev, index]);
+              observer.disconnect();
+            }
+          },
+          { threshold: 0.2, rootMargin: '50px' }
+        );
+        observer.observe(ref);
+        observers.push(observer);
+      }
+    });
+
+    return () => {
+      observers.forEach(observer => observer.disconnect());
+    };
+  }, []);
+
+  const arsenalItems = [
+    {
+      icon: Shield,
+      title: "AI-Powered Profile Shield",
+      description: "Advanced algorithms protect and optimize your professional presence across all platforms",
+      direction: "left"
+    },
+    {
+      icon: Target,
+      title: "Precision Career Targeting",
+      description: "Laser-focused positioning that aligns with C-suite expectations and industry demands",
+      direction: "right"
+    },
+    {
+      icon: Crown,
+      title: "Executive Authority Builder",
+      description: "Establish unquestionable leadership credibility through strategic narrative construction",
+      direction: "left"
+    }
+  ];
+
+  return (
+    <section className="py-24 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Elite Executive Arsenal
+          </h2>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Exclusive tools and strategies reserved for C-suite professionals
+          </p>
+        </div>
+
+        <div className="space-y-12">
+          {arsenalItems.map((item, index) => (
+            <div
+              key={index}
+              ref={el => cardRefs.current[index] = el}
+              className={`arsenal-card ${visibleCards.includes(index) ? 'arsenal-card-visible' : ''} arsenal-slide-${item.direction}`}
+            >
+              <div className="bg-black/40 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-8 hover:border-purple-400/40 transition-all duration-500">
+                <div className="flex items-center gap-6">
+                  <div className="p-4 bg-purple-600/20 rounded-xl">
+                    <item.icon className="w-12 h-12 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-3">{item.title}</h3>
+                    <p className="text-gray-300 text-lg">{item.description}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const EliteExecutive: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -188,13 +574,16 @@ const EliteExecutive: React.FC = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Intersection Observer for fade-in animations
+  // Intersection Observer for fade-in animations with staggered delays
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
+        entries.forEach((entry, index) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('elite-fade-in-visible');
+            // Add staggered delay for sequential animation
+            setTimeout(() => {
+              entry.target.classList.add('elite-fade-in-visible');
+            }, index * 150); // 150ms delay between each element
           }
         });
       },
@@ -256,35 +645,32 @@ const EliteExecutive: React.FC = () => {
       <EliteCursor />
       <BackgroundOrbs mousePosition={mousePosition} />
       
-      {/* Floating 3D elements */}
-      <Floating3DElement icon={Crown} initialX={15} initialY={20} mousePosition={mousePosition} />
-      <Floating3DElement icon={Shield} initialX={85} initialY={25} mousePosition={mousePosition} />
-      <Floating3DElement icon={Target} initialX={10} initialY={60} mousePosition={mousePosition} />
-      <Floating3DElement icon={Sparkles} initialX={90} initialY={70} mousePosition={mousePosition} />
+      {/* Removed floating 3D elements */}
 
-      {/* Hero Section */}
-      <section className="elite-hero">
+      {/* Hero Section with Better Spacing */}
+      <section className="elite-hero elite-hero-improved-spacing">
+        <HolographicHero />
         <div className="elite-container">
-          <div className="elite-fade-in" style={{ animationDelay: '0.1s' }}>
-            <div className="elite-crown-badge">
+          <div className="elite-fade-in hero-content-entrance" style={{ animationDelay: '1.5s' }}>
+            <div className="elite-crown-badge elite-crown-badge-spaced">
               <Crown className="w-6 h-6" />
               <span>Elite Executive</span>
             </div>
           </div>
           
-          <h1 className="elite-hero-title elite-fade-in" style={{ animationDelay: '0.2s' }}>
+          <h1 className="elite-hero-title elite-hero-title-spaced elite-fade-in hero-title-entrance" style={{ animationDelay: '2s' }}>
             Discreet Executive
             <br />
             <span className="elite-gradient-text">Job Search Mastery</span>
           </h1>
           
-          <p className="elite-hero-subtitle elite-fade-in" style={{ animationDelay: '0.3s' }}>
+          <p className="elite-hero-subtitle elite-hero-subtitle-spaced elite-fade-in hero-subtitle-entrance" style={{ animationDelay: '2.5s' }}>
             For C-suite executives who need absolute discretion, zero visibility risk,
             <br />
             and AI-powered access to the hidden executive job market.
           </p>
           
-          <div className="elite-hero-pricing elite-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="elite-hero-pricing elite-hero-pricing-spaced elite-fade-in hero-pricing-entrance" style={{ animationDelay: '3s' }}>
             <div className="elite-pricing-toggle">
               <button
                 className={`elite-toggle-btn ${selectedPlan === 'monthly' ? 'active' : ''}`}
@@ -317,7 +703,7 @@ const EliteExecutive: React.FC = () => {
             </div>
             
             <button
-              className="elite-cta-button"
+              className="elite-cta-button spectacular-button"
               onClick={() => handlePayment(selectedPlan)}
               disabled={isLoading}
             >
@@ -371,7 +757,7 @@ const EliteExecutive: React.FC = () => {
           </h2>
           
           <div className="elite-features-cascade">
-            <div className="elite-feature-card elite-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="elite-feature-card elite-slide-in-left" style={{ animationDelay: '0.1s' }}>
               <div className="elite-feature-icon">
                 <Shield className="w-12 h-12" />
               </div>
@@ -386,7 +772,7 @@ const EliteExecutive: React.FC = () => {
               </div>
             </div>
             
-            <div className="elite-feature-card elite-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="elite-feature-card elite-slide-in-right" style={{ animationDelay: '0.3s' }}>
               <div className="elite-feature-icon">
                 <Target className="w-12 h-12" />
               </div>
@@ -401,7 +787,7 @@ const EliteExecutive: React.FC = () => {
               </div>
             </div>
             
-            <div className="elite-feature-card elite-fade-in" style={{ animationDelay: '0.3s' }}>
+            <div className="elite-feature-card elite-slide-in-left" style={{ animationDelay: '0.5s' }}>
               <div className="elite-feature-icon">
                 <Crown className="w-12 h-12" />
               </div>
@@ -419,80 +805,74 @@ const EliteExecutive: React.FC = () => {
         </div>
       </section>
 
-      {/* 3D Stats Section */}
+      {/* Enhanced 3D Stats Section with Glass Effect */}
       <section className="elite-section elite-stats-3d">
         <div className="elite-container">
-          <div className="elite-stats-grid">
-            <div className="elite-stat-card elite-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="elite-stat-number">500+</div>
-              <div className="elite-stat-label">Elite Executives Placed</div>
+          <div className="elite-stats-grid elite-stats-glass-effect">
+            <div className="elite-stat-card elite-stat-glass-card">
+              <CounterStat 
+                end={500} 
+                suffix="+" 
+                label="Elite Executives Placed" 
+                delay="0.1s" 
+              />
             </div>
             
-            <div className="elite-stat-card elite-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="elite-stat-number">£2.5M</div>
-              <div className="elite-stat-label">Average Compensation Increase</div>
+            <div className="elite-stat-card elite-stat-glass-card">
+              <CounterStat 
+                end={25} 
+                suffix="M" 
+                label="Average Compensation Increase" 
+                delay="0.2s"
+                prefix="£"
+                isDecimal={true}
+              />
             </div>
             
-            <div className="elite-stat-card elite-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="elite-stat-number">100%</div>
-              <div className="elite-stat-label">Confidentiality Maintained</div>
+            <div className="elite-stat-card elite-stat-glass-card">
+              <CounterStat 
+                end={100} 
+                suffix="%" 
+                label="Confidentiality Maintained" 
+                delay="0.3s" 
+              />
             </div>
             
-            <div className="elite-stat-card elite-fade-in" style={{ animationDelay: '0.4s' }}>
-              <div className="elite-stat-number">45 Days</div>
-              <div className="elite-stat-label">Average Time to Offer</div>
+            <div className="elite-stat-card elite-stat-glass-card">
+              <CounterStat 
+                end={45} 
+                suffix=" Days" 
+                label="Average Time to Offer" 
+                delay="0.4s" 
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Cascade */}
+      {/* Seamless Integration Icons Section */}
+      <section className="elite-section">
+        <div className="elite-container">
+          <h2 className="elite-section-title elite-fade-in">
+            Seamless Integration with Executive Networks
+          </h2>
+          <p className="elite-section-subtitle elite-fade-in">
+            Our AI connects with 500+ executive search firms, private equity networks, and board connections
+          </p>
+          <ExecutiveNetworkIntegration />
+        </div>
+      </section>
+
+      {/* Success Stories Carousel */}
       <section className="elite-section">
         <div className="elite-container">
           <h2 className="elite-section-title elite-fade-in">
             Executive Success Stories
           </h2>
-          
-          <div className="elite-testimonials-cascade">
-            <div className="elite-testimonial-card elite-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="elite-testimonial-stars">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-current text-yellow-400" />
-                ))}
-              </div>
-              <p>"ApplyAce secured my transition from FTSE 100 CEO to Private Equity Partner with complete discretion. The process was invisible to my board and the compensation increase was extraordinary."</p>
-              <div className="elite-testimonial-author">
-                <strong>Sarah M.</strong>
-                <span>Former FTSE 100 CEO → PE Partner</span>
-              </div>
-            </div>
-            
-            <div className="elite-testimonial-card elite-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="elite-testimonial-stars">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-current text-yellow-400" />
-                ))}
-              </div>
-              <p>"The AI identified a Chairman role that wasn't even on the market yet. Three weeks later, I had the position with a £1.8M package. Absolute game-changer for executive search."</p>
-              <div className="elite-testimonial-author">
-                <strong>James R.</strong>
-                <span>Chairman, Tech Unicorn</span>
-              </div>
-            </div>
-            
-            <div className="elite-testimonial-card elite-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="elite-testimonial-stars">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-current text-yellow-400" />
-                ))}
-              </div>
-              <p>"Complete confidentiality during my transition from Global MD to CEO. The executive narrative positioning was so precise, I received three competing offers within 30 days."</p>
-              <div className="elite-testimonial-author">
-                <strong>Michael K.</strong>
-                <span>CEO, Global Manufacturing</span>
-              </div>
-            </div>
-          </div>
+          <p className="elite-section-subtitle elite-fade-in">
+            Real transformations from C-suite executives who secured their next role with complete discretion
+          </p>
+          <SuccessStoriesCarousel />
         </div>
       </section>
 
