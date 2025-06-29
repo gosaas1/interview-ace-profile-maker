@@ -3094,7 +3094,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid rgba(147, 51, 234, 0.6);
+  border: 2px solid rgba(251, 191, 36, 0.6);
   border-radius: 50%;
   animation: crown-circle-pulse 2s ease-in-out infinite;
 }
@@ -3120,9 +3120,16 @@ body {
 .crown-icon {
   position: relative;
   z-index: 10;
-  color: #a855f7;
-  filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.8));
+  color: #fbbf24;
+  filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
   animation: crown-permanent-glow 3s ease-in-out infinite;
+  stroke-width: 1.5;
+  transform: scaleY(0.85);
+  transition: opacity 2s ease-out;
+}
+
+.crown-icon.crown-fade-out {
+  animation: crown-fade-out-animation 2s ease-out forwards;
 }
 
 /* Crown Circle Pulse Animation */
@@ -3130,33 +3137,52 @@ body {
   0% {
     opacity: 0.8;
     transform: translate(-50%, -50%) scale(0.8);
-    border-color: rgba(147, 51, 234, 0.8);
+    border-color: rgba(251, 191, 36, 0.8);
   }
   50% {
     opacity: 0.4;
     transform: translate(-50%, -50%) scale(1.1);
-    border-color: rgba(147, 51, 234, 0.4);
+    border-color: rgba(251, 191, 36, 0.4);
   }
   100% {
     opacity: 0.8;
     transform: translate(-50%, -50%) scale(0.8);
-    border-color: rgba(147, 51, 234, 0.8);
+    border-color: rgba(251, 191, 36, 0.8);
   }
 }
 
 /* Crown Permanent Glow Animation */
 @keyframes crown-permanent-glow {
   0% {
-    transform: scale(1.0);
-    filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.8));
+    transform: scale(1.0) scaleY(0.85);
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
   }
   50% {
-    transform: scale(1.05);
-    filter: drop-shadow(0 0 30px rgba(147, 51, 234, 1));
+    transform: scale(1.05) scaleY(0.85);
+    filter: drop-shadow(0 0 30px rgba(251, 191, 36, 1));
   }
   100% {
-    transform: scale(1.0);
-    filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.8));
+    transform: scale(1.0) scaleY(0.85);
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
+  }
+}
+
+/* Crown Fade Out Animation */
+@keyframes crown-fade-out-animation {
+  0% {
+    opacity: 1;
+    transform: scale(1.0) scaleY(0.85);
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95) scaleY(0.85);
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) scaleY(0.85);
+    filter: drop-shadow(0 0 0px rgba(251, 191, 36, 0));
   }
 }
 
@@ -3252,38 +3278,67 @@ body {
 /* Elite Executive Arsenal Cards - Scroll Triggered Animation */
 .arsenal-card {
   opacity: 0;
-  transition: all 1s ease-out;
+  transform: translateY(50px);
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .arsenal-card.arsenal-card-visible {
   opacity: 1;
+  transform: translateY(0);
 }
 
 /* Slide animations for arsenal cards */
 .arsenal-slide-left {
-  transform: translateX(-100px);
+  transform: translateX(-100px) translateY(50px);
 }
 
 .arsenal-slide-left.arsenal-card-visible {
-  transform: translateX(0);
+  transform: translateX(0) translateY(0);
 }
 
 .arsenal-slide-right {
-  transform: translateX(100px);
+  transform: translateX(100px) translateY(50px);
 }
 
 .arsenal-slide-right.arsenal-card-visible {
-  transform: translateX(0);
+  transform: translateX(0) translateY(0);
 }
+
+/* Yellow Theme Classes for Hero Elements */
+.crown-yellow {
+  background: rgba(251, 191, 36, 0.1) !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+.crown-yellow span {
+  color: rgb(253, 224, 71) !important;
+}
+
+.crown-yellow .w-6 {
+  color: rgb(251, 191, 36) !important;
+}
+
+.title-yellow {
+  color: rgb(254, 240, 138) !important;
+}
+
+.title-yellow .elite-gradient-text {
+  background: linear-gradient(to right, rgb(251, 191, 36), rgb(253, 224, 71), rgb(251, 191, 36)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Arsenal cards are now purely scroll-triggered */
 
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .arsenal-slide-left {
-    transform: translateX(-50px);
+    transform: translateX(-50px) translateY(50px);
   }
   
   .arsenal-slide-right {
-    transform: translateX(50px);
+    transform: translateX(50px) translateY(50px);
   }
   
   .crown-circle-1 {
@@ -3300,4 +3355,82 @@ body {
     width: 140px;
     height: 140px;
   }
+}
+
+/* Custom CSS for Pricing Grid */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 500px;
+}
+
+.pricing-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-features {
+  flex: 1;
+}
+
+/* Ensure equal heights for grid items */
+.auto-rows-fr {
+  grid-auto-rows: 1fr;
+}
+
+/* Better card hover effects */
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Fix for Popular badge positioning */
+.popular-badge {
+  z-index: 10;
+}
+
+/* Perfected Flexbox Layout for Pricing Cards */
+@media (min-width: 768px) {
+  .pricing-flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+  
+  .pricing-flex-card {
+    flex: 1 1 calc(50% - 0.75rem);
+    max-width: calc(50% - 0.75rem);
+    min-height: 520px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pricing-flex-card {
+    flex: 1 1 calc(33.333% - 1rem);
+    max-width: calc(33.333% - 1rem);
+  }
+}
+
+/* Ensure consistent card heights */
+.pricing-card-equal-height {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.pricing-card-content-grow {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }

@@ -38,9 +38,9 @@ export const STRIPE_PRICES = {
   },
   
   eliteExecutive: {
-    monthly: 'price_1RezXPHO6B9cGpZ7dDuglg9b', // ✅ AUTOMATED - £69.99/month
-    sixMonth: 'price_1RezXQHO6B9cGpZ7YHDSEQZ1', // ✅ AUTOMATED - £244.96 every 6 months (30% off)
-    annual: 'price_1RezXQHO6B9cGpZ725aY0dvT', // ✅ AUTOMATED - £349.94/year (50% off)
+    monthly: 'price_1RezXPHO6B9cGpZ7dDuglg9b', // ✅ AUTOMATED - £71.99/month
+    sixMonth: 'price_1RezXQHO6B9cGpZ7YHDSEQZ1', // ✅ AUTOMATED - £251.96 every 6 months (30% off)
+    annual: 'price_1RezXQHO6B9cGpZ725aY0dvT', // ✅ AUTOMATED - £359.94/year (50% off)
   }
 };
 

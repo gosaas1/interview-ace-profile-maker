@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Star, Sparkles, Crown, Zap } from 'lucide-react';
+import { Check, Star, Sparkles, Crown, Zap, Shield, X, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,439 +13,320 @@ const PricingSection = () => {
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  // Handle payment button clicks
-  const handlePurchase = async (planName: string, billingPeriod: 'monthly' | 'sixMonth' | 'annual' = 'monthly') => {
-    // Check if user is logged in
-    if (!user) {
-      toast.error('Please sign in to continue');
-      navigate('/auth');
-      return;
-    }
-
-    setLoadingPlan(`${planName}-${billingPeriod}`);
-
-    try {
-      if (planName === 'Free') {
-        // Free plan - just redirect to dashboard
-        navigate('/dashboard');
-        return;
-      }
-
-      if (planName === 'Pay-as-you-go') {
-        // One-time payment using the pay-as-you-go Price ID
-        if (MOCK_MODE) {
-          await mockCreateOneTimePayment(user.id);
-        } else {
-          const session = await createCheckoutSession(STRIPE_PRICES.payAsYouGo.priceId, user.id);
-          if (session && session.url) {
-            window.location.href = session.url;
-          } else {
-            throw new Error('Failed to create payment session');
-          }
-        }
-      } else {
-        // Subscription plans
-        let planKey: keyof typeof STRIPE_PRICES;
-        let tier: SubscriptionTier;
-        
-        switch (planName) {
-          case 'Starter':
-            planKey = 'starter';
-            tier = 'starter';
-            break;
-          case 'Professional':
-            planKey = 'professional';
-            tier = 'professional';
-            break;
-          case 'Career Pro':
-            planKey = 'careerPro';
-            tier = 'career_pro';
-            break;
-          case 'Elite Executive':
-            planKey = 'eliteExecutive';
-            tier = 'elite_executive';
-            break;
-          default:
-            throw new Error(`Unknown plan: ${planName}`);
-        }
-        
-        const planPrices = STRIPE_PRICES[planKey];
-        if (!planPrices || typeof planPrices === 'object' && !('monthly' in planPrices)) {
-          throw new Error(`Price configuration not found for ${planName}`);
-        }
-        
-        const priceId = (planPrices as any)[billingPeriod];
-        
-        if (!priceId) {
-          throw new Error(`Price ID not found for ${planName} - ${billingPeriod}`);
-        }
-
-        if (MOCK_MODE) {
-          await mockCreateCheckoutSession(
-            priceId,
-            user.id,
-            tier,
-            billingPeriod
-          );
-        } else {
-          const session = await createCheckoutSession(priceId, user.id);
-          if (session && session.url) {
-            window.location.href = session.url;
-          } else {
-            throw new Error('Failed to create payment session');
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      
-      // More specific error messages
-      let errorMessage = 'Payment failed. Please try again.';
-      
-      if (error instanceof Error) {
-        if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.includes('session')) {
-          errorMessage = 'Unable to create payment session. Please try again.';
-        } else if (error.message.includes('400')) {
-          errorMessage = 'Invalid payment request. Please refresh and try again.';
-        } else if (error.message.includes('500')) {
-          errorMessage = 'Server error. Please try again in a few minutes.';
-        }
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setLoadingPlan(null);
-    }
-  };
-
-  const handlePlanClick = async (plan: any) => {
-    if (plan.name === 'Elite Executive') {
-      // Navigate to premium landing page for Elite Executive
-      navigate('/elite-executive');
-      return;
-    }
-
-    if (!user) {
-      toast.error('Please sign in to continue');
-      navigate('/auth');
-      return;
-    }
-
-    setLoadingPlan(plan.name);
-
-    try {
-      const planKey = plan.name.toLowerCase().replace(' ', '') as keyof typeof STRIPE_PRICES;
-      const planPrices = STRIPE_PRICES[planKey];
-      
-      if (!planPrices) {
-        throw new Error(`No pricing configuration found for ${plan.name}`);
-      }
-
-      // Handle different pricing structures
-      let priceId: string;
-      if ('priceId' in planPrices) {
-        // Pay-as-you-go structure
-        priceId = planPrices.priceId;
-      } else if ('monthly' in planPrices) {
-        // Subscription structure
-        priceId = planPrices.monthly;
-      } else {
-        throw new Error(`Invalid pricing structure for ${plan.name}`);
-      }
-
-      if (MOCK_MODE) {
-        await mockCreateCheckoutSession(
-          priceId,
-          user.id,
-          plan.name.toLowerCase().replace(' ', '_'),
-          'monthly'
-        );
-      } else {
-        const session = await createCheckoutSession(priceId, user.id);
-        if (session && session.url) {
-          window.location.href = session.url;
-        } else {
-          throw new Error('Failed to create payment session');
-        }
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Payment failed. Please try again.');
-    } finally {
-      setLoadingPlan(null);
-    }
-  };
-
-  // First row - Basic plans (Free, Pay-as-you-go, Starter)
-  const basicPlans = [
+  const plans = [
     {
       name: 'Free',
       price: '£0',
       period: '/month',
-      description: 'Perfect for getting started',
+      description: 'Perfect for getting started with CV analysis',
       features: [
-        '1 basic CV analysis/month',
-        '1 CV build or upload',
-        'Basic ATS compatibility check',
-        'Simple CV score',
+        '1 basic CV analysis',
+        'Core feedback insights',
+        'Basic formatting tips',
         'Community support'
       ],
-      buttonText: 'Start Free',
+      buttonText: 'Get Started Free',
       popular: false,
       gradient: 'from-slate-50 to-white',
-      buttonStyle: 'bg-slate-600 hover:bg-slate-700 text-white',
-      icon: <Check className="w-6 h-6" />
+      buttonStyle: 'bg-slate-800 hover:bg-slate-900 text-white',
+      tier: 'free' as SubscriptionTier,
+      isPayAsYouGo: false
     },
     {
-      name: 'Pay-as-you-go',
+      name: 'Pay-As-You-Go',
       price: '£2.49',
       period: '/analysis',
-      description: 'No commitment, pay when you need it',
+      description: 'No commitment, pay only when you need analysis',
       features: [
-        'Detailed CV analysis per purchase',
-        'Full keyword optimization',
-        'Improvement suggestions',
-        'ATS optimization',
-        'Perfect for testing our service'
+        'Per-analysis pricing',
+        'Full AI-powered analysis',
+        'Detailed improvement suggestions',
+        'No monthly commitment'
       ],
-      buttonText: 'Buy Analysis',
-      popular: false,
-      gradient: 'from-blue-50 to-cyan-50',
-      buttonStyle: 'bg-blue-600 hover:bg-blue-700 text-white',
-      icon: <Zap className="w-6 h-6" />,
-      annualDiscount: {
-        sixMonth: null,
-        twelveMonth: null
-      }
-    },
-    {
-      name: 'Starter',
-      price: '£11.99',
-      period: '/month',
-      description: 'Great for students & early career',
-      features: [
-        '5 detailed CV analyses/month',
-        'Unlimited CV builds & uploads',
-        'Industry insights',
-        '25 job applications/month',
-        '10 interview practice sessions'
-      ],
-      buttonText: 'Start Starter Plan',
+      buttonText: 'Pay Per Analysis',
       popular: false,
       gradient: 'from-green-50 to-emerald-50',
       buttonStyle: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white',
-      icon: <Star className="w-6 h-6" />,
-      annualDiscount: {
-        sixMonth: '£41.96 (30% off)',
-        twelveMonth: '£59.94 (50% off)'
-      }
-    }
-  ];
-
-  // Second row - Premium plans (Professional, Career Pro, Elite Executive)
-  const premiumPlans = [
+      tier: 'free' as SubscriptionTier,
+      isPayAsYouGo: true
+    },
+    {
+      name: 'Starter/Student',
+      price: '£11.99',
+      period: '/month',
+      description: 'Perfect for students and early career professionals',
+      features: [
+        '5 detailed CV analyses per month',
+        'AI-powered improvement suggestions',
+        'ATS compatibility checking',
+        'Email support'
+      ],
+      buttonText: 'Start Student Plan',
+      popular: false,
+      gradient: 'from-blue-50 to-indigo-50',
+      buttonStyle: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white',
+      tier: 'starter' as SubscriptionTier
+    },
     {
       name: 'Professional',
       price: '£17.99',
       period: '/month',
-      description: 'Most popular for active job seekers',
+      description: 'Most popular choice for active job seekers',
       features: [
-        'Unlimited CV analyses (GPT-4)',
-        'Unlimited CV builds with premium templates',
-        'Advanced job matching',
-        'Unlimited applications & interview coaching',
-        'Performance analytics',
-        'Priority support'
+        'Unlimited detailed CV analyses',
+        'Advanced AI insights & suggestions',
+        'Industry-specific optimization',
+        'Priority support',
+        'Export in multiple formats'
       ],
       buttonText: 'Go Professional',
       popular: true,
       gradient: 'from-blue-50 to-indigo-50',
       buttonStyle: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white',
-      icon: <Crown className="w-6 h-6" />,
-      annualDiscount: {
-        sixMonth: '£62.96 (30% off)',
-        twelveMonth: '£89.94 (50% off)'
-      }
+      tier: 'professional' as SubscriptionTier
     },
     {
       name: 'Career Pro',
       price: '£35.99',
       period: '/month',
-      description: 'Premium features for career advancement',
+      description: 'Everything plus human review and premium coaching',
       features: [
-        'All Professional features',
-        'Human CV review by experts',
-        'Premium AI models (Claude)',
-        'Video interview practice',
-        'Industry insights & salary data',
-        'Priority support',
-        'Early access to new features'
+        'Everything in Professional',
+        'Human expert review',
+        'Premium career coaching resources',
+        'Interview preparation materials',
+        'LinkedIn profile optimization',
+        'Job search strategy guidance'
       ],
-      buttonText: 'Unlock Career Pro',
+      buttonText: 'Upgrade to Career Pro',
       popular: false,
       gradient: 'from-purple-50 to-pink-50',
       buttonStyle: 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white',
-      icon: <Sparkles className="w-6 h-6" />,
-      annualDiscount: {
-        sixMonth: '£125.96 (30% off)',
-        twelveMonth: '£179.94 (50% off)'
-      }
+      tier: 'career_pro' as SubscriptionTier
     },
     {
       name: 'Elite Executive',
       price: '£69.99',
       period: '/month',
-      description: 'AI-backed coaching for executives',
+      description: 'Premium service with AI-backed 1-on-1 coaching',
       features: [
-        'All Career Pro features',
+        'Everything in Career Pro',
         'AI-backed 1-on-1 coaching sessions',
-        'Executive-level career strategy',
-        'Premium dark mode experience',
-        'White-glove concierge support',
-        'Custom career roadmaps',
-        'Industry networking connections'
+        'Executive-level CV optimization',
+        'Personal branding consultation',
+        'Salary negotiation guidance',
+        'VIP support & priority handling'
       ],
-      buttonText: 'Access Elite Portal',
+      buttonText: 'Go Elite Executive',
       popular: false,
-      gradient: 'from-slate-900 to-slate-700',
-      buttonStyle: 'bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white',
-      icon: <Crown className="w-6 h-6 text-gold-400" />,
-      annualDiscount: {
-        sixMonth: '£244.96 (30% off)',
-        twelveMonth: '£349.94 (50% off)'
-      }
+      gradient: 'from-slate-900 to-purple-900',
+      buttonStyle: 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-semibold',
+      tier: 'elite_executive' as SubscriptionTier,
+      textColor: 'text-white',
+      priceColor: 'text-yellow-400',
+      descColor: 'text-slate-300',
+      featureColor: 'text-slate-200'
     }
   ];
 
-  const renderPlanCard = (plan: any) => (
-    <Card 
-      key={plan.name} 
-      className={`relative hover-lift rounded-2xl transition-all duration-300 border shadow-lg hover:shadow-xl bg-gradient-to-br ${plan.gradient} ${
-        plan.popular 
-          ? 'ring-2 ring-green-400 scale-105 shadow-green-200 border-green-300 transform' 
-          : 'border-slate-200 hover:scale-102'
-      } h-full flex flex-col`}
-    >
-      {plan.popular && (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-1 shadow-lg">
-            <Star className="h-3 w-3 fill-current" />
-            <span>Most Popular</span>
-          </div>
-        </div>
-      )}
-      
-      <CardHeader className="text-center pb-6 pt-10 flex-shrink-0">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-white/50 rounded-full">
-            {plan.icon}
-          </div>
-        </div>
-        <CardTitle className="text-2xl font-bold text-slate-900 mb-3">{plan.name}</CardTitle>
-        <div className="mb-4">
-          <span className="text-4xl font-bold text-slate-900">
-            {plan.price}
-          </span>
-          {plan.period && <span className="text-slate-600 text-lg">{plan.period}</span>}
-        </div>
-        
-        {/* Annual Discount Badges */}
-        {plan.annualDiscount?.twelveMonth && (
-          <div className="mb-4 space-y-2">
-            <div className="text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors"
-                 onClick={() => handlePurchase(plan.name, 'annual')}>
-              12-month: {plan.annualDiscount.twelveMonth}
-            </div>
-            <div className="text-sm bg-purple-100 text-purple-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-purple-200 transition-colors"
-                 onClick={() => handlePurchase(plan.name, 'sixMonth')}>
-              6-month: {plan.annualDiscount.sixMonth}
-            </div>
-          </div>
-        )}
-        
-        <CardDescription className="text-slate-600 text-base leading-relaxed">
-          {plan.description}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="pt-0 px-6 pb-8 flex-grow flex flex-col">
-        <Button 
-          className={`w-full mb-6 py-4 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 text-base ${plan.buttonStyle}`}
-          onClick={() => handlePlanClick(plan)}
-          disabled={loadingPlan === plan.name}
-        >
-          {loadingPlan === plan.name ? 'Processing...' : plan.buttonText}
-        </Button>
-        
-        <ul className="space-y-3 flex-grow">
-          {plan.features.map((feature: string, index: number) => (
-            <li key={index} className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-1">
-                <Check className="h-5 w-5 text-green-600 bg-green-100 rounded-full p-1" />
-              </div>
-              <span className="text-slate-700 text-base leading-relaxed">{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
+  const handleSubscription = async (plan: typeof plans[0]) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (plan.tier === 'free' && !plan.isPayAsYouGo) {
+      navigate('/dashboard');
+      return;
+    }
+
+    setLoadingPlan(plan.name);
+    try {
+      if (MOCK_MODE) {
+        if (plan.isPayAsYouGo) {
+          await mockCreateOneTimePayment(user.id);
+          toast.success('Payment successful! Redirecting to analysis...');
+          navigate('/cv-analysis');
+        } else {
+          await mockCreateCheckoutSession(
+            plan.tier === 'career_pro' ? 'careerPro' : 
+            plan.tier === 'elite_executive' ? 'eliteExecutive' : plan.tier,
+            user.id,
+            plan.tier,
+            'monthly'
+          );
+          toast.success('Subscription activated! Redirecting to dashboard...');
+          navigate('/dashboard');
+        }
+      } else {
+        if (plan.isPayAsYouGo) {
+          // Handle pay-as-you-go
+          const payAsYouGoConfig = STRIPE_PRICES.payAsYouGo;
+          const sessionUrl = await createCheckoutSession(payAsYouGoConfig.priceId, user.id);
+          window.location.href = sessionUrl;
+        } else {
+          // Handle subscription plans
+          const stripeTier = plan.tier === 'career_pro' ? 'careerPro' : 
+                            plan.tier === 'elite_executive' ? 'eliteExecutive' : plan.tier;
+          const priceConfig = STRIPE_PRICES[stripeTier as keyof typeof STRIPE_PRICES];
+          
+          if (!priceConfig || typeof priceConfig !== 'object' || !('monthly' in priceConfig)) {
+            throw new Error(`No price configuration found for tier: ${plan.tier}`);
+          }
+
+          const sessionUrl = await createCheckoutSession(priceConfig.monthly, user.id);
+          window.location.href = sessionUrl;
+        }
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast.error('Failed to process subscription. Please try again.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
-    <section id="pricing" className="py-24 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="container mx-auto px-6 max-w-7xl">
-        <div className="text-center mb-20">
+    <section id="pricing" className="py-20 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Sparkles className="h-4 w-4" />
             <span>Simple, transparent pricing</span>
           </div>
-          <h2 className="text-5xl font-bold text-slate-900 mb-6">
+          <h2 className="text-4xl font-bold text-slate-900 mb-4">
             Choose your plan
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Start free and upgrade as you grow. All plans include our core AI-powered features 
             to help you land your dream job.
           </p>
         </div>
 
-        {/* First Row - Basic Plans */}
-        <div className="mb-12">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-semibold text-slate-800 mb-2">Getting Started</h3>
-            <p className="text-slate-600">Perfect for beginners and those testing our platform</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {basicPlans.map(renderPlanCard)}
+        {/* 
+          SENIOR FRONTEND DEVELOPER SOLUTION:
+          
+          RESEARCH-BASED APPROACH: Using proven CSS Grid techniques from:
+          - MDN Layout Cookbook for equal height cards
+          - CSS-Tricks flexbox/absolute positioning patterns
+          - Real-world pricing card implementations
+          
+          KEY PRINCIPLES:
+          1. CSS Grid with equal heights using grid-template-rows: 1fr
+          2. Badge positioned absolutely with proper containment
+          3. Card structure uses flexbox internally for content distribution
+          4. No complex calculations or nested grids that can break
+        */}
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
+            {plans.map((plan, index) => (
+              <div 
+                key={plan.name} 
+                className="relative group"
+              >
+                {/* Most Popular Badge - Absolutely Positioned Outside Card Flow */}
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                    <div className="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg flex items-center">
+                      <Star className="w-4 h-4 mr-1.5" />
+                      Most Popular
+                    </div>
+                  </div>
+                )}
+                
+                {/* Card Container - Uses Flexbox for Internal Layout */}
+                <Card className={`
+                  h-full flex flex-col relative
+                  rounded-2xl transition-all duration-300
+                  border-2 shadow-lg hover:shadow-xl
+                  bg-gradient-to-br ${plan.gradient}
+                  ${plan.popular 
+                    ? 'border-green-400 shadow-green-100 hover:glow-blue' 
+                    : 'border-slate-200 hover:border-blue-300 hover:glow-blue'
+                  }
+                  group-hover:scale-[1.02] transform-gpu
+                `}>
+                  
+                  {/* Header Section - Fixed Height */}
+                  <CardHeader className="text-center pt-8 pb-6 flex-shrink-0">
+                    <CardTitle className={`text-2xl font-bold mb-4 ${plan.textColor || 'text-slate-900'}`}>
+                      {plan.name}
+                    </CardTitle>
+                    
+                    <div className="mb-3">
+                      <span className={`text-5xl font-extrabold ${plan.priceColor || 'text-slate-900'}`}>
+                        {plan.price}
+                      </span>
+                      <span className={`text-base ${plan.descColor || 'text-slate-600'} ml-1`}>
+                        {plan.period}
+                      </span>
+                    </div>
+                    
+                    <CardDescription className={`text-base leading-relaxed ${plan.descColor || 'text-slate-600'}`}>
+                      {plan.description}
+                    </CardDescription>
+                  </CardHeader>
+
+                  {/* Features Section - Grows to Fill Available Space */}
+                  <CardContent className="flex-grow px-8 pb-6">
+                    <ul className="space-y-4">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start">
+                          <Check className={`h-5 w-5 mr-3 mt-0.5 flex-shrink-0 ${
+                            plan.popular ? 'text-green-600' : 'text-blue-600'
+                          }`} />
+                          <span className={`text-sm leading-relaxed ${plan.featureColor || 'text-slate-700'}`}>
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+
+                  {/* Button Section - Fixed at Bottom */}
+                  <CardContent className="px-8 pb-8 flex-shrink-0">
+                    <Button
+                      onClick={() => handleSubscription(plan)}
+                      disabled={loadingPlan === plan.name}
+                      className={`
+                        w-full py-3 px-6 rounded-xl font-semibold text-base
+                        transition-all duration-200 transform
+                        hover:scale-105 active:scale-95
+                        ${plan.buttonStyle}
+                        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                      `}
+                    >
+                      {loadingPlan === plan.name ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                          Processing...
+                        </div>
+                      ) : (
+                        plan.buttonText
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Second Row - Premium Plans */}
-        <div className="mb-12">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-semibold text-slate-800 mb-2">Professional & Executive</h3>
-            <p className="text-slate-600">Advanced features for serious job seekers and executives</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {premiumPlans.map(renderPlanCard)}
-          </div>
-        </div>
-        
-        {/* Additional Trust Section */}
-        <div className="mt-20 text-center">
-          <div className="flex flex-wrap justify-center items-center gap-8 text-slate-500">
-            <div className="flex items-center space-x-2">
-              <Check className="h-5 w-5 text-green-600" />
+        {/* Footer Information */}
+        <div className="text-center mt-12 text-sm text-slate-600">
+          <p className="mb-2">All plans include our core AI-powered CV analysis features. Upgrade or downgrade anytime.</p>
+          <div className="flex justify-center items-center space-x-6 mt-4">
+            <div className="flex items-center">
+              <Shield className="h-4 w-4 mr-2 text-green-600" />
               <span>30-day money-back guarantee</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Check className="h-5 w-5 text-green-600" />
+            <div className="flex items-center">
+              <X className="h-4 w-4 mr-2 text-blue-600" />
               <span>Cancel anytime</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Check className="h-5 w-5 text-green-600" />
-              <span>Secure payments</span>
+            <div className="flex items-center">
+              <CreditCard className="h-4 w-4 mr-2 text-purple-600" />
+              <span>Secure payment processing</span>
             </div>
           </div>
         </div>

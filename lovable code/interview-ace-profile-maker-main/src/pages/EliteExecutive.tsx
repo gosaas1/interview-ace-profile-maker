@@ -412,17 +412,28 @@ const BackgroundOrbs = ({ mousePosition }: { mousePosition: { x: number; y: numb
   );
 };
 
-// Crown animation component with circles instead of semi-circles
-const CrownWithCircles: React.FC = () => {
+// Crown animation component with circles and fade-out
+const CrownWithCircles: React.FC<{ onCirclesDisappear: (disappeared: boolean) => void }> = ({ onCirclesDisappear }) => {
   const [showCircles, setShowCircles] = useState(true);
+  const [showCrown, setShowCrown] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Hide circles after 5 seconds
+    const circlesTimer = setTimeout(() => {
       setShowCircles(false);
+      onCirclesDisappear(true);
     }, 5000);
 
-    return () => clearTimeout(timer);
-  }, []);
+    // Hide crown after 7 seconds (2 seconds after circles disappear)
+    const crownTimer = setTimeout(() => {
+      setShowCrown(false);
+    }, 7000);
+
+    return () => {
+      clearTimeout(circlesTimer);
+      clearTimeout(crownTimer);
+    };
+  }, [onCirclesDisappear]);
 
   return (
     <div className="crown-container">
@@ -435,18 +446,20 @@ const CrownWithCircles: React.FC = () => {
         </div>
       )}
       
-      {/* Crown icon */}
-      <Crown className="crown-icon" size={64} />
+      {/* Crown icon with fade-out */}
+      {showCrown && (
+        <Crown className={`crown-icon ${!showCircles ? 'crown-fade-out' : ''}`} size={64} />
+      )}
     </div>
   );
 };
 
 // Simplified Professional Hero Background with Crown Animation
-const HolographicHero: React.FC = () => {
+const HolographicHero: React.FC<{ onCirclesDisappear: (disappeared: boolean) => void }> = ({ onCirclesDisappear }) => {
   return (
     <div className="hero-container">
       {/* Crown with circles */}
-      <CrownWithCircles />
+      <CrownWithCircles onCirclesDisappear={onCirclesDisappear} />
       
       {/* Minimal particles */}
       <div className="hero-particles">
@@ -469,7 +482,7 @@ const HolographicHero: React.FC = () => {
   );
 };
 
-// Elite Executive Arsenal section with scroll-triggered animation
+// Elite Executive Arsenal section with scroll-triggered animations
 const EliteExecutiveArsenal: React.FC = () => {
   const [visibleCards, setVisibleCards] = useState<number[]>([]);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -563,6 +576,7 @@ const EliteExecutive: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'semi-annual' | 'annual'>('monthly');
+  const [circlesDisappeared, setCirclesDisappeared] = useState(false);
 
   // Mouse tracking for 3D effects
   useEffect(() => {
@@ -613,23 +627,19 @@ const EliteExecutive: React.FC = () => {
         annual: 'price_elite_annual'
       };
 
-      const response = await fetch('http://localhost:8080/api/create-checkout-session', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           priceId: priceIds[billingCycle],
-          userId: user.id,
-          userEmail: user.email,
-          successUrl: `${window.location.origin}/payment-success`,
-          cancelUrl: `${window.location.origin}/elite-executive`,
-        }),
+          userId: user.id
+        })
       });
 
       const { sessionId } = await response.json();
       await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error('Payment error:', error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -649,7 +659,7 @@ const EliteExecutive: React.FC = () => {
 
       {/* Hero Section with Better Spacing */}
       <section className="elite-hero elite-hero-improved-spacing">
-        <HolographicHero />
+        <HolographicHero onCirclesDisappear={setCirclesDisappeared} />
         <div className="elite-container">
           <div className="elite-fade-in hero-content-entrance" style={{ animationDelay: '1.5s' }}>
             <div className="elite-crown-badge elite-crown-badge-spaced">
