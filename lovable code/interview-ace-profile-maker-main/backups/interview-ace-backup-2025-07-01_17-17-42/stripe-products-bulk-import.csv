@@ -1,0 +1,14 @@
+product_name,price_amount,price_currency,price_type,price_recurring_interval,price_recurring_interval_count,product_description
+ApplyAce Pay-as-you-go,249,gbp,one_time,,,Single CV analysis with basic feedback
+ApplyAce Starter Monthly,1199,gbp,recurring,month,1,Perfect for students & early career professionals - 5 detailed analyses per month
+ApplyAce Starter 6-Month,4196,gbp,recurring,month,6,Starter plan billed every 6 months (30% discount)
+ApplyAce Starter Annual,5994,gbp,recurring,year,1,Starter plan billed annually (50% discount)
+ApplyAce Professional Monthly,1799,gbp,recurring,month,1,For active job seekers - Unlimited analyses with advanced AI features
+ApplyAce Professional 6-Month,6296,gbp,recurring,month,6,Professional plan billed every 6 months (30% discount)
+ApplyAce Professional Annual,8994,gbp,recurring,year,1,Professional plan billed annually (50% discount)
+ApplyAce Career Pro Monthly,3599,gbp,recurring,month,1,Premium features with human review and coaching
+ApplyAce Career Pro 6-Month,12596,gbp,recurring,month,6,Career Pro plan billed every 6 months (30% discount)
+ApplyAce Career Pro Annual,17994,gbp,recurring,year,1,Career Pro plan billed annually (50% discount)
+ApplyAce Elite Executive Monthly,6999,gbp,recurring,month,1,Everything plus AI-backed 1-on-1 coaching sessions
+ApplyAce Elite Executive 6-Month,25196,gbp,recurring,month,6,Elite Executive plan billed every 6 months (30% discount)
+ApplyAce Elite Executive Annual,35994,gbp,recurring,year,1,Elite Executive plan billed annually (50% discount) 

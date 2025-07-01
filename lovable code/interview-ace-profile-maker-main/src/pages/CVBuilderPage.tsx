@@ -1,13 +1,44 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { HomeNavigation } from '@/components/navigation/HomeNavigation';
-import { CVBuilder } from '@/components/cv/CVBuilder';
+import { CVBuilderRefactored } from '@/components/cv/CVBuilderRefactored';
 import { CVData } from '@/lib/supabase';
+import { cvOperations } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export const CVBuilderPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const editingCV = location.state?.editingCV as CVData | undefined;
+  const { cvId } = useParams<{ cvId: string }>();
+  const [editingCV, setEditingCV] = useState<CVData | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+
+  // Handle editing CV from state or URL parameter
+  useEffect(() => {
+    const stateEditingCV = location.state?.editingCV as CVData | undefined;
+    
+    if (stateEditingCV) {
+      setEditingCV(stateEditingCV);
+    } else if (cvId) {
+      // Load CV from database if cvId is provided
+      loadCVFromId(cvId);
+    }
+  }, [cvId, location.state]);
+
+  const loadCVFromId = async (id: string) => {
+    setLoading(true);
+    try {
+      const cv = await cvOperations.getCV(id);
+      setEditingCV(cv);
+    } catch (error: any) {
+      console.error('Failed to load CV:', error);
+      toast.error('Failed to load CV: ' + error.message);
+      navigate('/cvs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleClose = () => {
     navigate('/cvs');
@@ -16,6 +47,19 @@ export const CVBuilderPage: React.FC = () => {
   const handleSuccess = () => {
     navigate('/cvs');
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <div className="w-64">
+          <HomeNavigation />
+        </div>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -45,7 +89,7 @@ export const CVBuilderPage: React.FC = () => {
             </p>
           </div>
           
-          <CVBuilder 
+          <CVBuilderRefactored 
             onClose={handleClose}
             onSuccess={handleSuccess}
             editingCV={editingCV}

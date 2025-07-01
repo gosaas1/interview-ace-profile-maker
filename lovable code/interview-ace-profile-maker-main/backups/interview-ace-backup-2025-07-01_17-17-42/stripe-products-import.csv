@@ -1,0 +1,14 @@
+﻿name,description,type,default_price_unit_amount,default_price_currency,default_price_recurring_interval,default_price_recurring_interval_count,statement_descriptor
+ApplyAce Pay-As-You-Go,Single CV analysis - no commitment required,service,249,gbp,,,APPLYACE
+ApplyAce Starter,Perfect for students & early career professionals - MOST POPULAR,service,1199,gbp,month,1,APPLYACE
+ApplyAce Starter 6-Month,Perfect for students & early career professionals - 6 month plan,service,5036,gbp,month,6,APPLYACE
+ApplyAce Starter Annual,Perfect for students & early career professionals - annual plan,service,7194,gbp,year,1,APPLYACE
+ApplyAce Professional,Unlimited analyses with advanced AI features,service,1799,gbp,month,1,APPLYACE
+ApplyAce Professional 6-Month,Unlimited analyses with advanced AI features - 6 month plan,service,7556,gbp,month,6,APPLYACE
+ApplyAce Professional Annual,Unlimited analyses with advanced AI features - annual plan,service,10794,gbp,year,1,APPLYACE
+ApplyAce Career Pro,Everything plus human review and premium coaching,service,3599,gbp,month,1,APPLYACE
+ApplyAce Career Pro 6-Month,Everything plus human review and premium coaching - 6 month plan,service,15116,gbp,month,6,APPLYACE
+ApplyAce Career Pro Annual,Everything plus human review and premium coaching - annual plan,service,21594,gbp,year,1,APPLYACE
+ApplyAce Elite Executive,Everything plus AI-backed 1-on-1 coaching sessions,service,7199,gbp,month,1,APPLYACE
+ApplyAce Elite Executive 6-Month,Everything plus AI-backed 1-on-1 coaching sessions - 6 month plan,service,30236,gbp,month,6,APPLYACE
+ApplyAce Elite Executive Annual,Everything plus AI-backed 1-on-1 coaching sessions - annual plan,service,43194,gbp,year,1,APPLYACE
