@@ -1,0 +1,16 @@
+﻿Backup Information
+==================
+Date: 07/01/2025 17:18:01
+Project: Interview Ace Profile Maker
+Git Commit: bde0feb10e2b1dcf33607ae382d8745eef43c577
+Git Branch: main
+Node Version: v22.16.0
+NPM Version: 10.9.2
+
+Files backed up:
+206 files
+
+Recovery Instructions:
+1. Copy all files from this backup to a new directory
+2. Run 'npm install' to install dependencies
+3. Run 'npm run dev' to start development server
