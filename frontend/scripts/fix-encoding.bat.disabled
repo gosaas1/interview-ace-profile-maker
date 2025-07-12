@@ -1,0 +1,18 @@
+@echo off
+echo Fixing encoding issues in TypeScript files...
+
+REM Remove BOM from cvTemplates.ts if it exists
+if exist "src\data\cvTemplates.ts" (
+    echo Checking cvTemplates.ts for BOM characters...
+    powershell -Command "(Get-Content 'src\data\cvTemplates.ts' -Raw) -replace '^\uFEFF', '' | Set-Content 'src\data\cvTemplates.ts' -Encoding UTF8"
+    echo BOM removed from cvTemplates.ts
+)
+
+REM Check for other TypeScript files that might have encoding issues
+for /r src %%f in (*.ts) do (
+    echo Checking %%f...
+    powershell -Command "(Get-Content '%%f' -Raw) -replace '^\uFEFF', '' | Set-Content '%%f' -Encoding UTF8"
+)
+
+echo Encoding fix complete!
+pause 

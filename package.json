@@ -1,6 +1,19 @@
 {
+  "name": "ai-cv-application",
+  "version": "1.0.0",
+  "description": "AI-powered CV application platform",
+  "scripts": {
+    "dev": "cd frontend; npm run dev",
+    "server": "cd backend; npm run server",
+    "build": "cd frontend; npm run build",
+    "start": "cd backend; npm run server",
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
+    "kill-ports": "powershell -Command \"Get-Process -Name 'node' -ErrorAction SilentlyContinue | Stop-Process -Force\"",
+    "restart": "npm run kill-ports; npm run dev:full"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "concurrently": "^8.2.2"
   }
 }
