@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import mammoth from 'mammoth';
 import { useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
-import { CVTemplateSelector } from './CVTemplateSelector';
+import CVTemplateSelector from './CVTemplateSelector';
 import { cvTemplates, getTemplateById } from '@/data/cvTemplates';
 import { parseCVText, convertToCVBuilderFormat, type ParsedCVData } from '@/lib/cv/parser';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -131,6 +131,80 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
     setCurrentStep('builder');
+  };
+
+  // Save CV to database
+  const saveCVToDatabase = async () => {
+    if (!user) {
+      toast.error('Please log in to save your CV');
+      return;
+    }
+
+    if (!parsedCVData) {
+      toast.error('No CV data to save');
+      return;
+    }
+
+    try {
+      const cvData = {
+        user_id: user.id,
+        title: `${parsedCVData.full_name}'s CV`,
+        full_name: parsedCVData.full_name,
+        job_title: parsedCVData.job_title,
+        email: parsedCVData.email,
+        phone: parsedCVData.phone,
+        location: parsedCVData.location,
+        linkedin_url: parsedCVData.linkedin_url,
+        website: parsedCVData.website,
+        summary: parsedCVData.summary,
+        experiences: parsedCVData.experiences,
+        education: parsedCVData.education,
+        skills: parsedCVData.skills,
+        projects: parsedCVData.projects || [],
+        languages: parsedCVData.languages || [],
+        references: parsedCVData.references || [],
+        certifications: parsedCVData.certifications || '',
+        template_id: selectedTemplate,
+        is_public: false,
+        is_primary: false,
+        ats_score: 0,
+        file_url: uploadedFile ? undefined : undefined, // Will be added if file upload is implemented
+        file_name: uploadedFile?.name,
+        file_size: uploadedFile?.size,
+        content_type: uploadMethod === 'file' ? 'file' : 'manual',
+        content: cvBuilderData, // Store the full parsed content
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Saving CV data:', cvData);
+
+      const { data, error } = await supabase
+        .from('cvs')
+        .insert([cvData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('CV saved successfully:', data);
+      setUploadedCVId(data.id);
+      
+      toast.success('CV saved successfully!');
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      onClose();
+      
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      toast.error('Failed to save CV. Please try again.');
+    }
   };
 
   const handleProceedToBuilder = () => {
@@ -518,14 +592,24 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
           Back to Preview
         </Button>
         
-        <Button 
-          onClick={handleProceedToBuilder}
-          className="bg-gradient-to-r from-blue-600 to-purple-600"
-        >
-          <Eye className="h-4 w-4 mr-2" />
-          Build CV
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={saveCVToDatabase}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save CV
+          </Button>
+          
+          <Button 
+            onClick={handleProceedToBuilder}
+            className="bg-gradient-to-r from-blue-600 to-purple-600"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Build CV
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
       </div>
     </div>
   );

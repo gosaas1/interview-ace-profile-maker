@@ -16,6 +16,47 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaWtlbHRkcW1wZHNjemFrcmlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1ODExODksImV4cCI6MjA2NTE1NzE4OX0.o_c4yk6tKYM17uTXtdepkRWR4PUp71lflaciAcLB6i4'
 );
 
+// Test endpoint to verify database connection and new schema
+router.get('/test', async (req: Request, res: Response) => {
+  try {
+    console.log('Testing database connection...');
+    
+    // Test basic connection
+    const { data, error } = await supabase
+      .from('cvs')
+      .select('id, title, full_name, email, template_id, skills, created_at')
+      .limit(1);
+    
+    if (error) {
+      console.error('Database connection error:', error);
+      return res.status(500).json({ 
+        status: 'error', 
+        message: 'Database connection failed', 
+        error: error.message 
+      });
+    }
+    
+    console.log('Database connection successful');
+    console.log('Test data retrieved:', data);
+    
+    res.json({ 
+      status: 'success', 
+      message: 'Database connection working',
+      database: 'connected',
+      table: 'cvs',
+      testData: data,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    console.error('Test endpoint error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Test failed', 
+      error: error.message 
+    });
+  }
+});
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
@@ -134,6 +175,41 @@ function processExtractedText(text: string) {
   return sections;
 }
 
+// --- CV Content Type for Validation ---
+interface CVContent {
+  full_name: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin_url: string;
+  portfolio_url: string;
+  summary: string;
+  experience: any[];
+  education: any[];
+  skills: string[];
+  certifications: any[];
+  projects?: any[];
+  languages?: any[];
+  references?: any[];
+  isSampleDatabase?: boolean;
+}
+
+function validateCVContent(content: any): content is CVContent {
+  return (
+    typeof content.full_name === 'string' &&
+    typeof content.email === 'string' &&
+    typeof content.phone === 'string' &&
+    typeof content.location === 'string' &&
+    typeof content.linkedin_url === 'string' &&
+    typeof content.portfolio_url === 'string' &&
+    typeof content.summary === 'string' &&
+    Array.isArray(content.experience) &&
+    Array.isArray(content.education) &&
+    Array.isArray(content.skills) &&
+    Array.isArray(content.certifications)
+  );
+}
+
 // Create CV from builder (new endpoint)
 router.post('/create', authenticateUser, async (req: Request, res: Response): Promise<void> => {
   try {
@@ -153,6 +229,11 @@ router.post('/create', authenticateUser, async (req: Request, res: Response): Pr
     // Validate content structure
     if (typeof content !== 'object' || !content.full_name) {
       res.status(400).json({ error: 'Invalid content format. Content must be an object with full_name.' });
+      return;
+    }
+
+    if (!validateCVContent(content)) {
+      res.status(400).json({ error: 'Invalid content format. Missing or invalid fields.' });
       return;
     }
 

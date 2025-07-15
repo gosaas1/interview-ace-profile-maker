@@ -2,7 +2,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CVData } from '@/pages/CVBuilder';
+import { CVData } from '@/lib/cv/types';
 
 interface PersonalInfoFormProps {
   data: CVData['personalInfo'];
@@ -91,4 +91,4 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ data, onChange }) =
   );
 };
 
-export default PersonalInfoForm;
+export default PersonalInfoForm; 

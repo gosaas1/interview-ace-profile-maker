@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cvTemplates, type CVTemplate } from '@/data/cvTemplates';
-import { CVTemplatePreview } from '@/components/cv/CVTemplatePreview';
+import { TemplatePreview } from '@/components/cv/TemplatePreview';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Grid, List, Filter, Check, Star, Lock } from 'lucide-react';
 
@@ -203,22 +203,9 @@ export const TemplateTest: React.FC = () => {
                       </div>
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{template.description}</p>
                       
-                      {/* Template Preview Placeholder */}
-                      <div 
-                        className="bg-gray-100 h-32 rounded flex items-center justify-center mb-3"
-                        style={{
-                          backgroundColor: template.colors.background,
-                          color: template.colors.text
-                        }}
-                      >
-                        <div className="text-center">
-                          <div className="text-lg font-semibold" style={{ color: template.colors.primary }}>
-                            {template.name}
-                          </div>
-                          <div className="text-sm" style={{ color: template.colors.secondary }}>
-                            {template.layout}
-                          </div>
-                        </div>
+                      {/* Template Preview */}
+                      <div className="h-32 rounded mb-3 overflow-hidden">
+                        <TemplatePreview template={template} showContent={true} />
                       </div>
 
                       <div className="flex flex-wrap gap-1 mb-3">
@@ -282,6 +269,18 @@ export const TemplateTest: React.FC = () => {
                       <span className="text-muted-foreground">Tier:</span>
                       <span>{getTierDisplayName(selectedTemplate.tier)}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Color Scheme:</span>
+                      <span className="capitalize">{selectedTemplate.colorScheme || 'blue'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Font:</span>
+                      <span>{selectedTemplate.fontFamily || 'Inter'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">ATS Score:</span>
+                      <span>{selectedTemplate.atsScore || 'N/A'}%</span>
+                    </div>
                   </div>
                 </div>
 
@@ -297,22 +296,9 @@ export const TemplateTest: React.FC = () => {
                 </div>
 
                 <div>
-                  <h4 className="font-medium mb-2">Color Scheme</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-4 h-4 rounded border"
-                        style={{ backgroundColor: selectedTemplate.colors.primary }}
-                      />
-                      <span className="text-xs">Primary</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-4 h-4 rounded border"
-                        style={{ backgroundColor: selectedTemplate.colors.accent }}
-                      />
-                      <span className="text-xs">Accent</span>
-                    </div>
+                  <h4 className="font-medium mb-2">Template Preview</h4>
+                  <div className="h-48 rounded overflow-hidden border">
+                    <TemplatePreview template={selectedTemplate} showContent={true} />
                   </div>
                 </div>
 

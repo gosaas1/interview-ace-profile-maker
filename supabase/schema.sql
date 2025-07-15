@@ -9,13 +9,36 @@ create table public.profiles (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- CVs table
+-- CVs table - Updated with all required fields
 create table public.cvs (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
+  user_id uuid references auth.users on delete cascade not null,
   title text not null,
-  content jsonb not null,
+  full_name text,
+  job_title text,
+  email text,
+  phone text,
+  location text,
+  linkedin_url text,
+  portfolio_url text,
+  website text,
+  summary text,
+  experiences jsonb default '[]',
+  education jsonb default '[]',
+  skills jsonb default '[]',
+  projects jsonb default '[]',
+  languages jsonb default '[]',
+  references jsonb default '[]',
+  certifications text,
+  template_id text default 'modern',
   is_public boolean default false,
+  is_primary boolean default false,
+  ats_score integer default 0,
+  file_url text,
+  file_name text,
+  file_size integer,
+  content_type text default 'manual',
+  content jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -67,6 +90,8 @@ create table public.job_applications (
 
 -- Create indexes for better query performance
 create index cvs_user_id_idx on public.cvs(user_id);
+create index cvs_template_id_idx on public.cvs(template_id);
+create index cvs_created_at_idx on public.cvs(created_at);
 create index interview_answers_user_id_idx on public.interview_answers(user_id);
 create index jobs_employer_id_idx on public.jobs(employer_id);
 create index job_applications_job_id_idx on public.job_applications(job_id);
@@ -109,6 +134,10 @@ create policy "Users can update their own CVs"
 create policy "Users can delete their own CVs"
   on public.cvs for delete
   using (auth.uid() = user_id);
+
+create policy "Public CVs are viewable by everyone"
+  on public.cvs for select
+  using (is_public = true);
 
 -- Interview questions policies
 create policy "Anyone can view interview questions"

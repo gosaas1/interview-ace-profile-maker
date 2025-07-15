@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Download, Eye, Palette, Check } from 'lucide-react';
-import { CVBuilderModern } from '@/components/cv-builder/CVBuilderModern';
-import { CVTemplateSelector } from '@/components/cv/CVTemplateSelector';
+import CVTemplateSelector from '@/components/cv/CVTemplateSelector';
+import CVForm from '@/components/cv-builder/CVForm';
 import { cvTemplates, getTemplateById } from '@/data/cvTemplates';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
+import { CVData } from '@/lib/cv/types';
 
 interface CVBuilderProps {
   // Add any props if needed
@@ -27,6 +28,21 @@ const CVBuilder: React.FC<CVBuilderProps> = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(initialTemplate);
   const [showTemplateSelector, setShowTemplateSelector] = useState(!fromUpload);
   const [isSaving, setIsSaving] = useState(false);
+  const [cvData, setCvData] = useState<CVData>({
+    personalInfo: {
+      fullName: '',
+      email: '',
+      phone: '',
+      location: '',
+      linkedIn: '',
+      website: '',
+      summary: ''
+    },
+    experience: [],
+    education: [],
+    skills: [],
+    certifications: []
+  });
 
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {
@@ -165,9 +181,8 @@ const CVBuilder: React.FC<CVBuilderProps> = () => {
             </div>
             
             <CVTemplateSelector
-              selectedTemplate={selectedTemplate}
-              onTemplateSelect={handleTemplateSelect}
-              userTier="elite" // Show all templates for now
+              onSelectTemplate={handleTemplateSelect}
+              userTier="elite"
               showAllTemplates={true}
             />
           </div>
@@ -185,13 +200,9 @@ const CVBuilder: React.FC<CVBuilderProps> = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CVBuilderModern
-                  onClose={() => navigate(-1)}
-                  onSuccess={() => {
-                    toast.success('CV created successfully!');
-                    navigate('/cvs');
-                  }}
-                  isModal={false}
+                <CVForm
+                  cvData={cvData}
+                  onDataChange={setCvData}
                 />
               </CardContent>
             </Card>
@@ -200,33 +211,30 @@ const CVBuilder: React.FC<CVBuilderProps> = () => {
             {currentTemplate && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Template Information</CardTitle>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Palette className="h-5 w-5 text-purple-600" />
+                    <span>Template Information</span>
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <h4 className="font-medium">{currentTemplate.name}</h4>
-                    <p className="text-sm text-gray-600">{currentTemplate.description}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-2">Features:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {currentTemplate.features.slice(0, 3).map((feature, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {currentTemplate.atsScore && (
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm font-medium">ATS Score:</p>
-                      <Badge variant="secondary" className="text-xs">
-                        {currentTemplate.atsScore}%
+                      <h4 className="font-semibold text-gray-900">Template</h4>
+                      <p className="text-gray-600">{currentTemplate.name}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">ATS Score</h4>
+                      <Badge variant="outline" className="text-green-600">
+                        {currentTemplate.atsScore || 95}%
                       </Badge>
                     </div>
-                  )}
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Category</h4>
+                      <Badge variant="outline">
+                        {currentTemplate.category}
+                      </Badge>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}

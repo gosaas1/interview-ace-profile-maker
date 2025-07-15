@@ -230,10 +230,7 @@ export const CVs = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                setEditingCV(cv);
-                                setShowCVBuilder(true);
-                              }}
+                              onClick={() => navigate(`/cv-builder/${cv.id}`)}
                               className="text-gray-600 hover:text-gray-900 min-h-[44px] min-w-[44px]"
                             >
                               <Edit className="h-4 w-4 mr-1" />

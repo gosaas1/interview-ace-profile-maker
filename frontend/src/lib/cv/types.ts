@@ -2,33 +2,46 @@
 // Following PRD requirements for complete career pipeline
 
 export interface CVData {
-  id: string;
-  user_id: string;
-  full_name: string;
-  job_title: string;
-  email: string;
-  phone?: string;
-  location: string;
-  linkedin_url?: string;
-  portfolio_url?: string;
-  summary: string;
-  experiences: WorkExperience[];
-  education: Education[];
-  projects: Project[];
-  skills: string;
-  languages: Language[];
-  certifications?: string;
-  references: Reference[];
-  template_id: string;
-  is_primary: boolean;
-  ats_score: number;
-  content_type: 'manual' | 'uploaded' | 'ai_generated';
-  created_at: string;
-  updated_at: string;
-  industry?: string;
-  target_role?: string;
-  keywords?: string[];
-  ai_suggestions?: AISuggestion[];
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    linkedIn: string;
+    website: string;
+    summary: string;
+  };
+  experience: Array<{
+    id: string;
+    company: string;
+    position: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    current: boolean;
+    description: string;
+  }>;
+  education: Array<{
+    id: string;
+    institution: string;
+    degree: string;
+    field: string;
+    startDate: string;
+    endDate: string;
+    gpa?: string;
+  }>;
+  skills: string[];
+  certifications: Array<{
+    id: string;
+    name: string;
+    issuer: string;
+    date: string;
+    expiryDate?: string;
+  }>;
+  projects?: Project[];
+  languages?: Language[];
+  references?: Reference[];
+  isSampleDatabase?: boolean;
 }
 
 export interface WorkExperience {
@@ -90,16 +103,21 @@ export interface Reference {
 export interface CVTemplate {
   id: string;
   name: string;
-  category: 'professional' | 'creative' | 'modern' | 'classic' | 'minimalist' | 'executive' | 'basic' | 'business' | 'tech' | 'academic' | 'healthcare';
-  layout: 'single-column' | 'two-column' | 'creative' | 'modern' | 'classic';
-  tier: 'free' | 'starter' | 'professional' | 'career-pro' | 'elite';
-  features: string[];
-  preview_image: string;
   description: string;
-  industry_specific?: string[];
-  ats_optimized: boolean;
-  mobile_friendly: boolean;
-  accessibility_score: number;
+  category: 'basic' | 'professional' | 'executive' | 'creative' | 'academic' | 'modern' | 'minimalist' | 'tech' | 'business' | 'healthcare' | 'minimal' | 'classic' | 'attractive' | 'clean' | 'aesthetic' | 'stunning' | 'elegant' | 'comprehensive' | 'consulting' | 'research' | 'board' | 'founder' | 'global' | 'ceo';
+  tier: 'free' | 'starter' | 'professional' | 'career-pro' | 'elite';
+  preview: string;
+  layout: 'single-column' | 'two-column' | 'classic' | 'modern' | 'creative';
+  features: string[];
+  fontFamily: string;
+  colorScheme: string;
+  atsScore: number;
+  headerAlign: 'center' | 'left' | 'right';
+  sectionDivider: 'solid' | 'dashed' | 'horizontal';
+  listStyle: 'bullet' | 'dash' | 'minimal' | 'arrow' | 'check' | 'circle' | 'star' | 'creative' | 'tech' | 'diamond' | 'heart' | 'cross' | 'code' | 'globe' | 'premium';
+  headingStyle: 'uppercase' | 'titlecase' | 'normal';
+  skillsDisplay: 'bold' | 'tags' | 'underlined' | 'inline' | 'italic' | 'normal';
+  pageCount: number;
 }
 
 export interface AISuggestion {

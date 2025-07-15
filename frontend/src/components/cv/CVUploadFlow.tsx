@@ -29,7 +29,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { toast } from '@/hooks/use-toast';
 import mammoth from 'mammoth';
-import CVTemplateSelector from '../cv-builder/CVTemplateSelector';
+import { CVTemplateSelector } from '../cv/CVTemplateSelector';
 import { cvTemplates, getTemplatesByTier, getTemplateById } from '@/data/cvTemplates';
 import { CVBuilderRefactored } from './CVBuilderRefactored';
 import { useNavigate } from 'react-router-dom';
@@ -851,7 +851,8 @@ const CVUploadFlow: React.FC<CVUploadFlowProps> = ({ onClose, onSuccess }) => {
       </div>
       
       <CVTemplateSelector
-        onSelectTemplate={(templateId) => setSelectedTemplate(templateId)}
+        selectedTemplate={selectedTemplate}
+        onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
       />
       
       <div className="flex justify-center space-x-4">

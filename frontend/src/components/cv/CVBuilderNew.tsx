@@ -38,7 +38,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import CVTemplateSelector from './CVTemplateSelector';
+import { CVTemplateSelector } from './CVTemplateSelector';
 import { cvTemplates, getTemplateById } from '@/data/cvTemplates';
 
 interface CVData {
@@ -820,8 +820,8 @@ const CVBuilderNew: React.FC<CVBuilderNewProps> = ({ onClose, onSuccess, editing
       </div>
 
       <CVTemplateSelector
-        selectedTemplate={getTemplateById(selectedTemplate)}
-        onTemplateSelect={(template) => setSelectedTemplate(template.id)}
+        selectedTemplate={selectedTemplate}
+        onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
       />
     </div>
   );

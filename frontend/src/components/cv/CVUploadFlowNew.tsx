@@ -40,7 +40,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { toast } from '@/hooks/use-toast';
 import mammoth from 'mammoth';
-import CVTemplateSelector from './CVTemplateSelector';
+import { CVTemplateSelector } from './CVTemplateSelector';
 import { cvTemplates, getTemplatesByTier, getTemplateById } from '@/data/cvTemplates';
 import CVBuilderNew from './CVBuilderNew';
 import { useNavigate } from 'react-router-dom';
@@ -530,8 +530,8 @@ const CVUploadFlowNew: React.FC<CVUploadFlowNewProps> = ({ onClose, onSuccess })
       </div>
       
       <CVTemplateSelector
-        selectedTemplate={getTemplateById(selectedTemplate)}
-        onTemplateSelect={(template) => setSelectedTemplate(template.id)}
+        selectedTemplate={selectedTemplate}
+        onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
         userTier="elite"
       />
       

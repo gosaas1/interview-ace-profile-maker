@@ -1,497 +1,245 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Check, Star, Lock, Info, Grid, List, Filter, AlertCircle, Crown, Zap, ChevronLeft, ChevronRight, Eye, Palette } from 'lucide-react';
-import { cvTemplates, getTemplatesByTier, templateCategories, type CVTemplate } from '@/data/cvTemplates';
-import { CVTemplatePreview } from './CVTemplatePreview';
-import { useAuth } from '@/hooks/useAuth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useSwipeable } from 'react-swipeable';
-import { AnimatePresence, motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cvTemplates, type CVTemplate } from '@/data/cvTemplates';
+import { TemplatePreview } from './TemplatePreview';
 
 interface CVTemplateSelectorProps {
-  selectedTemplate: string;
-  onTemplateSelect: (templateId: string) => void;
+  onSelectTemplate: (templateId: string) => void;
   userTier?: string;
-  showAllTemplates?: boolean; // For development/testing
+  showAllTemplates?: boolean;
 }
 
-const TEMPLATES_PER_PAGE = 6;
+const TIER_TABS = [
+  { id: 'all', name: 'All' },
+  { id: 'free', name: 'Free' },
+  { id: 'starter', name: 'Starter' },
+  { id: 'professional', name: 'Professional' },
+  { id: 'career-pro', name: 'Career Pro' },
+  { id: 'elite', name: 'Elite Executive' },
+];
 
-export const CVTemplateSelector: React.FC<CVTemplateSelectorProps> = ({
-  selectedTemplate,
-  onTemplateSelect,
+const CVTemplateSelector: React.FC<CVTemplateSelectorProps> = ({
+  onSelectTemplate,
   userTier = 'free',
-  showAllTemplates = true // Show all templates for development
+  showAllTemplates = false,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [previewTemplate, setPreviewTemplate] = useState<CVTemplate | null>(null);
-  const [enlargePreview, setEnlargePreview] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'popular' | 'ats' | 'name'>('popular');
-  const { user } = useAuth();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedTier, setSelectedTier] = useState<string>('all');
 
-  // Filter templates based on user tier and category
-  let filteredTemplates = showAllTemplates 
-    ? cvTemplates 
-    : getTemplatesByTier(userTier);
-
-  if (selectedCategory !== 'all') {
-    filteredTemplates = filteredTemplates.filter(template => template.category === selectedCategory);
+  // Filter templates by selected tier
+  let filteredTemplates = cvTemplates.filter(t => t.tier === selectedTier);
+  if (selectedTier === 'all') {
+    filteredTemplates = cvTemplates;
   }
 
-  // Sort templates
-  filteredTemplates = [...filteredTemplates].sort((a, b) => {
-    switch (sortBy) {
-      case 'popular':
-        return (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0);
-      case 'ats':
-        return (b.atsScore || 0) - (a.atsScore || 0);
-      case 'name':
-        return a.name.localeCompare(b.name);
-      default:
-        return 0;
-    }
-  });
-
-  const currentTemplate = filteredTemplates[currentIndex];
-
-  // Swipe handlers for mobile
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => nextTemplate(),
-    onSwipedRight: () => previousTemplate(),
-    preventDefaultTouchmoveEvent: true,
-    trackMouse: true
-  });
-
-  const nextTemplate = () => {
-    if (currentIndex < filteredTemplates.length - 1) {
-      setIsTransitioning(true);
-      setCurrentIndex(prev => prev + 1);
-      setTimeout(() => setIsTransitioning(false), 300);
-    }
+  // Get color scheme for badges based on template colors
+  const getColorScheme = (colorScheme: string) => {
+    const colorMap: { [key: string]: { bg: string; text: string; border: string } } = {
+      'blue': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+      'emerald': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
+      'amber': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
+      'slate': { bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-200' },
+      'purple': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+      'gray': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' },
+      'teal': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+      'indigo': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+    };
+    return colorMap[colorScheme] || colorMap['blue'];
   };
 
-  const previousTemplate = () => {
-    if (currentIndex > 0) {
-      setIsTransitioning(true);
-      setCurrentIndex(prev => prev - 1);
-      setTimeout(() => setIsTransitioning(false), 300);
-    }
+  // Get layout icon and color
+  const getLayoutInfo = (layout: string) => {
+    const layoutMap: { [key: string]: { icon: string; color: string; label: string } } = {
+      'single-column': { icon: '📄', color: 'bg-slate-500', label: 'Single Column' },
+      'two-column': { icon: '📋', color: 'bg-blue-500', label: 'Two Column' },
+      'right-side': { icon: '📊', color: 'bg-emerald-500', label: 'Right Side' },
+      'center-title': { icon: '🎯', color: 'bg-purple-500', label: 'Center Title' },
+      'minimal-borders': { icon: '✨', color: 'bg-amber-500', label: 'Minimal' },
+    };
+    return layoutMap[layout] || layoutMap['single-column'];
   };
 
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [selectedCategory]);
-
-  const handleTemplateSelect = (template: CVTemplate) => {
-    // Check if user has access to this template
-    if (!showAllTemplates) {
-      const userTemplates = getTemplatesByTier(userTier);
-      const hasAccess = userTemplates.some(t => t.id === template.id);
-      
-      if (!hasAccess) {
-        // Show upgrade modal or message
-        return;
-      }
-    }
-    
-    onTemplateSelect(template.id);
-  };
-
-  const getTierIcon = (tier: string) => {
-    switch (tier) {
-      case 'elite':
-        return <Crown className="w-4 h-4 text-yellow-500" />;
-      case 'career-pro':
-        return <Zap className="w-4 h-4 text-purple-500" />;
-      case 'professional':
-        return <Star className="w-4 h-4 text-blue-500" />;
-      case 'starter':
-        return <Check className="w-4 h-4 text-green-500" />;
-      default:
-        return <Info className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'elite':
-        return 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white';
-      case 'career-pro':
-        return 'bg-gradient-to-r from-purple-400 to-purple-600 text-white';
-      case 'professional':
-        return 'bg-gradient-to-r from-blue-400 to-blue-600 text-white';
-      case 'starter':
-        return 'bg-gradient-to-r from-green-400 to-green-600 text-white';
-      default:
-        return 'bg-gradient-to-r from-gray-400 to-gray-600 text-white';
-    }
+  // Get header alignment info
+  const getHeaderAlignInfo = (align: string) => {
+    const alignMap: { [key: string]: { icon: string; color: string; label: string } } = {
+      'left': { icon: '⬅️', color: 'bg-gray-500', label: 'Left' },
+      'center': { icon: '🎯', color: 'bg-blue-500', label: 'Center' },
+      'right': { icon: '➡️', color: 'bg-emerald-500', label: 'Right' },
+    };
+    return alignMap[align] || alignMap['left'];
   };
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Choose Your CV Template
-        </h2>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Select from our collection of {cvTemplates.length}+ professionally designed templates. 
-          All templates are optimized for Applicant Tracking Systems (ATS) to ensure your CV gets noticed.
-        </p>
-        <div className="flex justify-center gap-4 mt-4">
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            ATS Optimized
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Palette className="w-3 h-3" />
-            Industry Specific
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Star className="w-3 h-3" />
-            Most Popular
-          </Badge>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        {/* Category Tabs */}
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1">
-          <TabsList className="grid grid-cols-6 lg:grid-cols-11 w-full">
-            {templateCategories.map(category => (
-              <TabsTrigger key={category.id} value={category.id} className="text-xs lg:text-sm">
-                {category.name} ({category.count})
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
-        {/* Sort and View Controls */}
-        <div className="flex gap-2">
-          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="ats">ATS Score</SelectItem>
-              <SelectItem value="name">Name</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="flex border rounded-md">
+      {/* Tier Filter Tabs */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Choose Your CV Template</h2>
+        <div className="flex flex-wrap gap-2">
+          {TIER_TABS.map((tier) => (
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="rounded-r-none"
+              key={tier.id}
+              variant={selectedTier === tier.id ? "default" : "outline"}
+              onClick={() => setSelectedTier(tier.id)}
+              className={`
+                transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95
+                ${selectedTier === tier.id
+                  ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/25'
+                  : 'hover:bg-blue-50 hover:border-blue-300'
+                }
+                font-medium px-4 py-2 rounded-lg
+              `}
             >
-              <Grid className="w-4 h-4" />
+              {tier.name}
             </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="rounded-l-none"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Template Grid */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTemplates.map(template => (
-            <motion.div
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTemplates.map((template) => {
+          const colorScheme = getColorScheme(template.colorScheme);
+          const layoutInfo = getLayoutInfo(template.layout);
+          const headerAlignInfo = getHeaderAlignInfo(template.headerAlign);
+
+          return (
+            <Card
               key={template.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              className={`
+                group cursor-pointer transition-all duration-500 ease-in-out transform hover:scale-105
+                hover:shadow-2xl hover:shadow-blue-500/20 border-2 hover:border-blue-300
+                relative overflow-hidden
+                before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-500/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300
+                hover:before:opacity-100
+              `}
+              onClick={() => onSelectTemplate(template.id)}
             >
-              <Card 
-                className={cn(
-                  "group hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden",
-                  selectedTemplate === template.id && "ring-2 ring-blue-500 shadow-lg"
-                )}
-                onClick={() => handleTemplateSelect(template)}
-              >
-                {/* Template Preview */}
-                <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-200">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <div className="text-4xl mb-2">📄</div>
-                      <div className="text-sm font-medium text-gray-700">{template.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {template.colorScheme} • {template.layout}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Badges */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {template.isPopular && (
-                      <Badge className="bg-red-500 text-white text-xs font-bold">
-                        🔥 Popular
-                      </Badge>
-                    )}
-                    {template.atsScore && (
-                      <Badge className="bg-blue-100 text-blue-700 text-xs font-semibold">
-                        ATS {template.atsScore}%
-                      </Badge>
-                    )}
-                  </div>
+              {/* Blue glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-transparent to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
 
-                  {/* Tier Badge */}
-                  <div className="absolute top-2 right-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Badge className={cn("text-xs", getTierColor(template.tier))}>
-                            {getTierIcon(template.tier)}
-                            {template.tier}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Available in {template.tier} tier</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-
-                  {/* Select Button */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <Button
-                      variant={selectedTemplate === template.id ? "default" : "secondary"}
-                      size="sm"
-                      className={cn(
-                        "opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-                        selectedTemplate === template.id && "opacity-100"
-                      )}
-                    >
-                      {selectedTemplate === template.id ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Selected
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Select
-                        </>
-                      )}
-                    </Button>
-                  </div>
+              <CardHeader className="relative z-10 pb-3">
+                <div className="flex items-start justify-between mb-3">
+                  <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">
+                    {template.name}
+                  </CardTitle>
+                  <Badge
+                    variant="secondary"
+                    className={`
+                      ${colorScheme.bg} ${colorScheme.text} ${colorScheme.border}
+                      transition-all duration-300 hover:scale-110
+                    `}
+                  >
+                    {template.tier.charAt(0).toUpperCase() + template.tier.slice(1)}
+                  </Badge>
                 </div>
 
-                {/* Template Info */}
-                <CardContent className="p-4">
-                  <CardTitle className="text-lg mb-2">{template.name}</CardTitle>
-                  <p className="text-sm text-gray-600 mb-4">{template.description}</p>
-                  
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {template.features.slice(0, 3).map(feature => (
-                      <Badge key={feature} variant="outline" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                    {template.features.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{template.features.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
+                                 {/* Template Preview */}
+                 <div className="w-full h-32 bg-gray-50 rounded-lg border border-gray-200 overflow-hidden mb-3 group-hover:border-blue-300 transition-colors duration-300">
+                   <TemplatePreview template={template} />
+                 </div>
 
-                  {/* Industry Specific */}
-                  {template.industrySpecific && template.industrySpecific.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs text-gray-500 mb-1">Perfect for:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {template.industrySpecific.map(industry => (
-                          <Badge key={industry} variant="secondary" className="text-xs">
-                            {industry}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Select Button */}
-                  <Button
-                    onClick={() => handleTemplateSelect(template)}
-                    className={cn(
-                      "w-full group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600",
-                      selectedTemplate === template.id && "bg-gradient-to-r from-blue-600 to-purple-600"
-                    )}
-                    variant={template.isPopular ? "default" : "outline"}
+                {/* Style Badges */}
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {/* Header Color Badge */}
+                  <Badge
+                    variant="outline"
+                    className={`
+                      ${colorScheme.bg} ${colorScheme.text} ${colorScheme.border}
+                      transition-all duration-300 hover:scale-105
+                      flex items-center gap-1 text-xs
+                    `}
                   >
-                    {selectedTemplate === template.id ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Selected
-                      </>
-                    ) : template.isPopular ? (
-                      'Use Most Popular'
-                    ) : (
-                      'Use This Template'
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        // List View
-        <div className="space-y-4">
-          {filteredTemplates.map(template => (
-            <motion.div
-              key={template.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card 
-                className={cn(
-                  "group hover:shadow-md transition-all duration-300 cursor-pointer",
-                  selectedTemplate === template.id && "ring-2 ring-blue-500"
-                )}
-                onClick={() => handleTemplateSelect(template)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    {/* Template Preview */}
-                    <div className="w-24 h-32 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-2xl mb-1">📄</div>
-                        <div className="text-xs text-gray-600">{template.name}</div>
-                      </div>
-                    </div>
+                    🎨 {template.colorScheme.charAt(0).toUpperCase() + template.colorScheme.slice(1)} Header
+                  </Badge>
 
-                    {/* Template Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold">{template.name}</h3>
-                        {template.isPopular && (
-                          <Badge className="bg-red-500 text-white text-xs">
-                            🔥 Popular
-                          </Badge>
-                        )}
-                        <Badge className={cn("text-xs", getTierColor(template.tier))}>
-                          {getTierIcon(template.tier)}
-                          {template.tier}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-gray-600 mb-3">{template.description}</p>
-                      
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {template.features.slice(0, 4).map(feature => (
-                          <Badge key={feature} variant="outline" className="text-xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                      </div>
+                  {/* Layout Badge */}
+                  <Badge
+                    variant="outline"
+                    className={`
+                      bg-gray-100 text-gray-700 border-gray-300
+                      transition-all duration-300 hover:scale-105
+                      flex items-center gap-1 text-xs
+                    `}
+                  >
+                    {layoutInfo.icon} {layoutInfo.label}
+                  </Badge>
 
-                      {template.atsScore && (
-                        <p className="text-sm text-gray-500">
-                          ATS Score: <span className="font-semibold text-blue-600">{template.atsScore}%</span>
-                        </p>
-                      )}
-                    </div>
+                  {/* Header Alignment Badge */}
+                  <Badge
+                    variant="outline"
+                    className={`
+                      bg-gray-100 text-gray-700 border-gray-300
+                      transition-all duration-300 hover:scale-105
+                      flex items-center gap-1 text-xs
+                    `}
+                  >
+                    {headerAlignInfo.icon} {headerAlignInfo.label}
+                  </Badge>
+                </div>
+              </CardHeader>
 
-                    {/* Action Button */}
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        onClick={() => handleTemplateSelect(template)}
-                        variant={selectedTemplate === template.id ? "default" : "outline"}
-                        size="sm"
-                      >
-                        {selectedTemplate === template.id ? (
-                          <>
-                            <Check className="w-4 h-4 mr-2" />
-                            Selected
-                          </>
-                        ) : (
-                          'Select'
-                        )}
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPreviewTemplate(template);
-                          setEnlargePreview(true);
-                        }}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview
-                      </Button>
-                    </div>
+              <CardContent className="relative z-10 pt-0">
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                  {template.description}
+                </p>
+
+                {/* Features */}
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {template.features.slice(0, 3).map((feature, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors duration-200"
+                    >
+                      {feature}
+                    </Badge>
+                  ))}
+                  {template.features.length > 3 && (
+                    <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
+                      +{template.features.length - 3} more
+                    </Badge>
+                  )}
+                </div>
+
+                {/* ATS Score */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">ATS Score:</span>
+                    <Badge
+                      variant="outline"
+                      className={`
+                        ${template.atsScore >= 98 ? 'bg-green-100 text-green-800 border-green-300' :
+                          template.atsScore >= 95 ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                          template.atsScore >= 93 ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                          'bg-gray-100 text-gray-800 border-gray-300'}
+                        transition-all duration-300 hover:scale-105
+                      `}
+                    >
+                      {template.atsScore}%
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      )}
 
-      {/* Template Count */}
-      <div className="text-center mt-8 text-gray-500">
-        Showing {filteredTemplates.length} of {cvTemplates.length} templates
-        {selectedCategory !== 'all' && ` in ${selectedCategory} category`}
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  >
+                    Use Template
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Preview Modal */}
-      <Dialog open={enlargePreview} onOpenChange={setEnlargePreview}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Template Preview: {previewTemplate?.name}</DialogTitle>
-          </DialogHeader>
-          {previewTemplate && (
-            <div className="space-y-4">
-              <CVTemplatePreview template={previewTemplate} />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <h3 className="font-semibold">{previewTemplate.name}</h3>
-                  <p className="text-sm text-gray-600">{previewTemplate.description}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {previewTemplate.features.map(feature => (
-                      <Badge key={feature} variant="outline" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <Button
-                  onClick={() => {
-                    handleTemplateSelect(previewTemplate);
-                    setEnlargePreview(false);
-                  }}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600"
-                >
-                  Use This Template
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {filteredTemplates.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No templates available for the selected tier.</p>
+        </div>
+      )}
     </div>
   );
-}; 
+};
+
+export default CVTemplateSelector; 

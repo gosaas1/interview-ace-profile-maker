@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { CVFormFields } from './CVFormFields';
-import CVTemplateSelector from './CVTemplateSelector';
+
 import CVPreview from './CVPreview';
 import { CVAnalysis } from './CVAnalysis';
 import { Eye, EyeOff, Palette, Save, Download, Brain, CheckCircle, AlertCircle, Plus, X, Languages } from 'lucide-react';

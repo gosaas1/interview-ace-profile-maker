@@ -28,6 +28,7 @@ import { DatabaseSchemaTest } from '@/components/debug/DatabaseSchemaTest';
 import SSOTest from '@/components/debug/SSOTest';
 import EliteExecutive from '@/pages/EliteExecutive';
 import Analytics from '@/pages/Analytics';
+import TemplatePreviewGenerator from '@/pages/TemplatePreviewGenerator';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -108,6 +109,9 @@ function App() {
           <Route path="/auth/reset-password" element={<AppLayout showTopNav={false}><ResetPassword /></AppLayout>} />
           <Route path="/auth/verify" element={<AppLayout showTopNav={false}><VerifyEmail /></AppLayout>} />
           <Route path="/auth/callback" element={<AppLayout showTopNav={false}><AuthCallback /></AppLayout>} />
+          
+          {/* Template Preview Generator (no auth required) */}
+          <Route path="/template-preview" element={<AppLayout showTopNav={false}><TemplatePreviewGenerator /></AppLayout>} />
           
           {/* Payment routes */}
           <Route path="/payment-success" element={<AppLayout showTopNav={false}><PaymentSuccess /></AppLayout>} />
