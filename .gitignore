@@ -24,6 +24,8 @@ out/
 .env.test.local
 .env.production.local
 env_backend_updated
+*.env
+env_*
 
 # IDE and editor files
 .vscode/
