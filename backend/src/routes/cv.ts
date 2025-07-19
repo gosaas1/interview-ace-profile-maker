@@ -4,13 +4,7 @@ import { authenticateUser } from '../middleware/auth.js';
 import { normalizeCVContent, validateCVContent } from '../lib/cv.js';
 import { supabase } from '../lib/supabase.js';
 import mammoth from 'mammoth';
-import { 
-  extractTextFromPDF as extractTextFromTextract, 
-  calculateFileHash, 
-  checkFileHashExists, 
-  storeFileHash,
-  estimateParsingCost 
-} from '../lib/aws-textract.js';
+// AWS Textract functionality removed - using Cohere parser only
 import { 
   extractTextFromPDF as extractTextFromCohere 
 } from '../lib/cohere-parser.js';
@@ -53,53 +47,19 @@ async function extractTextFromFile(file: Express.Multer.File, userId?: string): 
       try {
         console.log('🔍 Processing PDF with Textract + Cohere fallback...');
         
-        // Check if file has been parsed before (cost control)
-        const fileHash = calculateFileHash(buffer);
-        const alreadyParsed = await checkFileHashExists(fileHash);
-        
-        if (alreadyParsed) {
-          console.log('✅ File already parsed, skipping parsing call');
-          // TODO: Retrieve cached result from database
-          return 'File already processed - using cached result';
-        }
-        
-        // Estimate cost before processing
-        const costEstimate = estimateParsingCost(buffer);
-        console.log('💰 Estimated parsing cost: $', costEstimate.totalCost.toFixed(4));
-        
-        // Try Textract first (primary parser)
+        // Use Cohere parser for PDF files
         try {
-          console.log('🚀 Attempting AWS Textract...');
-          const textractResult = await extractTextFromTextract(buffer);
-        
-        // Store file hash for future deduplication
-        await storeFileHash(fileHash, userId || 'unknown', textractResult.cost);
-        
-        console.log('✅ AWS Textract completed successfully');
-        console.log('📊 Confidence:', textractResult.confidence.toFixed(2) + '%');
-        console.log('💸 Actual cost: $', textractResult.cost.toFixed(4));
-        
-        return textractResult.text;
-        } catch (textractError: any) {
-          console.error('❌ AWS Textract failed:', textractError.message);
-          console.log('🔄 Falling back to Cohere parser...');
+          console.log('🚀 Using Cohere parser for PDF...');
+          const cohereResult = await extractTextFromCohere(buffer);
           
-          // Fallback to Cohere
-          try {
-            const cohereResult = await extractTextFromCohere(buffer);
-            
-            // Store file hash for future deduplication
-            await storeFileHash(fileHash, userId || 'unknown', cohereResult.cost);
-            
-            console.log('✅ Cohere fallback completed successfully');
-            console.log('📊 Confidence:', cohereResult.confidence.toFixed(2) + '%');
-            console.log('💸 Actual cost: $', cohereResult.cost.toFixed(4));
-            
-            return cohereResult.text;
-          } catch (cohereError: any) {
-            console.error('❌ Cohere fallback also failed:', cohereError.message);
-            throw new Error(`PDF parsing failed: Textract error - ${textractError.message}, Cohere error - ${cohereError.message}`);
-          }
+          console.log('✅ Cohere parsing completed successfully');
+          console.log('📊 Confidence:', cohereResult.confidence.toFixed(2) + '%');
+          console.log('💸 Actual cost: $', cohereResult.cost.toFixed(4));
+          
+          return cohereResult.text;
+        } catch (cohereError: any) {
+          console.error('❌ Cohere parsing failed:', cohereError.message);
+          throw new Error(`PDF parsing failed: ${cohereError.message}`);
         }
       } catch (err: any) {
         console.error('❌ PDF parsing completely failed:', err);

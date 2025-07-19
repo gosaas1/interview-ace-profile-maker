@@ -21,7 +21,7 @@ interface CVBuilderProps {
   // Add any props if needed
 }
 
-const CVBuilderPage: React.FC<CVBuilderProps> = () => {
+export default function CVBuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -419,6 +419,4 @@ const CVBuilderPage: React.FC<CVBuilderProps> = () => {
       </div>
     </div>
   );
-};
-
-export default CVBuilderPage; 
+}; 

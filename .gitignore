@@ -27,6 +27,13 @@ env_backend_updated
 *.env
 env_*
 
+# Sensitive files with API keys
+backend/tests/run-e2e-tests.js
+backend/tests/e2e/
+backend/scripts/run-migrations.js
+backend/src/tests/cv.test.ts
+backend/fix-supabase-schema.js
+
 # IDE and editor files
 .vscode/
 .idea/

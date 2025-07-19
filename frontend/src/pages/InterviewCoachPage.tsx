@@ -709,4 +709,4 @@ export default function InterviewCoachPage() {
       </motion.div>
     </div>
   );
-} 
+}

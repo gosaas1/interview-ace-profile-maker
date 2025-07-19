@@ -129,8 +129,11 @@ export const CVs = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">        
-        <main className="overflow-y-auto p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="w-64 fixed left-0 top-0 h-full">
+          <HomeNavigation />
+        </div>
+        <main className="ml-64 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <div className="flex justify-between items-center">

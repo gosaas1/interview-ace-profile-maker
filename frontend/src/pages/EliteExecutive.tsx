@@ -618,7 +618,7 @@ const EliteExecutive: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_mock');
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
       if (!stripe) throw new Error('Stripe failed to load');
 
       const priceIds = {
