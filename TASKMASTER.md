@@ -1,304 +1,180 @@
-# 🎯 APPLYACE TASKMASTER - COMPREHENSIVE EXECUTION PLAN
+# 🎯 APPLYACE TASKMASTER v4.1 - COMPREHENSIVE EXECUTION PLAN
 
-## 📋 **CURRENT STATUS ASSESSMENT**
+## 📋 CURRENT STATUS ASSESSMENT
 
-### **✅ What's Working:**
+### ✅ What's Working:
 - Frontend server running on port 3000
 - Backend server running on port 8000
-- Supabase connection configured
-- OAuth authentication setup
-- CV Builder UI components
-- Database schema defined
+- Supabase connection established
+- OAuth authentication configured
+- CV Builder UI components designed
+- Stripe integration active
+- Database schema structured
 
-### **❌ Critical Issues to Fix:**
-1. **Backend API Routes Missing** - 404 errors on `/api/cv` endpoints
-2. **CV Upload Not Saving** - Database integration broken
-3. **API Base URL Mismatch** - Still trying port 8080 in some places
-4. **Missing Backend Routes** - Need to implement CV management endpoints
-
----
-
-## 🚨 **IMMEDIATE PRIORITY TASKS**
-
-### **Task 1: Fix Backend API Routes (CRITICAL)**
-**Status**: 🔴 BLOCKING
-**Issue**: Backend server running but API routes not configured
-
-**Actions Required:**
-1. Check `backend/server.js` for missing route definitions
-2. Add CV management routes to Express server
-3. Ensure proper middleware configuration
-4. Test API endpoints
-
-**Files to Update:**
-- `backend/server.js` - Add missing routes
-- `backend/src/routes/cv.ts` - Ensure proper export
-- `backend/src/index.ts` - Check route registration
-
-### **Task 2: Fix API Base URL Configuration**
-**Status**: 🔴 BLOCKING
-**Issue**: Frontend still trying port 8080 instead of 8000
-
-**Actions Required:**
-1. Update all API calls to use port 8000
-2. Verify environment variables
-3. Test API connectivity
-
-**Files to Update:**
-- `frontend/src/lib/supabase.ts` - API base URL
-- Any other files with hardcoded port 8080
-
-### **Task 3: Implement CV Upload Backend**
-**Status**: 🔴 BLOCKING
-**Issue**: CV upload not saving to database
-
-**Actions Required:**
-1. Implement `/api/cv/create` endpoint
-2. Add file upload handling
-3. Database integration
-4. Error handling
-
-**Files to Update:**
-- `backend/src/routes/cv.ts` - Add create endpoint
-- `backend/server.js` - Add file upload middleware
+### ❌ Critical Issues to Fix Immediately:
+- Backend API Routes Missing (404 errors)
+- CV Upload functionality broken
+- API Base URL configuration mismatch
+- CV management routes incomplete
+- Database integration using mock data
 
 ---
 
-## 🔧 **BACKEND INFRASTRUCTURE TASKS**
+## 🚨 PHASE 1: CRITICAL FIXES
 
-### **Task 4: Complete Backend Route Setup**
-**Priority**: 🔴 HIGH
-**Estimated Time**: 30 minutes
+### Task 1: Fix Backend API Routes (CRITICAL)
+- [ ] Verify and complete backend API endpoints (`/api/cv/*`)
+- [ ] Ensure route definitions in `backend/server.js`
+- [ ] Test all CV management endpoints
+- [ ] Implement proper error handling and validation
 
-**Required Endpoints:**
-```typescript
-// CV Management
-POST   /api/cv/create        // Create new CV
-GET    /api/cv              // Get user's CVs
-GET    /api/cv/:id          // Get specific CV
-PUT    /api/cv/:id          // Update CV
-DELETE /api/cv/:id          // Delete CV
+### Task 2: Correct API Base URL (CRITICAL)
+- [ ] Update frontend API calls to correct backend URL (port 8000)
+- [ ] Fix CORS configuration
+- [ ] Test API connectivity between frontend and backend
+- [ ] Implement proper error handling for API failures
 
-// File Upload
-POST   /api/cv/upload       // Upload CV file
+### Task 3: Implement CV Upload Backend (CRITICAL)
+- [ ] Integrate Multer for file uploads
+- [ ] Ensure uploads saved correctly to Supabase storage
+- [ ] Implement file validation and security
+- [ ] Add progress indicators and error handling
 
-// Health Check
-GET    /api/health          // Server health
-```
-
-**Implementation Steps:**
-1. Add route definitions to `server.js`
-2. Import and use route modules
-3. Add proper middleware (CORS, auth, file upload)
-4. Test all endpoints
-
-### **Task 5: Database Integration**
-**Priority**: 🔴 HIGH
-**Estimated Time**: 20 minutes
-
-**Required Actions:**
-1. Verify Supabase connection in backend
-2. Test database operations
-3. Add proper error handling
-4. Implement data validation
-
-### **Task 6: Authentication Middleware**
-**Priority**: 🟡 MEDIUM
-**Estimated Time**: 15 minutes
-
-**Required Actions:**
-1. Add JWT verification middleware
-2. Protect CV routes
-3. Handle authentication errors
-4. Test with OAuth tokens
+### Task 4: Database Integration (CRITICAL)
+- [ ] Replace mock data with real Supabase database integration
+- [ ] Verify CRUD operations across modules
+- [ ] Implement proper data validation
+- [ ] Add database error handling and logging
 
 ---
 
-## 🎨 **FRONTEND INTEGRATION TASKS**
+## ⚙️ PHASE 2: CORE FEATURE MODULES
 
-### **Task 7: Fix CV Upload Component**
-**Priority**: 🔴 HIGH
-**Estimated Time**: 20 minutes
+### Task 5: One-Click Apply Module
+- [ ] Implement LinkedIn job description parsing
+- [ ] Integrate AI-driven CV and cover letter tailoring (Claude/GPT-4)
+- [ ] Create application tracking UI
+- [ ] Implement job folder system
+- [ ] Add application status management
 
-**Required Actions:**
-1. Update API calls to use correct endpoints
-2. Add proper error handling
-3. Implement loading states
-4. Test file upload functionality
+### Task 6: Interview Coach Module
 
-### **Task 8: CV Builder Integration**
-**Priority**: 🟡 MEDIUM
-**Estimated Time**: 30 minutes
+**Phase 1:**
+- [ ] Implement AI-generated interview questions (Claude)
+- [ ] Text-based answer scoring and feedback
+- [ ] Create interview practice interface
+- [ ] Implement question categorization by job type
 
-**Required Actions:**
-1. Connect CV Builder to backend API
-2. Implement save functionality
-3. Add template selection
-4. Test end-to-end flow
+**Phase 2 (Optional):**
+- [ ] Implement video recording and Claude video scoring
+- [ ] Add video storage and playback
+- [ ] Create video feedback interface
+- [ ] Implement employer video viewing (if required)
 
-### **Task 9: OAuth Integration Testing**
-**Priority**: 🟡 MEDIUM
-**Estimated Time**: 15 minutes
-
-**Required Actions:**
-1. Test Google OAuth flow
-2. Test LinkedIn OAuth flow
-3. Verify callback handling
-4. Test user session management
+### Task 7: Employer Portal (EasyHire)
+- [ ] Build job posting interface
+- [ ] Develop applicant dashboard with filters (Score, Skills, Video)
+- [ ] Implement applicant management actions (Shortlist, Reject, Comment)
+- [ ] Create employer authentication and role management
+- [ ] Implement job management (create, edit, delete)
 
 ---
 
-## 🧪 **TESTING & VALIDATION TASKS**
+## 🎨 PHASE 3: SYSTEM ENHANCEMENTS
 
-### **Task 10: API Endpoint Testing**
-**Priority**: 🔴 HIGH
-**Estimated Time**: 20 minutes
+### Task 8: User Dashboard
+- [ ] Implement personalized dashboard for application tracking
+- [ ] Integrate metrics and notifications
+- [ ] Add progress indicators and success rates
+- [ ] Create job folder organization system
 
-**Test Cases:**
-1. Health check endpoint
-2. CV creation endpoint
-3. CV retrieval endpoints
-4. File upload endpoint
-5. Error handling
+### Task 9: Analytics Dashboard
+- [ ] Build analytics views for user metrics and KPIs
+- [ ] Track application and interview success rates
+- [ ] Implement data visualization components
+- [ ] Add export and reporting features
 
-### **Task 11: End-to-End Testing**
-**Priority**: 🟡 MEDIUM
-**Estimated Time**: 30 minutes
-
-**Test Scenarios:**
-1. User registration/login
-2. CV creation via builder
-3. CV upload via file
-4. CV editing and saving
-5. CV deletion
-
-### **Task 12: Performance Testing**
-**Priority**: 🟢 LOW
-**Estimated Time**: 15 minutes
-
-**Test Areas:**
-1. Page load times
-2. API response times
-3. File upload performance
-4. Database query performance
+### Task 10: Settings & Preferences
+- [ ] Implement settings management (profile, subscription, notifications)
+- [ ] Integrate Stripe for subscription enforcement
+- [ ] Add user preference controls
+- [ ] Implement notification settings
 
 ---
 
-## 📚 **DOCUMENTATION TASKS**
+## 📖 PHASE 4: TESTING & DOCUMENTATION
 
-### **Task 13: Update Development Guide**
-**Priority**: 🟢 LOW
-**Estimated Time**: 10 minutes
+### Task 11: Comprehensive API Endpoint Testing
+- [ ] Fully test all API endpoints with real data
+- [ ] Document responses and error handling
+- [ ] Implement automated API testing
+- [ ] Create API documentation
 
-**Required Updates:**
-1. Add troubleshooting section
-2. Update port configuration
-3. Add API testing instructions
-4. Include common issues
+### Task 12: OAuth Integration Testing
+- [ ] Thoroughly test Google and LinkedIn OAuth flows
+- [ ] Ensure robust session management
+- [ ] Test authentication edge cases
+- [ ] Implement proper logout and session cleanup
 
-### **Task 14: Create Deployment Guide**
-**Priority**: 🟢 LOW
-**Estimated Time**: 20 minutes
+### Task 13: End-to-End User Flow Testing
+- [ ] Test full user journeys from registration to CV management
+- [ ] Validate interview coach interactions
+- [ ] Test employer portal workflows
+- [ ] Verify payment and subscription flows
 
-**Required Content:**
-1. Production deployment steps
-2. Environment configuration
-3. Database migration
-4. Monitoring setup
-
----
-
-## 🚀 **EXECUTION ORDER**
-
-### **Phase 1: Critical Fixes (Immediate)**
-1. **Task 1**: Fix Backend API Routes
-2. **Task 2**: Fix API Base URL Configuration
-3. **Task 3**: Implement CV Upload Backend
-
-### **Phase 2: Core Functionality (High Priority)**
-4. **Task 4**: Complete Backend Route Setup
-5. **Task 5**: Database Integration
-6. **Task 7**: Fix CV Upload Component
-
-### **Phase 3: Integration & Testing (Medium Priority)**
-7. **Task 6**: Authentication Middleware
-8. **Task 8**: CV Builder Integration
-9. **Task 10**: API Endpoint Testing
-
-### **Phase 4: Polish & Documentation (Low Priority)**
-10. **Task 9**: OAuth Integration Testing
-11. **Task 11**: End-to-End Testing
-12. **Task 13**: Update Development Guide
+### Task 14: Update Documentation
+- [ ] Update Technical Reference, Deployment Guide, Testing Strategy, Security Documentation
+- [ ] Provide clear production deployment instructions
+- [ ] Create user guides and tutorials
+- [ ] Document API specifications
 
 ---
 
-## 🔍 **SUCCESS CRITERIA**
+## 📊 PROGRESS TRACKING CHECKLIST
 
-### **Minimum Viable Product (MVP)**
-- ✅ User can register/login
-- ✅ User can create CV via builder
-- ✅ User can upload CV file
-- ✅ User can view/edit/delete CVs
-- ✅ All API endpoints working
-- ✅ No 404 errors
+### Phase 1: Critical Fixes
+- [ ] Task 1: Backend API Routes
+- [ ] Task 2: API Base URL Configuration
+- [ ] Task 3: CV Upload Backend
+- [ ] Task 4: Database Integration
 
-### **Full Functionality**
-- ✅ OAuth authentication working
-- ✅ CV templates functional
-- ✅ File upload working
-- ✅ Database persistence
-- ✅ Error handling
-- ✅ Performance optimized
+### Phase 2: Core Features
+- [ ] Task 5: One-Click Apply Module
+- [ ] Task 6: Interview Coach Module (Phase 1)
+- [ ] Task 7: Employer Portal
 
----
+### Phase 3: System Enhancements
+- [ ] Task 8: User Dashboard
+- [ ] Task 9: Analytics Dashboard
+- [ ] Task 10: Settings & Preferences
 
-## 🚨 **BLOCKERS & DEPENDENCIES**
-
-### **Current Blockers:**
-1. **Backend API Routes Missing** - Must fix first
-2. **Database Connection Issues** - Must verify
-3. **Port Configuration Mismatch** - Must resolve
-
-### **Dependencies:**
-- Supabase project properly configured
-- Environment variables set correctly
-- All npm packages installed
-- Both servers running
+### Phase 4: Testing & Documentation
+- [ ] Task 11: API Endpoint Testing
+- [ ] Task 12: OAuth Integration Testing
+- [ ] Task 13: End-to-End Testing
+- [ ] Task 14: Documentation Updates
 
 ---
 
-## 📊 **PROGRESS TRACKING**
+## ✅ SUCCESS CRITERIA
 
-### **Task Completion Status:**
-- [ ] Task 1: Fix Backend API Routes
-- [ ] Task 2: Fix API Base URL Configuration  
-- [ ] Task 3: Implement CV Upload Backend
-- [ ] Task 4: Complete Backend Route Setup
-- [ ] Task 5: Database Integration
-- [ ] Task 6: Authentication Middleware
-- [ ] Task 7: Fix CV Upload Component
-- [ ] Task 8: CV Builder Integration
-- [ ] Task 9: OAuth Integration Testing
-- [ ] Task 10: API Endpoint Testing
-- [ ] Task 11: End-to-End Testing
-- [ ] Task 12: Performance Testing
-- [ ] Task 13: Update Development Guide
-- [ ] Task 14: Create Deployment Guide
-
-### **Overall Progress:**
-- **Critical Tasks**: 0/3 completed
-- **High Priority**: 0/3 completed  
-- **Medium Priority**: 0/3 completed
-- **Low Priority**: 0/5 completed
-
-**Total Progress**: 0% Complete
+- [ ] Fully operational MVP (user and employer portals)
+- [ ] Comprehensive AI-driven features
+- [ ] Robust and scalable infrastructure
+- [ ] Complete documentation and thorough testing
+- [ ] Stable, maintainable, and clean codebase
 
 ---
 
-## 🎯 **NEXT ACTION**
+## 🚀 IMMEDIATE NEXT STEPS
 
-**IMMEDIATE NEXT STEP**: Execute Task 1 - Fix Backend API Routes
+**Start with Task 1** and systematically progress through the tasks for a structured and efficient development cycle.
 
-This is the critical blocker preventing the application from working. Once this is fixed, we can proceed with the remaining tasks systematically.
+**Priority Order:**
+1. Fix backend API routes (Task 1)
+2. Correct API base URL (Task 2)
+3. Implement CV upload backend (Task 3)
+4. Database integration (Task 4)
+5. Begin One-Click Apply module (Task 5)
 
-**Ready to execute?** Let's start with Task 1 and work through the list systematically following our comprehensive documentation. 
+This structured approach ensures critical infrastructure issues are resolved before building advanced features, leading to a stable and scalable platform. 

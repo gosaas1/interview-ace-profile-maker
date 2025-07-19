@@ -61,6 +61,7 @@ export interface CVData {
   file_name?: string;
   file_size?: number;
   content_type?: string;
+  content?: any; // Add content field for builder CVs
   created_at: string;
   updated_at: string;
 }

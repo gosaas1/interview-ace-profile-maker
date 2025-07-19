@@ -52,16 +52,16 @@ const Footer = () => {
             </p>
             <div className="flex space-x-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">50K+</div>
-                <div className="text-sm text-slate-400">Users</div>
+                <div className="text-2xl font-bold">Growing</div>
+                <div className="text-sm text-slate-400">Community</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">98%</div>
-                <div className="text-sm text-slate-400">Success Rate</div>
+                <div className="text-2xl font-bold">AI-Powered</div>
+                <div className="text-sm text-slate-400">Tools</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">4.9★</div>
-                <div className="text-sm text-slate-400">Rating</div>
+                <div className="text-2xl font-bold">24/7</div>
+                <div className="text-sm text-slate-400">Support</div>
               </div>
             </div>
           </div>

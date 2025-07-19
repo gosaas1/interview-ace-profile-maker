@@ -11,6 +11,12 @@ import CVBuilderPage from '@/pages/CVBuilderPage';
 import { Interviews } from '@/pages/Interviews';
 import { Jobs } from '@/pages/Jobs';
 import AuthCallback from '@/components/auth/AuthCallback';
+import CoverLetterPage from '@/pages/CoverLetterPage';
+import JobApplyPage from '@/pages/JobApplyPage';
+import UsageDashboard from '@/pages/UsageDashboard';
+import AdminPanel from '@/pages/AdminPanel';
+import OneClickApplyPage from '@/pages/OneClickApplyPage';
+import InterviewCoachPage from '@/pages/InterviewCoachPage';
 import { TopNavigation } from '@/components/navigation/TopNavigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import BackendTest from '@/components/debug/BackendTest';
@@ -204,6 +210,76 @@ function App() {
               <AppLayout>
                 <PrivateRoute>
                   <Analytics />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/usage"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <UsageDashboard />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <AdminPanel />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/cover-letter"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <CoverLetterPage />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/cover-letter/:jobId"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <CoverLetterPage />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/apply"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <OneClickApplyPage />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/apply/:jobId"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <OneClickApplyPage />
+                </PrivateRoute>
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/interview-coach"
+            element={
+              <AppLayout>
+                <PrivateRoute>
+                  <InterviewCoachPage />
                 </PrivateRoute>
               </AppLayout>
             }

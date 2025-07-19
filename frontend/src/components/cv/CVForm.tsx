@@ -6,6 +6,7 @@ import EducationForm from './forms/EducationForm';
 import SkillsForm from './forms/SkillsForm';
 import CertificationsForm from './forms/CertificationsForm';
 import { CVData } from '@/lib/supabase';
+import { normalizeCVData } from '@/lib/cv/normalize';
 
 interface CVFormProps {
   cvData: CVData;
@@ -23,17 +24,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
     portfolio_url?: string;
     summary: string;
   }) => {
-    onDataChange({ 
-      ...cvData, 
-      full_name: personalInfo.full_name,
-      job_title: personalInfo.job_title,
-      email: personalInfo.email,
-      phone: personalInfo.phone,
-      location: personalInfo.location,
-      linkedin_url: personalInfo.linkedin_url,
-      portfolio_url: personalInfo.portfolio_url,
-      summary: personalInfo.summary
-    });
+    onDataChange(normalizeCVData({ ...cvData, personal_info: personalInfo }));
   };
 
   const updateExperience = (experience: Array<{
@@ -42,7 +33,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
     duration: string;
     description: string;
   }>) => {
-    onDataChange({ ...cvData, experiences: experience });
+    onDataChange(normalizeCVData({ ...cvData, experiences: experience }));
   };
 
   const updateEducation = (education: Array<{
@@ -51,15 +42,15 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
     year: string;
     gpa: string;
   }>) => {
-    onDataChange({ ...cvData, education });
+    onDataChange(normalizeCVData({ ...cvData, education }));
   };
 
   const updateSkills = (skills: string[]) => {
-    onDataChange({ ...cvData, skills: skills.join(', ') });
+    onDataChange(normalizeCVData({ ...cvData, skills: skills.join(', ') }));
   };
 
   const updateCertifications = (certifications: string) => {
-    onDataChange({ ...cvData, certifications });
+    onDataChange(normalizeCVData({ ...cvData, certifications }));
   };
 
   return (
@@ -74,14 +65,14 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         <CardContent>
           <PersonalInfoForm
             data={{
-              full_name: cvData.full_name,
-              job_title: cvData.job_title,
-              email: cvData.email,
-              phone: cvData.phone,
-              location: cvData.location,
-              linkedin_url: cvData.linkedin_url,
-              portfolio_url: cvData.portfolio_url,
-              summary: cvData.summary
+              full_name: cvData.personal_info.full_name,
+              job_title: cvData.personal_info.job_title,
+              email: cvData.personal_info.email,
+              phone: cvData.personal_info.phone,
+              location: cvData.personal_info.location,
+              linkedin_url: cvData.personal_info.linkedin_url,
+              portfolio_url: cvData.personal_info.portfolio_url,
+              summary: cvData.personal_info.summary
             }}
             onChange={updatePersonalInfo}
           />

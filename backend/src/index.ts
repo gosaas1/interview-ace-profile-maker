@@ -4,13 +4,13 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import cvRoutes from './routes/cv';
-import authRoutes from './routes/auth';
-import interviewRoutes from './routes/interview';
-import jobsRoutes from './routes/jobs';
+import cvRoutes from './routes/cv.js';
+import authRoutes from './routes/auth.js';
+import interviewRoutes from './routes/interview.js';
+import jobsRoutes from './routes/jobs.js';
 
 // Export supabase for use in routes
-export { supabase } from './lib/supabase';
+export { supabase } from './lib/supabase.js';
 
 // Load environment variables
 dotenv.config();

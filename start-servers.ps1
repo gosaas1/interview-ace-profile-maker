@@ -15,6 +15,6 @@ Write-Host "🎨 Starting Frontend Server (Port 3000)..." -ForegroundColor Blue
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd frontend; npm run dev"
 
 Write-Host "✅ Both servers are starting..." -ForegroundColor Green
-Write-Host "📍 Backend: http://localhost:8080" -ForegroundColor Cyan
+Write-Host "📍 Backend: http://localhost:8000" -ForegroundColor Cyan
 Write-Host "📍 Frontend: http://localhost:3000" -ForegroundColor Cyan
 Write-Host "📍 Health Check: http://localhost:8080/api/health" -ForegroundColor Cyan 

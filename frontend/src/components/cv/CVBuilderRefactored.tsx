@@ -16,54 +16,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Globe, Linkedin } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { normalizeCVData } from '@/lib/cv/normalize';
 
 interface CVBuilderProps {
   onClose: () => void;
   onSuccess?: () => void;
   editingCV?: CVData;
-}
-
-// Aligned form data structure with database schema
-interface CVFormData {
-  full_name: string;
-  job_title: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedin_url: string;
-  portfolio_url: string;
-  summary: string;
-  experiences: Array<{
-    company: string;
-    role: string;
-    duration: string;
-    description: string;
-  }>;
-  education: Array<{
-    institution: string;
-    degree: string;
-    year: string;
-    gpa: string;
-  }>;
-  projects: Array<{
-    name: string;
-    description: string;
-    technologies: string;
-    url: string;
-  }>;
-  skills: string;
-  languages: Array<{
-    language: string;
-    proficiency: string;
-  }>;
-  certifications: string;
-  references: Array<{
-    name: string;
-    title: string;
-    company: string;
-    email: string;
-    phone: string;
-  }>;
 }
 
 type ViewMode = 'form' | 'template' | 'preview' | 'analysis';
@@ -75,48 +33,36 @@ const PersonalInfoStep = ({ formData, onInputChange }: { formData: any, onInputC
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-        <Input name="full_name" value={formData.full_name} onChange={onInputChange} placeholder="John Doe" required />
+        <Input name="fullName" value={formData.personalInfo.fullName} onChange={onInputChange} placeholder="John Doe" required />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-        <Select value={formData.job_title} onValueChange={(value) => onInputChange({ target: { name: 'job_title', value } })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select job title" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Software Engineer">Software Engineer</SelectItem>
-            <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
-            <SelectItem value="Backend Developer">Backend Developer</SelectItem>
-            <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
-            <SelectItem value="Data Scientist">Data Scientist</SelectItem>
-            <SelectItem value="Product Manager">Product Manager</SelectItem>
-            <SelectItem value="UX Designer">UX Designer</SelectItem>
-            <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
-            <SelectItem value="QA Engineer">QA Engineer</SelectItem>
-            <SelectItem value="Project Manager">Project Manager</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input name="jobTitle" value={formData.personalInfo.jobTitle || ''} onChange={onInputChange} placeholder="Software Engineer" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-        <Input name="email" type="email" value={formData.email} onChange={onInputChange} placeholder="john.doe@email.com" />
+        <Input name="email" type="email" value={formData.personalInfo.email} onChange={onInputChange} placeholder="john.doe@email.com" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-        <Input name="phone" value={formData.phone} onChange={onInputChange} placeholder="+1 (555) 123-4567" />
+        <Input name="phone" value={formData.personalInfo.phone} onChange={onInputChange} placeholder="+1 (555) 123-4567" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-        <Input name="location" value={formData.location} onChange={onInputChange} placeholder="New York, NY" />
+        <Input name="location" value={formData.personalInfo.location} onChange={onInputChange} placeholder="New York, NY" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center"><Linkedin className="h-4 w-4 mr-1" />LinkedIn URL</label>
-        <Input name="linkedin_url" value={formData.linkedin_url} onChange={onInputChange} placeholder="https://linkedin.com/in/johndoe" />
+        <Input name="linkedIn" value={formData.personalInfo.linkedIn} onChange={onInputChange} placeholder="https://linkedin.com/in/johndoe" />
       </div>
     </div>
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center"><Globe className="h-4 w-4 mr-1" />Portfolio/Website URL</label>
-      <Input name="portfolio_url" value={formData.portfolio_url} onChange={onInputChange} placeholder="https://johndoe.com" />
+      <Input name="website" value={formData.personalInfo.website} onChange={onInputChange} placeholder="https://johndoe.com" />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Professional Summary</label>
+      <Textarea name="summary" value={formData.personalInfo.summary} onChange={onInputChange} placeholder="A brief overview of your professional background, key skills, and career objectives..." rows={4} />
     </div>
   </div>
 );
@@ -130,11 +76,11 @@ const ExperienceStep = ({ formData, onExperienceChange, onAddExperience, onRemov
         Add Experience
       </Button>
     </div>
-    {formData.experiences.map((exp: any, index: number) => (
+    {formData.experience.map((exp: any, index: number) => (
       <Card key={index} className="p-4">
         <div className="flex justify-between items-start mb-4">
           <h4 className="font-medium">Experience {index + 1}</h4>
-          {formData.experiences.length > 1 && (
+          {formData.experience.length > 1 && (
             <Button variant="ghost" size="sm" onClick={() => onRemoveExperience(index)}>
               <X className="h-4 w-4" />
             </Button>
@@ -349,31 +295,8 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
   const [isLoading, setIsLoading] = useState(false);
   const [userTier, setUserTier] = useState('free');
   const [showPreview, setShowPreview] = useState(false);
-
-  const steps = [
-    { title: 'Personal Info', component: PersonalInfoStep },
-    { title: 'Experience', component: ExperienceStep },
-    { title: 'Education', component: EducationStep },
-    { title: 'Skills & Projects', component: SkillsStep }
-  ];
-
-  const [formData, setFormData] = useState<CVFormData>({
-    full_name: '',
-    job_title: '',
-    email: '',
-    phone: '',
-    location: '',
-    linkedin_url: '',
-    portfolio_url: '',
-    summary: '',
-    experiences: [{ company: '', role: '', duration: '', description: '' }],
-    education: [{ institution: '', degree: '', year: '', gpa: '' }],
-    projects: [{ name: '', description: '', technologies: '', url: '' }],
-    skills: '',
-    languages: [{ language: '', proficiency: '' }],
-    certifications: '',
-    references: [{ name: '', title: '', company: '', email: '', phone: '' }]
-  });
+  // Correctly initialize formData state using the editingCV prop
+  const [formData, setFormData] = useState<CVData>(normalizeCVData(editingCV || {}));
 
   useEffect(() => {
     checkAuth();
@@ -396,36 +319,49 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
   };
 
   const populateFormData = (cv: CVData) => {
-    setFormData({
-      full_name: cv.full_name || '',
-      job_title: cv.job_title || '',
-      email: cv.email || '',
-      phone: cv.phone || '',
-      location: cv.location || '',
-      linkedin_url: cv.linkedin_url || '',
-      portfolio_url: cv.portfolio_url || '',
-      summary: cv.summary || '',
-      experiences: cv.experiences || [{ company: '', role: '', duration: '', description: '' }],
-      education: cv.education || [{ institution: '', degree: '', year: '', gpa: '' }],
-      projects: cv.projects || [{ name: '', description: '', technologies: '', url: '' }],
-      skills: cv.skills || '',
-      languages: cv.languages || [{ language: '', proficiency: '' }],
-      certifications: cv.certifications || '',
-      references: cv.references || [{ name: '', title: '', company: '', email: '', phone: '' }]
-    });
+    setFormData(cv);
   };
 
+  // Update PersonalInfoStep to use canonical structure
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (["fullName", "jobTitle", "email", "phone", "location", "linkedIn", "website", "summary"].includes(name)) {
+      setFormData(prev => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          [name]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
+  // Update all experience/education/projects/skills handlers to use canonical structure
   const handleExperienceChange = (index: number, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      experiences: prev.experiences.map((exp, i) =>
+      experience: prev.experience.map((exp, i) =>
         i === index ? { ...exp, [field]: value } : exp
       )
+    }));
+  };
+
+  const addExperience = () => {
+    setFormData(prev => ({
+      ...prev,
+      experience: [
+        ...prev.experience,
+        { id: String(Date.now()), company: '', position: '', location: '', startDate: '', endDate: '', current: false, description: '' }
+      ]
+    }));
+  };
+
+  const removeExperience = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
     }));
   };
 
@@ -438,51 +374,13 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     }));
   };
 
-  const handleProjectChange = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      projects: prev.projects.map((project, i) =>
-        i === index ? { ...project, [field]: value } : project
-      )
-    }));
-  };
-
-  const handleLanguageChange = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      languages: prev.languages.map((lang, i) =>
-        i === index ? { ...lang, [field]: value } : lang
-      )
-    }));
-  };
-
-  const handleReferenceChange = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      references: prev.references.map((ref, i) =>
-        i === index ? { ...ref, [field]: value } : ref
-      )
-    }));
-  };
-
-  const addExperience = () => {
-    setFormData(prev => ({
-      ...prev,
-      experiences: [...prev.experiences, { company: '', role: '', duration: '', description: '' }]
-    }));
-  };
-
-  const removeExperience = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      experiences: prev.experiences.filter((_, i) => i !== index)
-    }));
-  };
-
   const addEducation = () => {
     setFormData(prev => ({
       ...prev,
-      education: [...prev.education, { institution: '', degree: '', year: '', gpa: '' }]
+      education: [
+        ...prev.education,
+        { id: String(Date.now()), institution: '', degree: '', field: '', startDate: '', endDate: '', gpa: '' }
+      ]
     }));
   };
 
@@ -493,45 +391,81 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     }));
   };
 
+  const handleProjectChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      projects: prev.projects?.map((project, i) =>
+        i === index ? { ...project, [field]: value } : project
+      )
+    }));
+  };
+
   const addProject = () => {
     setFormData(prev => ({
       ...prev,
-      projects: [...prev.projects, { name: '', description: '', technologies: '', url: '' }]
+      projects: [
+        ...(prev.projects || []),
+        { id: String(Date.now()), name: '', description: '', technologies: '', url: '' }
+      ]
     }));
   };
 
   const removeProject = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      projects: prev.projects.filter((_, i) => i !== index)
+      projects: (prev.projects || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleLanguageChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      languages: prev.languages?.map((lang, i) =>
+        i === index ? { ...lang, [field]: value } : lang
+      )
     }));
   };
 
   const addLanguage = () => {
     setFormData(prev => ({
       ...prev,
-      languages: [...prev.languages, { language: '', proficiency: '' }]
+      languages: [
+        ...(prev.languages || []),
+        { id: String(Date.now()), language: '', proficiency: '' }
+      ]
     }));
   };
 
   const removeLanguage = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      languages: prev.languages.filter((_, i) => i !== index)
+      languages: (prev.languages || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleReferenceChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      references: prev.references?.map((ref, i) =>
+        i === index ? { ...ref, [field]: value } : ref
+      )
     }));
   };
 
   const addReference = () => {
     setFormData(prev => ({
       ...prev,
-      references: [...prev.references, { name: '', title: '', company: '', email: '', phone: '' }]
+      references: [
+        ...(prev.references || []),
+        { id: String(Date.now()), name: '', title: '', company: '', email: '', phone: '', relationship: '' }
+      ]
     }));
   };
 
   const removeReference = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      references: prev.references.filter((_, i) => i !== index)
+      references: (prev.references || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -541,26 +475,27 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
   };
 
   const generateCVText = (): string => {
+    const normalizedCV = normalizeCVData(formData);
     let cvText = '';
     
     // Personal Information
-    cvText += `${formData.full_name}\n`;
-    if (formData.job_title) cvText += `${formData.job_title}\n`;
-    if (formData.email) cvText += `${formData.email}\n`;
-    if (formData.phone) cvText += `${formData.phone}\n`;
-    if (formData.location) cvText += `${formData.location}\n`;
-    if (formData.linkedin_url) cvText += `${formData.linkedin_url}\n`;
-    if (formData.portfolio_url) cvText += `${formData.portfolio_url}\n\n`;
+    cvText += `${normalizedCV.personalInfo.fullName}\n`;
+    if (normalizedCV.personalInfo.jobTitle) cvText += `${normalizedCV.personalInfo.jobTitle}\n`;
+    if (normalizedCV.personalInfo.email) cvText += `${normalizedCV.personalInfo.email}\n`;
+    if (normalizedCV.personalInfo.phone) cvText += `${normalizedCV.personalInfo.phone}\n`;
+    if (normalizedCV.personalInfo.location) cvText += `${normalizedCV.personalInfo.location}\n`;
+    if (normalizedCV.personalInfo.linkedinUrl) cvText += `${normalizedCV.personalInfo.linkedinUrl}\n`;
+    if (normalizedCV.personalInfo.portfolioUrl) cvText += `${normalizedCV.personalInfo.portfolioUrl}\n\n`;
     
     // Summary
-    if (formData.summary) {
-      cvText += `PROFESSIONAL SUMMARY\n${formData.summary}\n\n`;
+    if (normalizedCV.summary) {
+      cvText += `PROFESSIONAL SUMMARY\n${normalizedCV.summary}\n\n`;
     }
     
     // Experience
-    if (formData.experiences.length > 0 && formData.experiences[0].company) {
+    if (normalizedCV.experience.length > 0 && normalizedCV.experience[0].company) {
       cvText += `WORK EXPERIENCE\n`;
-      formData.experiences.forEach(exp => {
+      normalizedCV.experience.forEach(exp => {
         if (exp.company) {
           cvText += `${exp.role} at ${exp.company}\n`;
           if (exp.duration) cvText += `${exp.duration}\n`;
@@ -570,9 +505,9 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     }
     
     // Education
-    if (formData.education.length > 0 && formData.education[0].institution) {
+    if (normalizedCV.education.length > 0 && normalizedCV.education[0].institution) {
       cvText += `EDUCATION\n`;
-      formData.education.forEach(edu => {
+      normalizedCV.education.forEach(edu => {
         if (edu.institution) {
           cvText += `${edu.degree} from ${edu.institution}\n`;
           if (edu.year) cvText += `${edu.year}\n`;
@@ -582,14 +517,14 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     }
     
     // Skills
-    if (formData.skills) {
-      cvText += `SKILLS\n${formData.skills}\n\n`;
+    if (normalizedCV.skills) {
+      cvText += `SKILLS\n${normalizedCV.skills}\n\n`;
     }
     
     // Projects
-    if (formData.projects.length > 0 && formData.projects[0].name) {
+    if (normalizedCV.projects.length > 0 && normalizedCV.projects[0].name) {
       cvText += `PROJECTS\n`;
-      formData.projects.forEach(project => {
+      normalizedCV.projects.forEach(project => {
         if (project.name) {
           cvText += `${project.name}\n`;
           if (project.technologies) cvText += `Technologies: ${project.technologies}\n`;
@@ -600,9 +535,9 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     }
     
     // Languages
-    if (formData.languages.length > 0 && formData.languages[0].language) {
+    if (normalizedCV.languages.length > 0 && normalizedCV.languages[0].language) {
       cvText += `LANGUAGES\n`;
-      formData.languages.forEach(lang => {
+      normalizedCV.languages.forEach(lang => {
         if (lang.language) {
           cvText += `${lang.language}: ${lang.proficiency}\n`;
         }
@@ -611,19 +546,20 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     }
     
     // Certifications
-    if (formData.certifications) {
-      cvText += `CERTIFICATIONS\n${formData.certifications}\n\n`;
+    if (normalizedCV.certifications) {
+      cvText += `CERTIFICATIONS\n${normalizedCV.certifications}\n\n`;
     }
     
     return cvText;
   };
 
   const validateForm = (): boolean => {
-    if (!formData.full_name.trim()) {
+    const normalizedCV = normalizeCVData(formData);
+    if (!normalizedCV.personalInfo.fullName.trim()) {
       toast.error('Full name is required');
       return false;
     }
-    if (!formData.email.trim()) {
+    if (!normalizedCV.personalInfo.email.trim()) {
       toast.error('Email is required');
       return false;
     }
@@ -635,10 +571,9 @@ export const CVBuilderRefactored: React.FC<CVBuilderProps> = ({ onClose, onSucce
     
     setIsLoading(true);
     try {
-      const cvText = generateCVText();
+      const normalizedCV = normalizeCVData(formData);
       const cvData = {
-        ...formData,
-        content: cvText,
+        ...normalizedCV,
         user_id: user!.id,
         template_id: selectedTemplate?.id || null
       };

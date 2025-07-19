@@ -1,7 +1,7 @@
 import { loadStripe } from '@stripe/stripe-js';
 
 // Initialize Stripe (only use publishable key on frontend)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51NfSxZJVGzodZBvIGdv4RpKCo0XjEJIk7Dgyxd7g9ekYqblzqqRDLwPNfOy4oVvljPoDZfqpNjGOBxDrh2xMLYLB00Z6TPkARu');
 
 export const getStripe = () => stripePromise;
 

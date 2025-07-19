@@ -231,7 +231,7 @@ export interface JobApplication {
 
 export const API_ENDPOINTS = {
   // Base URLs
-  BACKEND_BASE: 'http://localhost:8080',
+  BACKEND_BASE: 'http://localhost:8000',
   FRONTEND_BASE: 'http://localhost:3000',
   
   // Job Scraping

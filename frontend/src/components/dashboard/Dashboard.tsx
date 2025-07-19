@@ -1,64 +1,143 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, FileText, Briefcase, Users, BarChart3, Settings, LogOut, Search, Bell, User, Crown, Sparkles, TrendingUp, Award, Zap } from 'lucide-react';
+import { Plus, FileText, Briefcase, Users, BarChart3, Settings, LogOut, Search, Bell, User, Crown, Sparkles, TrendingUp, Award, Zap, Target, Send } from 'lucide-react';
 import CVUploadModal from '../cv/CVUploadModal';
 import JobFoldersList from '../folders/JobFoldersList';
+import UsageTrackingCard from './UsageTrackingCard';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showCVUpload, setShowCVUpload] = useState(false);
+  const [usageStats, setUsageStats] = useState<any>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [userTier, setUserTier] = useState<string>('Free Plan');
+
+  // Get user's display name
+  const getUserDisplayName = () => {
+    if (!user) return 'User';
+    
+    // Try to get name from user metadata first (for OAuth providers)
+    if (user.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    
+    // Try to get name from user metadata (for OAuth providers)
+    if (user.user_metadata?.name) {
+      return user.user_metadata.name;
+    }
+    
+    // Try to get first name from user metadata
+    if (user.user_metadata?.first_name) {
+      const firstName = user.user_metadata.first_name;
+      const lastName = user.user_metadata.last_name || '';
+      return `${firstName} ${lastName}`.trim();
+    }
+    
+    // Fallback to email display name
+    if (user.email) {
+      const emailName = user.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    
+    return 'User';
+  };
+
+  // Get user's first name for welcome message
+  const getUserFirstName = () => {
+    const fullName = getUserDisplayName();
+    return fullName.split(' ')[0];
+  };
+
+  // Load user tier information
+  useEffect(() => {
+    if (user) {
+      loadUserTier();
+    }
+  }, [user]);
+
+  const loadUserTier = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        setUserTier('Free Plan');
+        return;
+      }
+
+      const response = await fetch('/api/tier/info', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const tierData = await response.json();
+        setUserTier(`${tierData.currentTier.charAt(0).toUpperCase() + tierData.currentTier.slice(1)} Plan`);
+      } else {
+        setUserTier('Free Plan');
+      }
+    } catch (error) {
+      console.error('Error loading user tier:', error);
+      setUserTier('Free Plan');
+    }
+  };
 
   const stats = [
     { 
       label: 'CVs Created', 
       value: '12', 
       icon: FileText, 
-      color: 'from-blue-500 to-indigo-600',
-      bgColor: 'bg-gradient-to-br from-blue-50 to-indigo-50',
-      textColor: 'text-blue-700',
+      gradient: 'from-blue-100 to-blue-200',
+      iconColor: 'text-blue-500',
       change: '+3 this month',
-      trend: 'up'
+      trend: 'up',
+      action: () => navigate('/cvs')
     },
     { 
       label: 'Applications Sent', 
       value: '28', 
       icon: Briefcase, 
-      color: 'from-emerald-500 to-teal-600',
-      bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50',
-      textColor: 'text-emerald-700',
+      gradient: 'from-green-100 to-green-200',
+      iconColor: 'text-green-500',
       change: '+8 this week',
-      trend: 'up'
+      trend: 'up',
+      action: () => navigate('/jobs')
     },
     { 
-      label: 'Interviews Scheduled', 
-      value: '7', 
-      icon: Users, 
-      color: 'from-purple-500 to-violet-600',
-      bgColor: 'bg-gradient-to-br from-purple-50 to-violet-50',
-      textColor: 'text-purple-700',
-      change: '+2 pending',
-      trend: 'up'
+      label: 'One-Click Apply', 
+      value: '15', 
+      icon: Send, 
+      gradient: 'from-purple-100 to-purple-200',
+      iconColor: 'text-purple-500',
+      change: '+5 this week',
+      trend: 'up',
+      action: () => navigate('/apply')
     },
     { 
       label: 'Success Rate', 
       value: '89%', 
       icon: BarChart3, 
-      color: 'from-orange-500 to-amber-600',
-      bgColor: 'bg-gradient-to-br from-orange-50 to-amber-50',
-      textColor: 'text-orange-700',
+      gradient: 'from-orange-100 to-orange-200',
+      iconColor: 'text-orange-500',
       change: '+12% vs avg',
-      trend: 'up'
+      trend: 'up',
+      action: () => navigate('/analytics')
     },
   ];
 
   const sidebarItems = [
-    { id: 'overview', label: 'Dashboard', icon: BarChart3 },
-    { id: 'cvs', label: 'CV Library', icon: FileText },
-    { id: 'jobs', label: 'Applications', icon: Briefcase },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: 'Dashboard', icon: BarChart3, href: '/dashboard' },
+    { id: 'cvs', label: 'CV Library', icon: FileText, href: '/cvs' },
+    { id: 'jobs', label: 'Applications', icon: Briefcase, href: '/jobs' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/settings' },
   ];
 
   const handleLogout = () => {
@@ -68,6 +147,37 @@ const Dashboard = () => {
 
   const handleCreateCV = () => {
     navigate('/cv-builder');
+  };
+
+  const handleOneClickApply = () => {
+    navigate('/apply');
+  };
+
+  // Load user usage stats
+  useEffect(() => {
+    if (user) {
+      loadUsageStats();
+    }
+  }, [user]);
+
+  const loadUsageStats = async () => {
+    try {
+      setIsLoadingStats(true);
+      const response = await fetch('/api/analytics/usage', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+
+      if (response.ok) {
+        const stats = await response.json();
+        setUsageStats(stats);
+      }
+    } catch (error) {
+      console.error('Error loading usage stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
   };
 
   const handleNavigateToSection = (section: string) => {
@@ -81,276 +191,236 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 via-purple-50/20 to-indigo-50/40 flex">
-      {/* Premium Sidebar */}
-      <div className="w-72 bg-white/90 backdrop-blur-sm shadow-2xl border-r border-slate-200/60">
-        {/* Logo & Branding */}
-        <div className="p-8 border-b border-slate-100/60">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-white" />
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
+      {/* Modern Sidebar */}
+      <motion.div 
+        className="w-80 bg-white/90 backdrop-blur-md shadow-xl border-r border-gray-200/60 flex flex-col"
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200/60">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+              <Crown className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">ApplyAce</h1>
-              <p className="text-sm text-slate-500 font-medium">AI Career Suite</p>
-            </div>
-          </div>
-          
-          {/* User Profile */}
-          <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border border-blue-100/50">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-              <User className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-slate-900 text-sm truncate">John Smith</p>
-              <div className="flex items-center space-x-1 mt-1">
-                <Crown className="h-3 w-3 text-amber-500 flex-shrink-0" />
-                <span className="text-xs text-slate-600 font-medium truncate">Professional Plan</span>
-              </div>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                ApplyAce
+              </h1>
+              <p className="text-xs text-gray-500">Career Platform</p>
             </div>
           </div>
         </div>
-        
-        {/* Navigation */}
-        <nav className="px-6 py-4 space-y-2">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavigateToSection(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 ${
-                activeTab === item.id
-                  ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 transform scale-105'
-                  : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/30 hover:text-slate-900 hover:shadow-md'
-              }`}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-        
-        {/* Bottom Actions */}
-        <div className="absolute bottom-6 left-6 right-6 space-y-3">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-50/50 rounded-xl h-10"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-3 flex-shrink-0" />
-            <span className="truncate">Sign Out</span>
-          </Button>
-          
-          <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl text-white shadow-lg">
-            <div className="flex items-center space-x-2 mb-2">
-              <Zap className="h-4 w-4 flex-shrink-0" />
-              <h3 className="font-semibold text-sm truncate">Upgrade to Elite</h3>
+
+        {/* User Info */}
+        <div className="p-6 border-b border-gray-200/60">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+              <User className="h-6 w-6 text-blue-600" />
             </div>
-            <p className="text-xs text-blue-100 mb-3 line-clamp-2">Unlock advanced AI features & coaching</p>
-            <Button size="sm" className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30 rounded-xl h-8">
-              <span className="truncate">Learn More</span>
+            <div className="flex-1">
+              <h2 className="font-semibold text-gray-900">Welcome back, {getUserFirstName()}!</h2>
+              <p className="text-sm text-gray-500">{userTier}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {sidebarItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  onClick={() => handleNavigateToSection(item.id)}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    activeTab === item.id
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Quick Actions */}
+        <div className="p-4 border-t border-gray-200/60">
+          <div className="space-y-3">
+            <Button
+              onClick={handleCreateCV}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create CV
+            </Button>
+            <Button
+              onClick={handleOneClickApply}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              One-Click Apply
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Premium Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-8 py-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
-                {activeTab === 'overview' && 'Dashboard Overview'}
-                {activeTab === 'cvs' && 'CV Library'}
-                {activeTab === 'jobs' && 'Job Applications'}
-                {activeTab === 'settings' && 'Account Settings'}
-              </h2>
-              <p className="text-slate-600 mt-2 flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-blue-500" />
-                {activeTab === 'overview' && 'Monitor your career progress and optimize your job search strategy'}
-                {activeTab === 'cvs' && 'Create, customize, and manage your professional CV collection'}
-                {activeTab === 'jobs' && 'Track applications and manage tailored CVs for each opportunity'}
-                {activeTab === 'settings' && 'Customize your account preferences and subscription'}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm shadow-sm"
-                />
-              </div>
-              
-              {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative hover:bg-slate-100/50 rounded-xl">
-                <Bell className="h-5 w-5 text-slate-600" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-pulse"></span>
-              </Button>
-              
-              {/* Action Buttons */}
-              {(activeTab === 'overview' || activeTab === 'cvs') && (
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowCVUpload(true)}
-                    className="border-slate-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/30 rounded-xl"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Upload CV
-                  </Button>
-                  <Button 
-                    onClick={handleCreateCV}
-                    className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-lg rounded-xl"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create CV
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+        {/* Logout */}
+        <div className="p-4 border-t border-gray-200/60">
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            className="w-full text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </motion.div>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto p-8">
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* Welcome Banner */}
-              <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between">
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Track your career progress and manage your job search
+            </p>
+          </motion.div>
+
+          {/* Stats Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          >
+            {stats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                whileHover={{ y: -5 }}
+                className="group cursor-pointer"
+                onClick={stat.action}
+              >
+                <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-blue-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 bg-gradient-to-r ${stat.gradient} rounded-lg flex items-center justify-center`}>
+                        <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                      </div>
+                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    </div>
                     <div>
-                      <h3 className="text-2xl font-bold mb-2">Welcome back, John! 👋</h3>
-                      <p className="text-blue-100 text-lg">Ready to supercharge your career today?</p>
-                    </div>
-                    <div className="flex space-x-3">
-                      <Button 
-                        onClick={handleCreateCV}
-                        className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm rounded-xl"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create New CV
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
-                  <Card key={index} className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-4">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                              <stat.icon className="h-6 w-6 text-white" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium text-slate-600">{stat.label}</p>
-                            <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-                            <div className="flex items-center space-x-1">
-                              <TrendingUp className="h-3 w-3 text-emerald-500" />
-                              <span className="text-xs text-emerald-600 font-medium">{stat.change}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-2xl overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <span>Quick Actions</span>
-                    </CardTitle>
-                    <CardDescription>Get started with your job search</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button 
-                      onClick={handleCreateCV}
-                      className="w-full justify-start bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border border-blue-200 rounded-xl h-12"
-                    >
-                      <Plus className="h-4 w-4 mr-3" />
-                      Create New CV
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setShowCVUpload(true)}
-                      className="w-full justify-start hover:bg-slate-50 rounded-xl h-12"
-                    >
-                      <FileText className="h-4 w-4 mr-3" />
-                      Upload Existing CV
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/jobs')}
-                      className="w-full justify-start hover:bg-slate-50 rounded-xl h-12"
-                    >
-                      <Briefcase className="h-4 w-4 mr-3" />
-                      Browse Jobs
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-2xl overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center space-x-2">
-                      <Award className="h-5 w-5 text-purple-600" />
-                      <span>Recent Activity</span>
-                    </CardTitle>
-                    <CardDescription>Your latest career moves</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200/50">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                        <span className="text-sm text-slate-700">CV "Software Engineer" updated</span>
-                        <span className="text-xs text-slate-500 ml-auto">2h ago</span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm text-slate-700">Applied to Google Inc.</span>
-                        <span className="text-xs text-slate-500 ml-auto">5h ago</span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-200/50">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span className="text-sm text-slate-700">Interview scheduled with Meta</span>
-                        <span className="text-xs text-slate-500 ml-auto">1d ago</span>
-                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
+                      <p className="text-gray-600 mb-2">{stat.label}</p>
+                      <p className="text-sm text-green-600 font-medium">{stat.change}</p>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            ))}
+          </motion.div>
 
-          {activeTab === 'settings' && (
-            <div className="max-w-2xl">
-              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg rounded-2xl">
-                <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                  <CardDescription>Manage your account preferences</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">Settings panel coming soon...</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </main>
+          {/* Usage Tracking */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mb-8"
+          >
+            <UsageTrackingCard 
+              usageStats={{
+                cv_parsed_count: usageStats?.cv_parsed_count || 0,
+                jobs_saved_count: usageStats?.jobs_saved_count || 0,
+                interviews_done: usageStats?.interviews_done || 0,
+                tier: usageStats?.tier || 'free'
+              }}
+            />
+          </motion.div>
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
+            {/* CV Management */}
+            <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <span>CV Management</span>
+                </CardTitle>
+                <CardDescription>
+                  Create, edit, and manage your professional CVs
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={() => setShowCVUpload(true)}
+                  variant="outline"
+                  className="w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upload Existing CV
+                </Button>
+                <Button
+                  onClick={handleCreateCV}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Create New CV
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Job Applications */}
+            <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Briefcase className="h-5 w-5 text-green-600" />
+                  <span>Job Applications</span>
+                </CardTitle>
+                <CardDescription>
+                  Apply to jobs with AI-powered tailoring
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={handleOneClickApply}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  One-Click Apply
+                </Button>
+                <Button
+                  onClick={() => navigate('/jobs')}
+                  variant="outline"
+                  className="w-full border-green-200 text-green-700 hover:bg-green-50"
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Browse Jobs
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
 
       {/* CV Upload Modal */}
@@ -359,11 +429,13 @@ const Dashboard = () => {
           onClose={() => setShowCVUpload(false)}
           onSuccess={() => {
             setShowCVUpload(false);
-            // Refresh data or navigate
+            // Refresh stats or navigate to CVs
+            navigate('/cvs');
           }}
         />
       )}
     </div>
+    </>
   );
 };
 

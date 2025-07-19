@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { supabase } from '../index';
-import { validateRequest, schemas } from '../middleware/validation';
+import { supabase } from '../lib/supabase.js';
+import { validateRequest, schemas } from '../middleware/validation.js';
 
 const router = Router();
 

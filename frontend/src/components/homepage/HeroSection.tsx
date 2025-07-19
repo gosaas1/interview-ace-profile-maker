@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FileText, Target, Shield, Award, Upload, PlusCircle, ArrowRight, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { FileText, Target, Shield, Award, Upload, PlusCircle, ArrowRight, AlertTriangle, CheckCircle, Clock, Zap, User, Heart } from 'lucide-react';
 import CVUploadModal from '@/components/cv/CVUploadModal';
 import { useAuth } from '@/lib/auth';
 import { motion } from 'framer-motion';
@@ -45,20 +45,20 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         
         <div className="container mx-auto px-6 py-20 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Left side - Text content */}
             <div className="space-y-8">
               {/* Headline and Subheadline */}
-              <h1 className="text-5xl font-extrabold text-slate-900 leading-tight mb-2">
-                The Complete Career Pipeline
+              <h1 className="text-4xl font-extrabold text-slate-900 leading-tight mb-2">
+                Stop Getting Rejected. Get Hired.
               </h1>
-              <p className="text-2xl text-slate-700 font-medium leading-snug mb-4">
-                From CV to hired, not just "application sent."<br/>
-                CV optimization, one-button apply, and AI-powered interview coaching—built for the UK.
+              <p className="text-xl text-slate-700 font-medium leading-snug mb-4">
+                Stop getting rejected by ATS systems and interviewers.<br/>
+                AI-powered CV optimization, one-click applications, and interview coaching that actually works.
               </p>
               {/* UK-Optimized Statement */}
               <div className="text-base text-blue-700 font-semibold mb-6">
-                UK-Optimized: A4 CVs, British English, UK job boards, and interview prep.
+                9 out of 10 people get rejected by ATS systems before humans see their CV. AI-powered optimization that gets you past the robots and into interviews.
               </div>
               {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
@@ -81,13 +81,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
               {/* Floating Stat Card */}
               <div className="w-full max-w-md mt-6">
                 <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d flex items-center space-x-4">
-                  <CheckCircle className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                  <Clock className="h-8 w-8 text-orange-500 flex-shrink-0" />
                   <div>
-                    <span className="font-bold text-slate-900">75%</span> of applications get interviews, but <span className="font-bold text-slate-900">90%</span> fail the interview.<br/>
-                    <span className="text-blue-700 font-semibold">We help you get HIRED.</span>
+                    Every worthy job application takes <span className="font-bold text-slate-900">hours</span> to complete.<br/>
+                    <span className="text-orange-700 font-semibold">We cut out time-consuming tasks so you can focus on getting the job you want.</span>
                   </div>
                 </div>
               </div>
+              
               {/* Stats Row (unchanged) */}
               <motion.div 
                 className="flex items-center space-x-8 pt-4"
@@ -104,7 +105,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
                     <AnimatedCounter value={40} suffix="%" />
                   </div>
                   <div className="text-sm text-slate-600">Target Interview Success</div>
-                  <div className="text-xs text-slate-500">(vs. industry 10%)</div>
+                  <div className="text-xs text-slate-500">(aspirational goal)</div>
                 </motion.div>
                 <motion.div 
                   className="text-center"
@@ -117,22 +118,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
                   <div className="text-sm text-slate-600">Starting Price</div>
                   <div className="text-xs text-slate-500">(50% cheaper than competitors)</div>
                 </motion.div>
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="text-2xl font-bold text-slate-900">
-                    <Clock className="h-6 w-6 mx-auto text-blue-600" />
-                  </div>
-                  <div className="text-sm text-slate-600">30-Day Guarantee</div>
-                  <div className="text-xs text-slate-500">Get hired or money back</div>
-                </motion.div>
               </motion.div>
             </div>
             
             {/* Right side - Value Proposition */}
-            <div className="relative">
+            <div className="relative lg:mt-8">
               <div className="relative z-10 bg-white rounded-2xl shadow-2xl p-8 transform rotate-2 hover:rotate-0 transition-transform duration-500">
                 <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center">
                   <div className="text-center space-y-4">
@@ -158,43 +148,43 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
 
           {/* Feature cards - Pain Point Focused */}
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mt-16"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
             <FloatingCard delay={0.1} className="group">
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d">
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d transition-all duration-300 hover:shadow-2xl hover:shadow-blue-200/50 hover:scale-105 hover:border-blue-300">
                 <motion.div 
                   className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mb-4 glow-blue"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <FileText className="h-6 w-6 text-white" />
+                  <Clock className="h-6 w-6 text-white" />
                 </motion.div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">UK-Optimized CVs</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Save Hours on Applications</h3>
                 <p className="text-slate-600">
-                  A4 format, British English, UK industry keywords. Not generic US templates.
+                  Every worthy job application takes hours to complete. We cut out time-consuming tasks so you can focus on getting the job you want.
                 </p>
               </div>
             </FloatingCard>
             
             <FloatingCard delay={0.2} className="group">
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d">
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d transition-all duration-300 hover:shadow-2xl hover:shadow-green-200/50 hover:scale-105 hover:border-green-300">
                 <motion.div 
                   className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center mb-4 glow-green"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Target className="h-6 w-6 text-white" />
+                  <User className="h-6 w-6 text-white" />
                 </motion.div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">Smart Applications</h3>
-                <p className="text-slate-600">Quality over quantity. UK job boards, intelligent matching.</p>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Personalized Applications</h3>
+                <p className="text-slate-600">Each application is tailored to the specific job. No more generic CVs that get ignored by recruiters.</p>
               </div>
             </FloatingCard>
             
             <FloatingCard delay={0.3} className="group">
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d">
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d transition-all duration-300 hover:shadow-2xl hover:shadow-purple-200/50 hover:scale-105 hover:border-purple-300">
                 <motion.div 
                   className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 glow-purple"
                   whileHover={{ rotate: 360 }}
@@ -203,21 +193,35 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
                   <Shield className="h-6 w-6 text-white" />
                 </motion.div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">Interview Success</h3>
-                <p className="text-slate-600">10,000+ UK interview questions. AI coaching to actually get hired.</p>
+                <p className="text-slate-600">Comprehensive interview questions database. AI coaching to help you prepare with confidence and succeed.</p>
               </div>
             </FloatingCard>
             
             <FloatingCard delay={0.4} className="group">
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d">
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d transition-all duration-300 hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-105 hover:border-orange-300">
                 <motion.div 
-                  className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center mb-4 glow-pink"
+                  className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Zap className="h-6 w-6 text-white" />
+                </motion.div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">Beat ATS Systems</h3>
+                <p className="text-slate-600">Many CVs get rejected by ATS systems before humans see them. Our AI helps your CV pass through filters effectively.</p>
+              </div>
+            </FloatingCard>
+            
+            <FloatingCard delay={0.5} className="group">
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-slate-100 card-3d transition-all duration-300 hover:shadow-2xl hover:shadow-pink-200/50 hover:scale-105 hover:border-pink-300">
+                <motion.div 
+                  className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg flex items-center justify-center mb-4 glow-pink"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Award className="h-6 w-6 text-white" />
+                  <Heart className="h-6 w-6 text-white" />
                 </motion.div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">Success Guarantee</h3>
-                <p className="text-slate-600">30-day money-back guarantee. Get hired or your money back.</p>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">We Take Care of You</h3>
+                <p className="text-slate-600">No one else cares about your success like we do. We help you in every possible way to get that job.</p>
               </div>
             </FloatingCard>
           </motion.div>

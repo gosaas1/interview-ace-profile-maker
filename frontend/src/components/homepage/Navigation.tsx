@@ -17,7 +17,7 @@ const Navigation: React.FC<NavigationProps> = ({ onAuthClick }) => {
     { name: 'CV Builder', href: '#cv-builder' },
     { name: 'Interview Coach', href: '#interview-coach' },
     { name: 'Job Matching', href: '#job-matching' },
-    { name: 'For Employers', href: '#employers' },
+    { name: 'One-Click Apply', href: '#one-click-apply' },
     { name: 'Pricing', href: '#pricing' },
   ];
 
@@ -31,6 +31,8 @@ const Navigation: React.FC<NavigationProps> = ({ onAuthClick }) => {
         return 'data-[state=active]:text-purple-600 data-[state=active]:bg-purple-50';
       case 3:
         return 'data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50';
+      case 4:
+        return 'data-[state=active]:text-orange-600 data-[state=active]:bg-orange-50';
       default:
         return 'data-[state=active]:text-slate-600 data-[state=active]:bg-slate-50';
     }

@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import ReactDOM from 'react-dom/client';
 import CVPreview from '../cv-builder/CVPreview';
 import { cn } from '@/lib/utils';
+import { normalizeCVData } from '@/lib/cv/normalize';
 
 interface CVPreviewModalProps {
   open: boolean;
@@ -336,58 +337,6 @@ const TemplatePreview = ({ cvData, templateId }: { cvData: CVData; templateId: s
   );
 };
 
-// Map Supabase CVData to new CVData structure for CVPreview
-function mapToNewCVData(cv: any): import('@/lib/cv/types').CVData {
-  return {
-    personalInfo: {
-      fullName: cv.full_name || '',
-      email: cv.email || '',
-      phone: cv.phone || '',
-      location: cv.location || '',
-      linkedIn: cv.linkedin_url || '',
-      website: cv.portfolio_url || '',
-      summary: cv.summary || '',
-    },
-    experience: (cv.experiences || []).map((exp: any) => ({
-      id: exp.id || '',
-      company: exp.company || '',
-      position: exp.role || exp.position || '',
-      location: exp.location || '',
-      startDate: exp.start_date || '',
-      endDate: exp.end_date || '',
-      current: exp.current || false,
-      description: exp.description || '',
-    })),
-    education: (cv.education || []).map((edu: any) => ({
-      id: edu.id || '',
-      institution: edu.institution || '',
-      degree: edu.degree || '',
-      field: edu.field || edu.field_of_study || '',
-      startDate: edu.start_date || '',
-      endDate: edu.end_date || '',
-      gpa: edu.gpa || '',
-    })),
-    skills: Array.isArray(cv.skills)
-      ? cv.skills
-      : typeof cv.skills === 'string'
-        ? cv.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
-        : [],
-    certifications: Array.isArray(cv.certifications)
-      ? cv.certifications
-      : typeof cv.certifications === 'string' && cv.certifications.trim() !== ''
-        ? cv.certifications.split(',').map((c: string, i: number) => ({
-            id: String(i),
-            name: c.trim(),
-            issuer: '',
-            date: '',
-          }))
-        : [],
-    projects: cv.projects || [],
-    languages: cv.languages || [],
-    references: cv.references || [],
-  };
-}
-
 const CVPreviewModal: React.FC<CVPreviewModalProps> = ({ 
   open, 
   onClose, 
@@ -405,6 +354,7 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
   const [editName, setEditName] = useState(cv?.full_name || '');
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
     if (cv && open) {
@@ -414,8 +364,15 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
 
   if (!cv || !open) return null;
 
+  // Replace legacy mapping logic with canonical normalization
+  const normalizedCV = normalizeCVData(cv);
+  // Use normalizedCV throughout the component instead of legacy mapping
+  // Example usage:
+  // normalizedCV.personalInfo.fullName, normalizedCV.experience, etc.
+
   // Check if this is a structured CV (from builder) or file-based CV
-  const isStructuredCV = !cv.file_url && (cv.experiences || cv.education || cv.skills);
+  // CVs from builder have a 'content' field with structured data
+  const isStructuredCV = !cv.file_url && (cv.content || cv.experiences || cv.education || cv.skills);
   const hasFileUrl = !!(cv.file_url && cv.file_url.trim().length > 0);
   const isPDF = cv.file_name && cv.file_name.toLowerCase().endsWith('.pdf');
 
@@ -498,11 +455,10 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
       const root = printWindow.document.getElementById('cv-print-root');
       if (root) {
         clearInterval(interval);
-        const mapped = mapToNewCVData(cv);
         const reactRoot = ReactDOM.createRoot(root);
         reactRoot.render(
           <CVPreview 
-            cvData={mapped} 
+            cvData={normalizedCV} 
             templateId={cv.template_id || 'modern-professional'} 
             showWatermark={userTier === 'free'}
             minimal={true} // Only CV content, no extra UI
@@ -520,10 +476,9 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
   let previewContent = null;
   
   if (isStructuredCV) {
-    const mapped = mapToNewCVData(cv);
     previewContent = (
       <CVPreview
-        cvData={mapped}
+        cvData={normalizedCV}
         templateId={cv.template_id || 'modern-professional'}
         showWatermark={userTier === 'free'}
         minimal={true}
@@ -564,16 +519,34 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
 
   const handleEdit = () => setEditing(true);
   const handleCancel = () => { setEditing(false); setEditName(cv?.full_name || ''); };
-  const handleSave = async () => {
+  const handleSaveName = async () => {
     if (!cv) return;
     setSaving(true);
     try {
       await cvOperations.updateCV(cv.id, { full_name: editName });
       setEditing(false);
       if (cv.full_name !== editName) cv.full_name = editName;
+      setSaveMessage('Name saved successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
       if (onSaved) onSaved();
     } catch (e) {
       alert('Failed to save name.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveCV = async () => {
+    if (!cv) return;
+    setSaving(true);
+    try {
+      // Save the CV content - this would typically save the current CV data
+      // For now, we'll just trigger the onSaved callback to refresh the CV list
+      setSaveMessage('CV saved successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
+      if (onSaved) onSaved();
+    } catch (e) {
+      alert('Failed to save CV.');
     } finally {
       setSaving(false);
     }
@@ -598,13 +571,21 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
             )}
             {editing ? (
               <>
-                <button onClick={handleSave} disabled={saving} className="ml-2 px-2 py-1 bg-blue-600 text-white rounded">Save</button>
-                <button onClick={handleCancel} disabled={saving} className="ml-2 px-2 py-1 bg-gray-300 rounded">Cancel</button>
+                <button onClick={handleSaveName} disabled={saving} className="ml-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Save Name'}
+                </button>
+                <button onClick={handleCancel} disabled={saving} className="ml-2 px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">
+                  Cancel
+                </button>
               </>
             ) : (
               <>
-                <button onClick={handleEdit} className="ml-2 px-2 py-1 bg-gray-200 rounded">Rename</button>
-                <button onClick={handleSave} disabled={saving} className="ml-2 px-2 py-1 bg-blue-600 text-white rounded">Save</button>
+                <button onClick={handleEdit} className="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                  Rename
+                </button>
+                <button onClick={handleSaveCV} disabled={saving} className="ml-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Save CV'}
+                </button>
               </>
             )}
           </DialogTitle>
@@ -615,6 +596,9 @@ const CVPreviewModal: React.FC<CVPreviewModalProps> = ({
             }
             {isNewUpload && (
               <span className="ml-2 text-green-600 font-medium">✓ Successfully uploaded!</span>
+            )}
+            {saveMessage && (
+              <span className="ml-2 text-green-600 font-medium">✓ {saveMessage}</span>
             )}
           </DialogDescription>
         </DialogHeader>

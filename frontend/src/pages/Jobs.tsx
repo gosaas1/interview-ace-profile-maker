@@ -210,243 +210,167 @@ export const Jobs = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="w-64">
-        <HomeNavigation />
-      </div>
-      
-      <main className="flex-1 overflow-y-auto p-8">
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <main className="overflow-y-auto p-8">
         <div className="max-w-7xl mx-auto">
+            {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Job Matches</h1>
-            <p className="mt-2 text-gray-600">
-              Find your next opportunity based on your CV and preferences
-            </p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                    Job Opportunities
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    Discover and apply to jobs that match your skills and experience
+                  </p>
+                </div>
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="outline"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter Jobs
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/apply')}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  >
+                    <Brain className="h-4 w-4 mr-2" />
+                    One-Click Apply
+                  </Button>
+                </div>
           </div>
 
-          <div className="flex space-x-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              {/* Search Bar */}
+              <div className="mt-6 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search jobs..."
+                  placeholder="Search for jobs, companies, or skills..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm"
               />
             </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <motion.div 
-              className="lg:col-span-2 space-y-4"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, staggerChildren: 0.1 }}
-            >
+            {/* Jobs Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockJobs.map((job, index) => (
-                <FloatingCard key={job.id} delay={index * 0.1}>
-                  <Card 
-                    className={`p-6 cursor-pointer card-3d ${
-                      selectedJob?.id === job.id 
-                        ? 'ring-2 ring-blue-500 bg-blue-50 glow-blue' 
-                        : 'glow-green'
-                    }`}
+                <motion.div
+                  key={job.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="group cursor-pointer"
                     onClick={() => setSelectedJob(job)}
                   >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                        <div className="flex items-center text-gray-600 mt-1">
-                          <motion.div
-                            whileHover={{ rotate: 360 }}
-                            transition={{ duration: 0.6 }}
-                          >
-                            <Building2 className="h-4 w-4 mr-2" />
-                          </motion.div>
-                          {job.company}
+                  <Card className="h-full bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-blue-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                            {job.title}
+                          </h3>
+                          <div className="flex items-center text-gray-600 mb-3">
+                            <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                              <Building2 className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <span className="font-medium">{job.company}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                            <span className="text-sm font-medium text-gray-900">{job.matchScore}%</span>
+                          </div>
+                          <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                            Match
+                          </span>
                         </div>
                       </div>
-                      <motion.div 
-                        className="flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full"
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <motion.div
-                          animate={{ rotate: [0, 360] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Star className="h-4 w-4 mr-1" />
-                        </motion.div>
-                        <AnimatedCounter value={job.matchScore} suffix="%" /> Match
-                      </motion.div>
-                    </div>
 
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                      <motion.div 
-                        className="flex items-center text-gray-600"
-                        whileHover={{ scale: 1.02 }}
-                      >
-                        <MapPin className="h-4 w-4 mr-2" />
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center text-gray-600">
+                          <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-2">
+                            <MapPin className="w-3 h-3 text-gray-500" />
+                    </div>
                         {job.location}
-                      </motion.div>
-                      <motion.div 
-                        className="flex items-center text-gray-600"
-                        whileHover={{ scale: 1.02 }}
-                      >
-                        <Clock className="h-4 w-4 mr-2" />
-                        {job.type}
-                      </motion.div>
-                      <motion.div 
-                        className="flex items-center text-gray-600"
-                        whileHover={{ scale: 1.02 }}
-                      >
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        {job.salary}
-                      </motion.div>
-                    </div>
-
-                    <p className="text-gray-600 line-clamp-2">{job.description}</p>
-                  </Card>
-                </FloatingCard>
-              ))}
-            </motion.div>
-
-            <motion.div 
-              className="lg:col-span-1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              {selectedJob ? (
-                <motion.div
-                  key={selectedJob.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card className="p-6 sticky top-8 card-3d glow-purple">
-                    <motion.h2 
-                      className="text-xl font-semibold mb-4"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      {selectedJob.title}
-                    </motion.h2>
-                    <motion.div 
-                      className="space-y-4 mb-6"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <div className="flex items-center text-gray-600">
-                        <Building2 className="h-4 w-4 mr-2" />
-                        {selectedJob.company}
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {selectedJob.location}
+                          <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-2">
+                            <Clock className="w-3 h-3 text-gray-500" />
+                          </div>
+                          {job.type}
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <Clock className="h-4 w-4 mr-2" />
-                        {selectedJob.type}
+                          <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-2">
+                            <DollarSign className="w-3 h-3 text-gray-500" />
+                          </div>
+                          {job.salary}
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        {selectedJob.salary}
                       </div>
-                    </motion.div>
 
-                    <motion.div 
-                      className="space-y-3"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <Button 
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white min-h-[44px]"
-                        onClick={() => handleApplyToJob(selectedJob)}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Apply with CV
-                      </Button>
-                      
-                      <Button 
-                        variant="outline"
-                        className="w-full min-h-[44px]"
-                        onClick={() => navigate('/cvs?analyze=job')}
-                      >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Analyze CV for This Job
-                      </Button>
-                      
-                      <Button 
-                        variant="outline"
-                        className="w-full min-h-[44px]"
-                        onClick={() => navigate('/interview?job=' + selectedJob.id)}
-                      >
-                        <Award className="h-4 w-4 mr-2" />
-                        Practice Interview for This Job
-                      </Button>
-                      
-                      <Button 
-                        variant="outline"
-                        className="w-full min-h-[44px]"
-                        onClick={() => {
-                          toast.success('Job saved to favorites!');
-                        }}
-                      >
-                        <Star className="h-4 w-4 mr-2" />
-                        Save Job
-                      </Button>
-                    </motion.div>
-
-                    <motion.div 
-                      className="mt-6 p-4 bg-gray-50 rounded-lg"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <h3 className="font-semibold text-gray-900 mb-2">Job Description</h3>
-                      <p className="text-sm text-gray-600 line-clamp-4">
-                        {selectedJob.description}
+                      <p className="text-sm text-gray-600 line-clamp-3 mb-4">
+                        {job.description}
                       </p>
+
+                      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                       <Button 
-                        variant="link" 
-                        className="p-0 h-auto text-blue-600 hover:text-blue-700 mt-2"
-                        onClick={() => {
-                          toast.info('Full job description would open here');
-                        }}
+                        variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedJob(job);
+                          }}
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
                       >
-                        Read More
+                          <FileText className="h-4 w-4 mr-1" />
+                          View Details
                       </Button>
-                    </motion.div>
+                      <Button 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApplyToJob(job);
+                          }}
+                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                        >
+                          <Brain className="h-4 w-4 mr-1" />
+                          Apply Now
+                      </Button>
+                      </div>
+                    </CardContent>
                   </Card>
                 </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Card className="p-6 text-center card-3d glow-gray">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a Job</h3>
-                    <p className="text-gray-600">
-                      Click on a job to view details and take action
+              ))}
+            </div>
+
+            {/* Empty State */}
+            {mockJobs.length === 0 && (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Briefcase className="h-10 w-10 text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-3">No jobs found</h3>
+                <p className="text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
+                  Try adjusting your search criteria or check back later for new opportunities.
                     </p>
-                  </Card>
-                </motion.div>
-              )}
-            </motion.div>
+                <Button 
+                  onClick={() => navigate('/apply')}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  <Brain className="h-4 w-4 mr-2" />
+                  One-Click Apply
+                </Button>
+              </div>
+            )}
           </div>
+        </main>
         </div>
-      </main>
 
       {/* One-Button Apply Modal */}
       {showApplyModal && selectedJobForApply && (
@@ -545,6 +469,6 @@ export const Jobs = () => {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </>
   );
 }; 

@@ -38,8 +38,10 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { CVTemplateSelector } from './CVTemplateSelector';
+import CVTemplateSelector from './CVTemplateSelector';
 import { cvTemplates, getTemplateById } from '@/data/cvTemplates';
+import { normalizeCVData } from '@/lib/cv/normalize';
+import { cvAPI } from '@/lib/api';
 
 interface CVData {
   id?: string;
@@ -284,61 +286,29 @@ const CVBuilderNew: React.FC<CVBuilderNewProps> = ({ onClose, onSuccess, editing
       console.log('CV Data:', cvData);
       console.log('Selected Template:', selectedTemplate);
 
-      // Convert skills array to string for database storage
-      const skillsString = Array.isArray(cvData.skills) 
-        ? cvData.skills.join(', ')
-        : cvData.skills || '';
-
-      const cvToSave = {
-        user_id: user.id,
-        full_name: cvData.full_name,
-        email: cvData.email,
-        phone: cvData.phone,
-        location: cvData.location,
-        summary: cvData.summary,
-        experiences: cvData.experience,
-        education: cvData.education,
-        skills: skillsString, // Store as string, not array
-        certifications: cvData.certifications,
+      // Prepare backend payload
+      const dbCVData = {
+        title: cvData.title || 'Untitled CV',
+        content: {
+          ...cvData,
+        },
+        is_public: false,
         template_id: selectedTemplate,
-        updated_at: new Date().toISOString()
+        ats_score: 0,
+        content_type: 'builder',
       };
 
-      console.log('CV to save:', cvToSave);
-
-      let result;
+      let savedCV;
       if (cvData.id) {
-        // Update existing CV
-        console.log('Updating existing CV with ID:', cvData.id);
-        result = await supabase
-          .from('cvs')
-          .update(cvToSave)
-          .eq('id', cvData.id)
-          .select();
+        // Update existing CV via backend
+        savedCV = await cvAPI.update(cvData.id, dbCVData);
       } else {
-        // Create new CV
-        console.log('Creating new CV');
-        result = await supabase
-          .from('cvs')
-          .insert([cvToSave])
-          .select();
+        // Create new CV via backend
+        savedCV = await cvAPI.create(dbCVData);
       }
 
-      console.log('Supabase result:', result);
-
-      if (result.error) {
-        console.error('Supabase error:', result.error);
-        throw result.error;
-      }
-
-      // Get the CV id (for new or updated CV)
-      const savedCV = result.data && result.data[0] ? result.data[0] : cvData;
-      console.log('CV saved successfully:', savedCV);
       setLastSavedCVName(savedCV.full_name || 'Untitled CV');
       setShowSaveModal(true);
-      console.log('Save modal should be visible now');
-      
-      // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
@@ -820,91 +790,93 @@ const CVBuilderNew: React.FC<CVBuilderNewProps> = ({ onClose, onSuccess, editing
       </div>
 
       <CVTemplateSelector
-        selectedTemplate={selectedTemplate}
-        onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
+        onSelectTemplate={(templateId) => setSelectedTemplate(templateId)}
       />
     </div>
   );
 
-  const renderPreview = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-2xl font-bold">Preview Your CV</h3>
-        <p className="text-muted-foreground">Review your CV before saving</p>
-      </div>
+  const renderPreview = () => {
+    const normalizedCV = normalizeCVData(cvData);
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-2xl font-bold">Preview Your CV</h3>
+          <p className="text-muted-foreground">Review your CV before saving</p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>CV Preview</span>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg p-6 bg-white">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold">{cvData.full_name || 'Your Name'}</h1>
-              <p className="text-muted-foreground">{cvData.title || 'Professional Title'}</p>
-              <div className="flex items-center justify-center space-x-4 mt-2 text-sm">
-                {cvData.email && <span>{cvData.email}</span>}
-                {cvData.phone && <span>{cvData.phone}</span>}
-                {cvData.location && <span>{cvData.location}</span>}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>CV Preview</span>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
               </div>
-            </div>
-
-            {cvData.summary && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">Professional Summary</h2>
-                <p className="text-sm">{cvData.summary}</p>
-              </div>
-            )}
-
-            {cvData.experience.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">Work Experience</h2>
-                {cvData.experience.map((exp, index) => (
-                  <div key={exp.id} className="mb-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{exp.title}</h3>
-                        <p className="text-sm text-muted-foreground">{exp.company}</p>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {exp.start_month ? exp.start_month + ' ' : ''}{exp.start_year} - {exp.current ? 'Present' : (exp.end_month ? exp.end_month + ' ' : '') + exp.end_year}
-                      </span>
-                    </div>
-                    <p className="text-sm mt-1">{exp.description}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {cvData.skills.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {cvData.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-lg p-6 bg-white">
+              <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold">{normalizedCV.full_name || 'Your Name'}</h1>
+                <p className="text-muted-foreground">{normalizedCV.title || 'Professional Title'}</p>
+                <div className="flex items-center justify-center space-x-4 mt-2 text-sm">
+                  {normalizedCV.email && <span>{normalizedCV.email}</span>}
+                  {normalizedCV.phone && <span>{normalizedCV.phone}</span>}
+                  {normalizedCV.location && <span>{normalizedCV.location}</span>}
                 </div>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+
+              {normalizedCV.summary && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-2">Professional Summary</h2>
+                  <p className="text-sm">{normalizedCV.summary}</p>
+                </div>
+              )}
+
+              {normalizedCV.experience.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-2">Work Experience</h2>
+                  {normalizedCV.experience.map((exp, index) => (
+                    <div key={exp.id} className="mb-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{exp.title}</h3>
+                          <p className="text-sm text-muted-foreground">{exp.company}</p>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {exp.start_month ? exp.start_month + ' ' : ''}{exp.start_year} - {exp.current ? 'Present' : (exp.end_month ? exp.end_month + ' ' : '') + exp.end_year}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-1">{exp.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {normalizedCV.skills.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-2">Skills</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {normalizedCV.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const renderCurrentStep = () => {
     switch (currentStep) {

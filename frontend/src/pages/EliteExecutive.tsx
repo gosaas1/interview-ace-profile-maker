@@ -627,7 +627,7 @@ const EliteExecutive: React.FC = () => {
         annual: 'price_elite_annual'
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/create-checkout-session`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

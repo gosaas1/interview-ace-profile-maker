@@ -5,50 +5,44 @@ import { Star } from 'lucide-react';
 const TestimonialsSection = () => {
   const testimonials = [
     {
-      name: 'Sarah Mitchell',
+      name: 'Sarah M.',
       role: 'Software Engineer',
-      company: 'Google',
-      content: 'HireAI Hub transformed my job search completely. The AI-optimized CV got me 3x more interviews, and the interview coaching helped me land my dream job at Google!',
+      content: 'The AI-optimized CV helped me get more interviews. The interview coaching gave me confidence and practical tips that really made a difference.',
       rating: 5,
       avatar: 'SM'
     },
     {
-      name: 'James Rodriguez',
+      name: 'James R.',
       role: 'Marketing Manager',
-      company: 'Meta',
-      content: 'The job matching feature is incredible. It analyzed my CV against job descriptions and gave me specific suggestions that increased my application success rate by 80%.',
+      content: 'The job matching feature is really helpful. It analyzes my CV against job descriptions and gives specific suggestions to improve my applications.',
       rating: 5,
       avatar: 'JR'
     },
     {
-      name: 'Emily Chen',
+      name: 'Emily C.',
       role: 'Data Scientist',
-      company: 'Microsoft',
-      content: 'As someone who struggled with interviews, the AI coach was a game-changer. The feedback was detailed and actionable. I went from nervous to confident in just a week.',
+      content: 'As someone who struggled with interviews, the AI coach was really useful. The feedback was detailed and helped me prepare better.',
       rating: 5,
       avatar: 'EC'
     },
     {
-      name: 'Michael Thompson',
+      name: 'Michael T.',
       role: 'UX Designer',
-      company: 'Apple',
-      content: 'The ATS optimization feature is brilliant. My CV now passes through all the filters and reaches human reviewers. Got 5 interview calls in my first week!',
+      content: 'The ATS optimization feature works well. My CV now gets through more filters and reaches human reviewers more often.',
       rating: 5,
       avatar: 'MT'
     },
     {
-      name: 'Lisa Wang',
+      name: 'Lisa W.',
       role: 'Product Manager',
-      company: 'Amazon',
-      content: 'HireAI Hub is like having a personal career coach available 24/7. The AI understands my industry and gives incredibly relevant advice.',
+      content: 'The platform is like having a career coach available whenever I need it. The AI gives relevant advice for my industry.',
       rating: 5,
       avatar: 'LW'
     },
     {
-      name: 'David Kim',
+      name: 'David K.',
       role: 'Financial Analyst',
-      company: 'Goldman Sachs',
-      content: 'The folder organization system keeps all my job applications perfectly organized. I can track which CV version I sent to which company effortlessly.',
+      content: 'The folder organization system keeps all my job applications organized. I can track which CV version I sent where easily.',
       rating: 5,
       avatar: 'DK'
     }
@@ -59,10 +53,10 @@ const TestimonialsSection = () => {
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-slate-900 mb-4">
-            Success stories from our users
+            What our users say
           </h2>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Join thousands of professionals who have transformed their careers with HireAI Hub
+            Join professionals who are transforming their job search with AI-powered tools
           </p>
         </div>
 
@@ -91,7 +85,7 @@ const TestimonialsSection = () => {
                       {testimonial.name}
                     </div>
                     <div className="text-sm text-slate-600">
-                      {testimonial.role} at {testimonial.company}
+                      {testimonial.role}
                     </div>
                   </div>
                 </div>

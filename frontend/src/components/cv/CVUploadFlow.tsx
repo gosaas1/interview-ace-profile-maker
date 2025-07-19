@@ -29,11 +29,13 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { toast } from '@/hooks/use-toast';
 import mammoth from 'mammoth';
-import { CVTemplateSelector } from '../cv/CVTemplateSelector';
+import CVTemplateSelector from '../cv/CVTemplateSelector';
 import { cvTemplates, getTemplatesByTier, getTemplateById } from '@/data/cvTemplates';
 import { CVBuilderRefactored } from './CVBuilderRefactored';
 import { useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
+import { normalizeCVData } from '@/lib/cv/normalize';
+import { cvAPI } from '@/lib/api';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
@@ -403,37 +405,30 @@ const CVUploadFlow: React.FC<CVUploadFlowProps> = ({ onClose, onSuccess }) => {
     
     setIsSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('cvs')
-        .insert({
-          user_id: user.id,
-          full_name: parsedData.fullName,
-          email: parsedData.email,
-          phone: parsedData.phone,
-          location: parsedData.location,
-          summary: parsedData.summary,
-          skills: parsedData.skills.join(', '),
-          experiences: parsedData.experience,
-          education: parsedData.education,
-          template_id: selectedTemplate,
-          content: parsedData.rawText,
-          file_name: uploadedFile?.name || 'Uploaded CV',
-          file_size: uploadedFile?.size || 0,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
+      const flowCV = {
+        fullName: parsedData.fullName,
+        email: parsedData.email,
+        phone: parsedData.phone,
+        location: parsedData.location,
+        summary: parsedData.summary,
+        skills: parsedData.skills,
+        experience: parsedData.experience,
+        education: parsedData.education,
+        rawText: parsedData.rawText,
+        template_id: selectedTemplate,
+        user_id: user?.id || '',
+        is_public: false,
+        ats_score: 0,
+        content_type: uploadedFile ? 'file' : 'manual',
+      };
+      const normalizedCV = normalizeCVData(flowCV);
+      const data = await cvAPI.create(normalizedCV);
       setSavedCVId(data.id);
       toast({
         title: "CV Saved Successfully",
         description: `Your CV has been saved with ${parsedData.experience.length} work experiences extracted.`,
       });
-      
       if (onSuccess) onSuccess();
-      
     } catch (error) {
       console.error('Error saving CV:', error);
       toast({
@@ -851,8 +846,7 @@ const CVUploadFlow: React.FC<CVUploadFlowProps> = ({ onClose, onSuccess }) => {
       </div>
       
       <CVTemplateSelector
-        selectedTemplate={selectedTemplate}
-        onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
+        onSelectTemplate={(templateId) => setSelectedTemplate(templateId)}
       />
       
       <div className="flex justify-center space-x-4">

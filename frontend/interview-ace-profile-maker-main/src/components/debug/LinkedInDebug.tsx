@@ -274,7 +274,7 @@ export default function LinkedInDebug() {
                       <strong>Redirect URLs:</strong> Add these URLs to your LinkedIn app:
                       <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
                         <li><code>https://iqikeltdqmpdsczakril.supabase.co/auth/v1/callback</code></li>
-                        <li><code>http://localhost:8080/auth/callback</code></li>
+                        <li><code>http://localhost:8000/auth/callback</code></li>
                       </ul>
                     </li>
                     <li>

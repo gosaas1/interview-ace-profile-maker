@@ -64,7 +64,7 @@ export interface UserSubscription {
 export async function createCheckoutSession(priceId: string, userId: string) {
   try {
     // Call your backend API endpoint instead of using secret key on frontend
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/api/stripe/create-checkout-session`, {
       method: 'POST',
       headers: {
@@ -92,7 +92,7 @@ export async function createCheckoutSession(priceId: string, userId: string) {
 // Get user's current subscription
 export async function getUserSubscription(userId: string): Promise<UserSubscription | null> {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/api/stripe/subscription/${userId}`);
     if (!response.ok) return null;
     
@@ -106,7 +106,7 @@ export async function getUserSubscription(userId: string): Promise<UserSubscript
 // Cancel subscription
 export async function cancelSubscription(subscriptionId: string) {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/api/stripe/cancel-subscription`, {
       method: 'POST',
       headers: {
@@ -133,7 +133,7 @@ export async function updateSubscription(
   tier: SubscriptionTier
 ) {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/api/stripe/update-subscription`, {
       method: 'POST',
       headers: {
@@ -168,7 +168,7 @@ export interface UsageStats {
 
 export async function getUserUsage(userId: string): Promise<UsageStats> {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/api/usage/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to get usage stats');

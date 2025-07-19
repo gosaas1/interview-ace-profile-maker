@@ -1,500 +1,648 @@
-import { Router, Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
-import multer, { FileFilterCallback } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import fs from 'fs';
-import pdfParse from 'pdf-parse';
+import express, { Request, Response } from 'express';
+import multer from 'multer';
+import { authenticateUser } from '../middleware/auth.js';
+import { normalizeCVContent, validateCVContent } from '../lib/cv.js';
+import { supabase } from '../lib/supabase.js';
 import mammoth from 'mammoth';
-import { authenticateUser } from '../middleware/auth';
+import { 
+  extractTextFromPDF as extractTextFromTextract, 
+  calculateFileHash, 
+  checkFileHashExists, 
+  storeFileHash,
+  estimateParsingCost 
+} from '../lib/aws-textract.js';
+import { 
+  extractTextFromPDF as extractTextFromCohere 
+} from '../lib/cohere-parser.js';
 
-const router = Router();
+const router = express.Router();
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://iqikeltdqmpdsczakril.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaWtlbHRkcW1wZHNjemFrcmlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1ODExODksImV4cCI6MjA2NTE1NzE4OX0.o_c4yk6tKYM17uTXtdepkRWR4PUp71lflaciAcLB6i4'
-);
-
-// Test endpoint to verify database connection and new schema
-router.get('/test', async (req: Request, res: Response) => {
-  try {
-    console.log('Testing database connection...');
-    
-    // Test basic connection
-    const { data, error } = await supabase
-      .from('cvs')
-      .select('id, title, full_name, email, template_id, skills, created_at')
-      .limit(1);
-    
-    if (error) {
-      console.error('Database connection error:', error);
-      return res.status(500).json({ 
-        status: 'error', 
-        message: 'Database connection failed', 
-        error: error.message 
-      });
-    }
-    
-    console.log('Database connection successful');
-    console.log('Test data retrieved:', data);
-    
-    res.json({ 
-      status: 'success', 
-      message: 'Database connection working',
-      database: 'connected',
-      table: 'cvs',
-      testData: data,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error: any) {
-    console.error('Test endpoint error:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Test failed', 
-      error: error.message 
-    });
-  }
-});
+// ─── ENFORCE AUTH ON ALL /api/cv ROUTES ─────────────────────────────────────
+router.use(authenticateUser);
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    const uploadDir = path.join(__dirname, '../../uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-    const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueFilename);
-  },
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({
-  storage,
-  fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
-    const allowedTypes = ['.pdf', '.doc', '.docx'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.includes(ext)) {
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    // Allow only PDF, DOCX, and TXT files
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF and Word documents are allowed.'));
+      cb(new Error('Invalid file type. Only PDF, DOCX, and TXT files are allowed.'));
     }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-}).single('cv');
-
-// Helper function to extract text from PDF
-async function extractTextFromPDF(filePath: string): Promise<string> {
-  try {
-    const pdfBuffer = await fs.promises.readFile(filePath);
-    const data = await pdfParse(pdfBuffer);
-    return data.text || '';
-  } catch (error) {
-    console.error('Error extracting text from PDF:', error);
-    throw new Error('Failed to extract text from PDF file');
-  }
-}
-
-// Helper function to extract text from Word document
-async function extractTextFromWord(filePath: string): Promise<string> {
-  const result = await mammoth.extractRawText({ path: filePath });
-  return result.value;
-}
-
-// Helper function to process extracted text
-function processExtractedText(text: string) {
-  // Common section headers in CVs
-  const sectionHeaders = [
-    'experience',
-    'work experience',
-    'employment',
-    'education',
-    'academic',
-    'skills',
-    'technical skills',
-    'certifications',
-    'professional summary',
-    'summary',
-    'profile',
-  ];
-
-  // Split text into lines and process
-  const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-  
-  const sections: Record<string, string[]> = {
-    personalInfo: [],
-    summary: [],
-    experience: [],
-    education: [],
-    skills: [],
-    certifications: [],
-  };
-
-  let currentSection = 'personalInfo';
-  
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
-    
-    // Check if line is a section header
-    const isHeader = sectionHeaders.some(header => 
-      lowerLine.includes(header) && line.length < 50
-    );
-
-    if (isHeader) {
-      // Map the header to our section names
-      if (lowerLine.includes('experience') || lowerLine.includes('employment')) {
-        currentSection = 'experience';
-      } else if (lowerLine.includes('education') || lowerLine.includes('academic')) {
-        currentSection = 'education';
-      } else if (lowerLine.includes('skill')) {
-        currentSection = 'skills';
-      } else if (lowerLine.includes('certification')) {
-        currentSection = 'certifications';
-      } else if (lowerLine.includes('summary') || lowerLine.includes('profile')) {
-        currentSection = 'summary';
-      }
-    } else {
-      // Add line to current section
-      sections[currentSection].push(line);
-    }
-  }
-
-  // Clean up sections
-  for (const key in sections) {
-    sections[key] = sections[key]
-      .filter(Boolean)
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-  }
-
-  return sections;
-}
-
-// --- CV Content Type for Validation ---
-interface CVContent {
-  full_name: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedin_url: string;
-  portfolio_url: string;
-  summary: string;
-  experience: any[];
-  education: any[];
-  skills: string[];
-  certifications: any[];
-  projects?: any[];
-  languages?: any[];
-  references?: any[];
-  isSampleDatabase?: boolean;
-}
-
-function validateCVContent(content: any): content is CVContent {
-  return (
-    typeof content.full_name === 'string' &&
-    typeof content.email === 'string' &&
-    typeof content.phone === 'string' &&
-    typeof content.location === 'string' &&
-    typeof content.linkedin_url === 'string' &&
-    typeof content.portfolio_url === 'string' &&
-    typeof content.summary === 'string' &&
-    Array.isArray(content.experience) &&
-    Array.isArray(content.education) &&
-    Array.isArray(content.skills) &&
-    Array.isArray(content.certifications)
-  );
-}
-
-// Create CV from builder (new endpoint)
-router.post('/create', authenticateUser, async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const { title, content, is_public = false } = req.body;
-
-    // Validate required fields
-    if (!title || !content) {
-      res.status(400).json({ error: 'Title and content are required' });
-      return;
-    }
-
-    // Validate content structure
-    if (typeof content !== 'object' || !content.full_name) {
-      res.status(400).json({ error: 'Invalid content format. Content must be an object with full_name.' });
-      return;
-    }
-
-    if (!validateCVContent(content)) {
-      res.status(400).json({ error: 'Invalid content format. Missing or invalid fields.' });
-      return;
-    }
-
-    // Create CV record in database
-    const { data: cvData, error: cvError } = await supabase
-      .from('cvs')
-      .insert([
-        {
-          user_id: req.user.id,
-          title: title.trim(),
-          content: content,
-          is_public: is_public,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ])
-      .select()
-      .single();
-
-    if (cvError) {
-      console.error('Error creating CV record:', cvError);
-      res.status(500).json({ error: 'Failed to create CV record', details: cvError.message });
-      return;
-    }
-
-    res.status(201).json(cvData);
-  } catch (error: any) {
-    console.error('Error creating CV:', error);
-    res.status(500).json({ error: error.message });
   }
 });
 
-// Upload CV endpoint (existing - for file uploads)
-router.post('/upload', authenticateUser, (req: Request, res: Response) => {
-  upload(req, res, async (err: any) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ error: err.message });
+// Helper function to extract text from different file types
+async function extractTextFromFile(file: Express.Multer.File, userId?: string): Promise<string> {
+  try {
+    const buffer = file.buffer;
+    
+    // Handle PDF files with Textract + Cohere fallback
+    if (file.mimetype === 'application/pdf') {
+      try {
+        console.log('🔍 Processing PDF with Textract + Cohere fallback...');
+        
+        // Check if file has been parsed before (cost control)
+        const fileHash = calculateFileHash(buffer);
+        const alreadyParsed = await checkFileHashExists(fileHash);
+        
+        if (alreadyParsed) {
+          console.log('✅ File already parsed, skipping parsing call');
+          // TODO: Retrieve cached result from database
+          return 'File already processed - using cached result';
+        }
+        
+        // Estimate cost before processing
+        const costEstimate = estimateParsingCost(buffer);
+        console.log('💰 Estimated parsing cost: $', costEstimate.totalCost.toFixed(4));
+        
+        // Try Textract first (primary parser)
+        try {
+          console.log('🚀 Attempting AWS Textract...');
+          const textractResult = await extractTextFromTextract(buffer);
+        
+        // Store file hash for future deduplication
+        await storeFileHash(fileHash, userId || 'unknown', textractResult.cost);
+        
+        console.log('✅ AWS Textract completed successfully');
+        console.log('📊 Confidence:', textractResult.confidence.toFixed(2) + '%');
+        console.log('💸 Actual cost: $', textractResult.cost.toFixed(4));
+        
+        return textractResult.text;
+        } catch (textractError: any) {
+          console.error('❌ AWS Textract failed:', textractError.message);
+          console.log('🔄 Falling back to Cohere parser...');
+          
+          // Fallback to Cohere
+          try {
+            const cohereResult = await extractTextFromCohere(buffer);
+            
+            // Store file hash for future deduplication
+            await storeFileHash(fileHash, userId || 'unknown', cohereResult.cost);
+            
+            console.log('✅ Cohere fallback completed successfully');
+            console.log('📊 Confidence:', cohereResult.confidence.toFixed(2) + '%');
+            console.log('💸 Actual cost: $', cohereResult.cost.toFixed(4));
+            
+            return cohereResult.text;
+          } catch (cohereError: any) {
+            console.error('❌ Cohere fallback also failed:', cohereError.message);
+            throw new Error(`PDF parsing failed: Textract error - ${textractError.message}, Cohere error - ${cohereError.message}`);
+          }
+        }
+      } catch (err: any) {
+        console.error('❌ PDF parsing completely failed:', err);
+        // Return empty string instead of crashing
+        console.warn('⚠️ PDF parsing failed, continuing with empty text');
+        return '';
       }
-      return res.status(400).json({ error: err.message });
     }
+    
+    // Handle DOCX files
+    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      try {
+        const result = await mammoth.extractRawText({ buffer });
+        return result.value.trim();
+      } catch (error) {
+        console.error('DOCX extraction error:', error);
+        throw new Error('Failed to extract text from DOCX file');
+      }
+    }
+    
+    // Handle TXT files
+    if (file.mimetype === 'text/plain') {
+      return buffer.toString('utf-8').trim();
+    }
+    
+    throw new Error('Unsupported file type');
+  } catch (error) {
+    console.error('Text extraction error:', error);
+    throw error;
+  }
+}
+
+// POST /api/cv/parse - Parse CV file and return extracted text with method
+router.post('/parse', upload.single('cvFile'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('🔍 CV PARSE: User authenticated:', req.user);
+
+    // Check if file was uploaded
+    if (!req.file) {
+      res.status(400).json({ 
+        error: 'NO_FILE', 
+        details: 'No file uploaded. Please select a PDF, DOCX, or TXT file.' 
+      });
+      return;
+    }
+
+    const file = req.file;
+    console.log('📁 File received for parsing:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+
+    // Extract text content from file with method tracking
+    let extractedText: string;
+    let parsingMethod: 'textract' | 'cohere' | 'mammoth' | 'text' = 'text';
+    let warning: string | undefined;
 
     try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-      }
-      if (!req.user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // Extract text based on file type
-      const fileExt = path.extname(req.file.originalname).toLowerCase();
-      let extractedText = '';
-
-      try {
-        if (fileExt === '.pdf') {
-          extractedText = await extractTextFromPDF(req.file.path);
-        } else if (fileExt === '.docx' || fileExt === '.doc') {
-          extractedText = await extractTextFromWord(req.file.path);
-        } else {
-          return res.status(400).json({ error: 'Invalid file type. Only PDF and Word documents are allowed.' });
+      if (file.mimetype === 'application/pdf') {
+        // Try Textract first, then Cohere fallback
+        try {
+          console.log('🚀 Attempting AWS Textract...');
+          const textractResult = await extractTextFromTextract(file.buffer);
+          extractedText = textractResult.text;
+          parsingMethod = 'textract';
+          console.log('✅ Textract parsing successful');
+        } catch (textractError: any) {
+          console.error('❌ Textract failed:', textractError.message);
+          console.log('🔄 Falling back to Cohere...');
+          
+          try {
+            const cohereResult = await extractTextFromCohere(file.buffer);
+            extractedText = cohereResult.text;
+            parsingMethod = 'cohere';
+            warning = `Textract failed, used Cohere fallback: ${textractError.message}`;
+            console.log('✅ Cohere fallback successful');
+          } catch (cohereError: any) {
+            console.error('❌ Cohere fallback also failed:', cohereError.message);
+            throw new Error(`PDF parsing failed: Textract error - ${textractError.message}, Cohere error - ${cohereError.message}`);
+          }
         }
-      } catch (error: any) {
-        return res.status(400).json({ error: error.message });
+      } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        const result = await mammoth.extractRawText({ buffer: file.buffer });
+        extractedText = result.value.trim();
+        parsingMethod = 'mammoth';
+      } else if (file.mimetype === 'text/plain') {
+        extractedText = file.buffer.toString('utf-8').trim();
+        parsingMethod = 'text';
+      } else {
+        throw new Error('Unsupported file type');
       }
 
-      // Process the extracted text
-      const sections = processExtractedText(extractedText);
-
-      // Upload file to Supabase Storage
-      const fileContent = await fs.promises.readFile(req.file.path);
-      const { error: uploadError } = await supabase.storage
-        .from('cv-uploads')
-        .upload(`${req.user.id}/${req.file.filename}`, fileContent);
-
-      if (uploadError) {
-        console.error('Error uploading to storage:', uploadError);
-        return res.status(500).json({ error: 'Failed to upload file to storage' });
+      console.log('📝 Text extracted, length:', extractedText.length);
+      
+      // If no text was extracted, provide a fallback message
+      if (!extractedText || extractedText.trim().length === 0) {
+        console.warn('⚠️ No text extracted from file, using fallback content');
+        extractedText = 'Text extraction failed - file content could not be parsed';
+        warning = 'No text could be extracted from the file';
       }
 
-      // Create CV record in database (use cvs table for consistency)
-      const { data: cvData, error: cvError } = await supabase
-        .from('cvs')
-        .insert([
-          {
-            user_id: req.user.id,
-            title: req.file.originalname,
-            content: sections,
-            is_public: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single();
+      // Calculate file hash for deduplication
+      const fileHash = calculateFileHash(file.buffer);
 
-      if (cvError) {
-        console.error('Error creating CV record:', cvError);
-        return res.status(500).json({ error: 'Failed to create CV record' });
-      }
+      // Return parsing result
+      res.status(200).json({
+        success: true,
+        parsedText: extractedText,
+        method: parsingMethod,
+        fileHash: fileHash,
+        warning: warning,
+        filename: file.originalname,
+        contentLength: extractedText.length
+      });
 
-      // Clean up temporary file
-      await fs.promises.unlink(req.file.path);
-
-      return res.status(201).json(cvData);
     } catch (error: any) {
-      console.error('Error uploading CV:', error);
-      return res.status(500).json({ error: error.message });
-    }
-  });
-});
-
-// Get user's CVs
-router.get('/', authenticateUser, async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+      console.error('❌ Text extraction failed:', error);
+      res.status(400).json({ 
+        error: 'TEXT_EXTRACTION_FAILED', 
+        details: error.message 
+      });
       return;
     }
 
-    const { data, error } = await supabase
-      .from('cvs')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    res.json(data);
   } catch (error: any) {
-    console.error('Error fetching CVs:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ CV PARSE ERROR:', error);
+    
+    // Handle multer errors
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({ 
+        error: 'FILE_TOO_LARGE', 
+        details: 'File size exceeds 10MB limit' 
+      });
+      return;
+    }
+    
+    if (error.message && error.message.includes('Invalid file type')) {
+      res.status(400).json({ 
+        error: 'INVALID_FILE_TYPE', 
+        details: error.message 
+      });
+      return;
+    }
+    
+    res.status(500).json({ 
+      error: 'INTERNAL_ERROR', 
+      details: 'Failed to parse CV' 
+    });
   }
 });
 
-// Get a specific CV
-router.get('/:id', authenticateUser, async (req, res): Promise<void> => {
+// POST /api/cv/upload
+router.post('/upload', upload.single('cvFile'), async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+    console.log('✅ CV UPLOAD: User authenticated:', req.user);
+
+    // Check if file was uploaded
+    if (!req.file) {
+      res.status(400).json({ 
+        error: 'NO_FILE', 
+        details: 'No file uploaded. Please select a PDF, DOCX, or TXT file.' 
+      });
       return;
     }
 
-    const { id } = req.params;
+    const file = req.file;
+    console.log('📁 File received:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+
+    // 1. Extract text content from file
+    let extractedText: string;
+    try {
+      extractedText = await extractTextFromFile(file, req.user?.id);
+      console.log('📝 Text extracted, length:', extractedText.length);
+      
+      // If no text was extracted, provide a fallback message
+      if (!extractedText || extractedText.trim().length === 0) {
+        console.warn('⚠️ No text extracted from file, using fallback content');
+        extractedText = 'Text extraction failed - file content could not be parsed';
+      }
+    } catch (error: any) {
+      console.error('❌ Text extraction failed:', error);
+      res.status(400).json({ 
+        error: 'TEXT_EXTRACTION_FAILED', 
+        details: error.message 
+      });
+      return;
+    }
+
+    // 2. Upload file to Supabase storage
+    let fileUrl: string | null = null;
+    try {
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const { error: uploadError } = await supabase.storage
+        .from('cv-files')
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+          cacheControl: '3600'
+        });
+
+      if (uploadError) {
+        console.error('❌ Storage upload error:', uploadError);
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('cv-files')
+        .getPublicUrl(fileName);
+      
+      fileUrl = urlData.publicUrl;
+      console.log('✅ File uploaded to storage:', fileUrl);
+    } catch (error: any) {
+      console.error('❌ Storage upload failed:', error);
+      // Continue without file URL - we still have the extracted text
+      console.warn('⚠️ Continuing without file storage, using extracted text only');
+    }
+
+    // 3. Prepare CV data for database
+    const cvData = {
+      title: file.originalname.replace(/\.[^/.]+$/, ''), // Remove file extension
+      content: JSON.stringify({
+        full_name: 'Extracted from file',
+        email: '',
+        phone: '',
+        location: '',
+        summary: extractedText.substring(0, 500) + (extractedText.length > 500 ? '...' : ''),
+        experience: [],
+        education: [],
+        skills: [],
+        certifications: '',
+        raw_text: extractedText
+      }),
+      template_id: 'uploaded',
+      is_public: false,
+      user_id: req.user?.id,
+      content_type: 'file',
+      file_name: file.originalname,
+      file_size: file.size,
+      file_url: fileUrl,
+      ats_score: 0,
+      is_active: true,
+      version: 1,
+      is_primary: false
+    };
+
+    console.log('📝 Attempting to save CV with data:', {
+      title: cvData.title,
+      content_length: cvData.content.length,
+      file_name: cvData.file_name,
+      file_size: cvData.file_size
+    });
+
+    // 4. Insert into database
     const { data: cv, error } = await supabase
       .from('cvs')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', req.user.id)
+      .insert(cvData)
+      .select()
       .single();
 
     if (error) {
-      // Handle both "not found" and invalid UUID errors
-      if (error.code === 'PGRST116' || error.code === '22P02') {
-        res.status(404).json({ error: 'CV not found' });
-        return;
-      }
-      throw error;
-    }
-
-    if (!cv) {
-      res.status(404).json({ error: 'CV not found' });
+      console.error('❌ Database error:', error);
+      res.status(500).json({ 
+        error: 'DATABASE_ERROR', 
+        details: error.message 
+      });
       return;
     }
 
-    res.json(cv);
-  } catch (error) {
-    console.error('Error fetching CV:', error);
-    res.status(500).json({ error: 'Failed to fetch CV' });
+    console.log('✅ CV uploaded successfully:', cv.id);
+
+    // 5. Return success response
+    res.status(200).json({
+      success: true,
+      message: 'CV uploaded successfully',
+      data: {
+        id: cv.id,
+        filename: file.originalname,
+        content_length: extractedText.length,
+        file_url: fileUrl,
+        created_at: cv.created_at
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ CV UPLOAD ERROR:', error);
+    
+    // Handle multer errors
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({ 
+        error: 'FILE_TOO_LARGE', 
+        details: 'File size exceeds 10MB limit' 
+      });
+      return;
+    }
+    
+    if (error.message && error.message.includes('Invalid file type')) {
+      res.status(400).json({ 
+        error: 'INVALID_FILE_TYPE', 
+        details: error.message 
+      });
+      return;
+    }
+    
+    res.status(500).json({ 
+      error: 'INTERNAL_ERROR', 
+      details: 'Failed to upload CV' 
+    });
   }
 });
 
-// Update CV
-router.put('/:id', authenticateUser, async (req: Request, res: Response): Promise<void> => {
+// GET /api/cv/:id - Fetch a specific CV by ID for the logged-in user
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ 
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      });
       return;
     }
 
-    const { title, content, is_public } = req.body;
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-    };
-
-    // Only update provided fields
-    if (title !== undefined) updateData.title = title;
-    if (content !== undefined) updateData.content = content;
-    if (is_public !== undefined) updateData.is_public = is_public;
+    console.log('🔍 Fetching CV:', { id, userId });
 
     const { data, error } = await supabase
       .from('cvs')
-      .update(updateData)
-      .eq('id', req.params.id)
-      .eq('user_id', req.user.id)
-      .select()
+      .select('id, user_id, content, created_at, title, job_title, file_name, file_url, ats_score, is_active, version, is_primary')
+      .eq('id', id)
+      .eq('user_id', userId)
       .single();
 
-    if (error) throw error;
-
-    if (!data) {
-      res.status(404).json({ error: 'CV not found' });
+    if (error) {
+      console.error('❌ Database error:', error);
+      res.status(500).json({ 
+        error: 'Database error',
+        details: error.message 
+      });
       return;
     }
 
-    res.json(data);
+    if (!data) {
+      res.status(404).json({ 
+        error: 'CV not found',
+        code: 'CV_NOT_FOUND',
+        details: 'CV not found or not owned by user'
+      });
+      return;
+    }
+
+    // Parse the content to extract parsed_text and method
+    let parsedText = '';
+    let method = 'unknown';
+    
+    try {
+      const content = JSON.parse(data.content);
+      parsedText = content.raw_text || content.summary || '';
+      method = content.parsing_method || 'unknown';
+    } catch (parseError) {
+      console.warn('⚠️ Could not parse CV content:', parseError);
+      parsedText = 'Content parsing failed';
+    }
+
+    const response = {
+      id: data.id,
+      user_id: data.user_id,
+      parsed_text: parsedText,
+      created_at: data.created_at,
+      title: data.title,
+      job_title: data.job_title,
+      file_type: data.file_name ? data.file_name.split('.').pop() : null,
+      method: method
+    };
+
+    console.log('✅ CV fetched successfully:', data.id);
+    res.status(200).json(response);
+
   } catch (error: any) {
-    console.error('Error updating CV:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ CV fetch error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 });
 
-// Delete CV
-router.delete('/:id', authenticateUser, async (req: Request, res: Response): Promise<void> => {
+// GET /api/cv/history - Fetch all uploaded CVs for the current user
+router.get('/history', async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ 
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      });
       return;
     }
 
-    // Get CV data to delete associated file
-    const { data: cvData, error: fetchError } = await supabase
+    console.log('🔍 Fetching CV history for user:', userId);
+
+    const { data, error } = await supabase
       .from('cvs')
-      .select('*')
-      .eq('id', req.params.id)
-      .eq('user_id', req.user.id)
+      .select('id, title, job_title, file_name, file_size, created_at, updated_at, ats_score, is_active, version, is_primary')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Database error:', error);
+      res.status(500).json({ 
+        error: 'Database error',
+        details: error.message 
+      });
+      return;
+    }
+
+    // Transform data to include metadata
+    const cvHistory = data.map(cv => ({
+      id: cv.id,
+      title: cv.title,
+      job_title: cv.job_title,
+      file_name: cv.file_name,
+      file_size: cv.file_size,
+      created_at: cv.created_at,
+      updated_at: cv.updated_at,
+      ats_score: cv.ats_score,
+      is_active: cv.is_active,
+      version: cv.version,
+      is_primary: cv.is_primary
+    }));
+
+    console.log('✅ CV history fetched successfully:', cvHistory.length, 'CVs');
+    res.status(200).json(cvHistory);
+
+  } catch (error: any) {
+    console.error('❌ CV history fetch error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// POST /api/cv/create
+router.post('/create', async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('✅ CV CREATE: User authenticated:', req.user);
+
+    const { title, content, is_public = false, template_id = 'basic-modern' } = req.body;
+
+    // 1. Validation
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      res.status(400).json({ error: 'INVALID_TITLE', details: 'Title required' });
+      return;
+    }
+
+    if (!content || typeof content !== 'object') {
+      res.status(400).json({ error: 'INVALID_CONTENT', details: 'Content must be an object' });
+      return;
+    }
+
+    // 2. Normalize and validate content
+    const normalizedContent = normalizeCVContent(content);
+    const isValid = validateCVContent(normalizedContent);
+    
+    if (!isValid) {
+      res.status(400).json({ 
+        error: 'INVALID_CONTENT', 
+        details: 'CV content validation failed' 
+      });
+      return;
+    }
+
+    // 3. Prepare CV data for database
+    const cvData = {
+      title: title.trim(),
+      content: JSON.stringify(normalizedContent),
+      template_id,
+      is_public,
+      user_id: req.user?.id,
+      content_type: 'manual',
+      ats_score: 0,
+      is_active: true,
+      version: 1,
+      is_primary: false
+    };
+
+    console.log('📝 Attempting to create CV with data:', cvData);
+
+    // 4. Insert into database
+    const { data: cv, error } = await supabase
+      .from('cvs')
+      .insert(cvData)
+      .select()
       .single();
 
-    if (fetchError) throw fetchError;
-
-    if (!cvData) {
-      res.status(404).json({ error: 'CV not found' });
+    if (error) {
+      console.error('❌ Database error:', error);
+      res.status(500).json({ 
+        error: 'DATABASE_ERROR', 
+        details: error.message 
+      });
       return;
     }
 
-    // Delete file from storage if it exists (for uploaded CVs)
-    if (cvData.content && cvData.content.file_path) {
-      const { error: storageError } = await supabase.storage
-        .from('cv-uploads')
-        .remove([cvData.content.file_path]);
+    console.log('✅ CV created successfully:', cv);
 
-      if (storageError) {
-        console.warn('Could not delete file from storage:', storageError);
-        // Don't fail the whole operation if storage deletion fails
+    // 5. Return success response
+    res.status(201).json({
+      success: true,
+      cv: {
+        id: cv.id,
+        title: cv.title,
+        template_id: cv.template_id,
+        is_public: cv.is_public,
+        created_at: cv.created_at,
+        updated_at: cv.updated_at
       }
-    }
+    });
 
-    // Delete CV record
-    const { error: deleteError } = await supabase
-      .from('cvs')
-      .delete()
-      .eq('id', req.params.id)
-      .eq('user_id', req.user.id);
-
-    if (deleteError) throw deleteError;
-
-    res.status(204).send();
-  } catch (error: any) {
-    console.error('Error deleting CV:', error);
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    console.error('❌ CV CREATE ERROR:', error);
+    res.status(500).json({ 
+      error: 'INTERNAL_ERROR', 
+      details: 'Failed to create CV' 
+    });
   }
+});
+
+// GET /api/cv/debug-auth
+router.get('/debug-auth', (req: Request, res: Response): void => {
+  console.log('🔍 DEBUG AUTH: User data:', req.user);
+  res.status(200).json({
+    authenticated: true,
+    user: req.user,
+    message: 'Authentication working correctly'
+  });
 });
 
 export default router; 

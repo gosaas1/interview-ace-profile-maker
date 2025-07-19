@@ -475,7 +475,7 @@ const OneButtonApply: React.FC<OneButtonApplyProps> = ({
     updateStepStatus('cover-letter', 'processing');
     
     try {
-      const response = await fetch('http://localhost:8080/api/ai/tailor-cv', {
+      const response = await fetch('http://localhost:8000/api/ai/tailor-cv', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -57,7 +57,7 @@ const PricingSection = () => {
       name: 'Professional',
       price: '£17.99',
       period: '/month',
-      description: 'Unlimited analyses, advanced AI, most popular',
+      description: 'Unlimited analyses, advanced AI features',
       features: [
         'Unlimited AI CV analyses',
         'Unlimited uploads',
@@ -67,7 +67,7 @@ const PricingSection = () => {
         'Priority support'
       ],
       buttonText: 'Start Professional',
-      popular: true,
+      popular: false,
       gradient: 'from-blue-50 to-indigo-50',
       buttonStyle: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
     },
@@ -133,7 +133,7 @@ const PricingSection = () => {
               {plans.map((plan, idx) => (
                 <div
                   key={plan.name}
-                  className={`relative flex flex-col h-full justify-between rounded-2xl shadow-xl ${
+                  className={`relative flex flex-col h-full justify-between rounded-2xl shadow-lg border border-slate-200 bg-white transition-all duration-300 hover:shadow-2xl hover:shadow-blue-200/50 hover:scale-105 hover:border-blue-300 ${
                     plan.popular
                       ? 'border-2 border-blue-400 bg-white z-10'
                       : plan.gradient ? `bg-gradient-to-br ${plan.gradient}` : 'bg-white border border-slate-200'

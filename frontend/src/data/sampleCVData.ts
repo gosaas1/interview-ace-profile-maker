@@ -1,4 +1,5 @@
 import { CVData } from '@/lib/cv/types';
+import { cvTemplates } from './cvTemplates';
 
 export interface SampleCVData {
   [templateId: string]: CVData;
@@ -401,104 +402,81 @@ export const sampleCVData: SampleCVData = {
     personalInfo: {
       fullName: 'Emma Wilson',
       email: 'emma.wilson@email.com',
-      phone: '+1 (555) 567-8901',
-      location: 'Boston, MA',
-      linkedIn: 'https://linkedin.com/in/emma-wilson-data',
-      website: 'https://emmawilson.tech',
-      summary: 'Data scientist with 5+ years experience in machine learning, statistical analysis, and predictive modeling. Specialized in developing AI solutions for healthcare and finance industries. Proven track record of delivering insights that drive business decisions and improve operational efficiency.'
+      phone: '+1 (555) 456-7890',
+      location: 'Seattle, WA',
+      linkedIn: 'https://linkedin.com/in/emma-wilson-ux',
+      website: 'https://emmawilson.design',
+      summary: 'UX/UI designer with 5+ years creating user-centered digital experiences. Specialized in mobile app design and user research. Led design teams for products serving 2M+ users. Passionate about accessibility and inclusive design principles.'
     },
     experience: [
       {
         id: '1',
-        company: 'HealthTech Solutions',
-        position: 'Senior Data Scientist',
-        location: 'Boston, MA',
-        startDate: '2021-09-01',
+        company: 'Design Studio X',
+        position: 'Senior UX Designer',
+        location: 'Seattle, WA',
+        startDate: '2021-06-01',
         endDate: '',
         current: true,
-        description: 'Lead development of predictive models for patient outcomes and treatment optimization. Built machine learning pipeline processing 100M+ healthcare records. Improved diagnostic accuracy by 25% and reduced hospital readmission rates by 30%. Mentored 3 junior data scientists.'
+        description: 'Lead UX design for mobile applications with 2M+ active users. Conduct user research, create wireframes, and collaborate with development teams. Improved user satisfaction scores by 45% through iterative design improvements.'
       },
       {
         id: '2',
-        company: 'Financial Analytics Corp',
-        position: 'Data Scientist',
-        location: 'Boston, MA',
-        startDate: '2020-01-15',
-        endDate: '2021-08-31',
+        company: 'Tech Startup Inc.',
+        position: 'Product Designer',
+        location: 'Seattle, WA',
+        startDate: '2019-03-01',
+        endDate: '2021-05-31',
         current: false,
-        description: 'Developed risk assessment models for credit scoring and fraud detection. Implemented real-time analytics dashboard monitoring $1B+ in transactions. Reduced false positive fraud alerts by 40% while maintaining 99.9% detection accuracy.'
+        description: 'Designed complete user experience for SaaS platform from concept to launch. Created design system and component library. Conducted usability testing and implemented feedback-driven improvements.'
       },
       {
         id: '3',
-        company: 'Research Institute',
-        position: 'Research Analyst',
-        location: 'Boston, MA',
-        startDate: '2018-06-01',
-        endDate: '2019-12-31',
+        company: 'Creative Agency',
+        position: 'Junior Designer',
+        location: 'Seattle, WA',
+        startDate: '2017-09-01',
+        endDate: '2019-02-28',
         current: false,
-        description: 'Conducted statistical analysis for academic research projects. Published 3 peer-reviewed papers on machine learning applications in healthcare. Developed data visualization tools used by 50+ researchers.'
+        description: 'Created visual designs for web and mobile applications. Collaborated with senior designers on large-scale projects. Developed skills in user research and prototyping.'
       }
     ],
     education: [
       {
         id: '1',
-        institution: 'Massachusetts Institute of Technology',
-        degree: 'Master of Science in Data Science',
-        field: 'Data Science',
-        startDate: '2016-09-01',
-        endDate: '2018-05-15',
-        gpa: '4.0'
-      },
-      {
-        id: '2',
-        institution: 'University of Michigan',
-        degree: 'Bachelor of Science in Statistics',
-        field: 'Statistics',
-        startDate: '2012-09-01',
-        endDate: '2016-05-15',
-        gpa: '3.9'
+        institution: 'University of Washington',
+        degree: 'Bachelor of Design',
+        field: 'Interaction Design',
+        startDate: '2013-09-01',
+        endDate: '2017-06-15',
+        gpa: '3.8'
       }
     ],
-    skills: ['Python', 'R', 'SQL', 'Machine Learning', 'Deep Learning', 'Statistical Analysis', 'Data Visualization', 'Big Data', 'AWS', 'Docker', 'Git', 'Jupyter', 'Pandas', 'Scikit-learn', 'TensorFlow'],
+    skills: ['Figma', 'Sketch', 'Adobe Creative Suite', 'User Research', 'Wireframing', 'Prototyping', 'Design Systems', 'Accessibility', 'Mobile Design', 'Web Design', 'User Testing', 'Information Architecture'],
     certifications: [
       {
         id: '1',
-        name: 'AWS Machine Learning Specialty',
-        issuer: 'Amazon Web Services',
-        date: '2021-07-20',
-        expiryDate: '2024-07-20'
+        name: 'Google UX Design Certificate',
+        issuer: 'Google',
+        date: '2020-08-15',
+        expiryDate: '2023-08-15'
       },
       {
         id: '2',
-        name: 'Google Cloud Professional Data Engineer',
-        issuer: 'Google Cloud',
-        date: '2020-11-15',
-        expiryDate: '2023-11-15'
-      },
-      {
-        id: '3',
-        name: 'Certified Analytics Professional (CAP)',
-        issuer: 'INFORMS',
-        date: '2019-09-10',
-        expiryDate: '2022-09-10'
-      },
-      {
-        id: '4',
-        name: 'Deep Learning Specialization',
-        issuer: 'Coursera',
-        date: '2018-12-05',
-        expiryDate: '2021-12-05'
+        name: 'Accessibility Fundamentals',
+        issuer: 'Deque University',
+        date: '2019-11-20',
+        expiryDate: '2022-11-20'
       }
     ],
     projects: [
-      { id: '1', name: 'E-Commerce Platform', description: 'Built a scalable e-commerce app...', technologies: 'React, Node.js, AWS', url: 'https://github.com/sample/ecommerce' }
+      { id: '1', name: 'Mobile Banking App', description: 'Redesigned mobile banking experience improving task completion by 60%', technologies: 'Figma, Prototyping', url: 'https://dribbble.com/sample/banking-app' }
     ],
     languages: [
       { id: '1', language: 'English', proficiency: 'Native' },
-      { id: '2', language: 'Spanish', proficiency: 'Professional' }
+      { id: '2', language: 'French', proficiency: 'Intermediate' }
     ],
     references: [
-      { id: '1', name: 'Jane Doe', title: 'Manager', company: 'TechCorp', email: 'jane.doe@techcorp.com', phone: '+1 (555) 111-2222' }
+      { id: '1', name: 'Michael Chen', title: 'Design Director', company: 'Design Studio X', email: 'michael.chen@designstudio.com', phone: '+1 (555) 777-8888' }
     ],
     isSampleDatabase: false
   },
@@ -1840,6 +1818,143 @@ export const sampleCVData: SampleCVData = {
       { id: '1', name: 'Jane Doe', title: 'Manager', company: 'TechCorp', email: 'jane.doe@techcorp.com', phone: '+1 (555) 111-2222' }
     ],
     isSampleDatabase: false
+  },
+  'minimal-clean': {
+    personalInfo: {
+      fullName: 'Emma Wilson',
+      email: 'emma.wilson@email.com',
+      phone: '+1 (555) 456-7890',
+      location: 'Seattle, WA',
+      linkedIn: 'https://linkedin.com/in/emma-wilson-ux',
+      website: 'https://emmawilson.design',
+      summary: 'UX/UI designer with 5+ years creating user-centered digital experiences. Specialized in mobile app design and user research. Led design teams for products serving 2M+ users. Passionate about accessibility and inclusive design principles.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'Design Studio X',
+        position: 'Senior UX Designer',
+        location: 'Seattle, WA',
+        startDate: '2021-06-01',
+        endDate: '',
+        current: true,
+        description: 'Lead UX design for mobile applications with 2M+ active users. Conduct user research, create wireframes, and collaborate with development teams. Improved user satisfaction scores by 45% through iterative design improvements.'
+      },
+      {
+        id: '2',
+        company: 'Tech Startup Inc.',
+        position: 'Product Designer',
+        location: 'Seattle, WA',
+        startDate: '2019-03-01',
+        endDate: '2021-05-31',
+        current: false,
+        description: 'Designed complete user experience for SaaS platform from concept to launch. Created design system and component library. Conducted usability testing and implemented feedback-driven improvements.'
+      },
+      {
+        id: '3',
+        company: 'Creative Agency',
+        position: 'Junior Designer',
+        location: 'Seattle, WA',
+        startDate: '2017-09-01',
+        endDate: '2019-02-28',
+        current: false,
+        description: 'Created visual designs for web and mobile applications. Collaborated with senior designers on large-scale projects. Developed skills in user research and prototyping.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'University of Washington',
+        degree: 'Bachelor of Design',
+        field: 'Interaction Design',
+        startDate: '2013-09-01',
+        endDate: '2017-06-15',
+        gpa: '3.8'
+      }
+    ],
+    skills: ['Figma', 'Sketch', 'Adobe Creative Suite', 'User Research', 'Wireframing', 'Prototyping', 'Design Systems', 'Accessibility', 'Mobile Design', 'Web Design', 'User Testing', 'Information Architecture'],
+    certifications: [
+      {
+        id: '1',
+        name: 'Google UX Design Certificate',
+        issuer: 'Google',
+        date: '2020-08-15',
+        expiryDate: '2023-08-15'
+      },
+      {
+        id: '2',
+        name: 'Accessibility Fundamentals',
+        issuer: 'Deque University',
+        date: '2019-11-20',
+        expiryDate: '2022-11-20'
+      }
+    ],
+    projects: [
+      { id: '1', name: 'Mobile Banking App', description: 'Redesigned mobile banking experience improving task completion by 60%', technologies: 'Figma, Prototyping', url: 'https://dribbble.com/sample/banking-app' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'French', proficiency: 'Intermediate' }
+    ],
+    references: [
+      { id: '1', name: 'Michael Chen', title: 'Design Director', company: 'Design Studio X', email: 'michael.chen@designstudio.com', phone: '+1 (555) 777-8888' }
+    ],
+    isSampleDatabase: false
+  },
+  'professional-simple': {
+    personalInfo: {
+      fullName: 'Simple Professional Test',
+      email: 'simple.professional@email.com',
+      phone: '+1 (555) 999-0000',
+      location: 'New York, NY',
+      linkedIn: 'https://linkedin.com/in/simple-professional',
+      website: 'https://simpleprofessional.com',
+      summary: 'Test CV for Simple Professional template. Clean, professional, and minimalist.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'Tech Innovators',
+        position: 'Junior Software Engineer',
+        location: 'New York, NY',
+        startDate: '2021-01-01',
+        endDate: '',
+        current: true,
+        description: 'Developed and maintained web applications using React and Node.js.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'New York University',
+        degree: 'BS in Computer Science',
+        field: 'Computer Science',
+        startDate: '2018-09-01',
+        endDate: '2021-05-15',
+        gpa: '3.7'
+      }
+    ],
+    skills: ['JavaScript', 'React', 'Node.js', 'AWS'],
+    certifications: [
+      {
+        id: '1',
+        name: 'AWS Certified Developer',
+        issuer: 'Amazon',
+        date: '2021-08-01',
+        expiryDate: ''
+      }
+    ],
+    projects: [
+      { id: '1', name: 'E-Commerce Platform', description: 'Built a scalable e-commerce app...', technologies: 'React, Node.js, AWS', url: 'https://github.com/sample/ecommerce' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'Spanish', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Jane Doe', title: 'Manager', company: 'TechCorp', email: 'jane.doe@techcorp.com', phone: '+1 (555) 111-2222' }
+    ],
+    isSampleDatabase: false
   }
 };
 
@@ -1848,11 +1963,44 @@ export const getTemplateNames = (): Record<string, string> => ({
   'professional-clean': 'Professional Clean',
   'creative-modern': 'Creative Modern',
   'executive-formal': 'Executive Formal',
-  'minimalist-clean': 'Minimalist Clean'
+  'minimalist-clean': 'Minimalist Clean',
+  'minimal-clean': 'Minimal Clean',
+  'professional-simple': 'Professional Simple',
+  'classic-elegant': 'Classic Elegant',
+  'modern-minimal': 'Modern Minimal',
+  'harvard-classic': 'Harvard Classic',
+  'modern-professional': 'Modern Professional',
+  'creative-clean': 'Creative Clean',
+  'attractive-cv': 'Attractive CV'
 });
 
 export const getSampleDataForTemplate = (templateId: string): CVData => {
-  return sampleCVData[templateId] || sampleCVData['basic-modern'];
+  // If we have specific sample data for this template, use it
+  if (sampleCVData[templateId]) {
+    return sampleCVData[templateId];
+  }
+  
+  // Otherwise, use a default template based on the category
+  const template = cvTemplates.find(t => t.id === templateId);
+  if (template) {
+    switch (template.category) {
+      case 'professional':
+      case 'executive':
+        return sampleCVData['professional-clean'];
+      case 'creative':
+        return sampleCVData['creative-modern'];
+      case 'minimal':
+      case 'minimalist':
+        return sampleCVData['minimalist'];
+      case 'academic':
+        return sampleCVData['executive-formal'];
+      default:
+        return sampleCVData['basic-modern'];
+    }
+  }
+  
+  // Fallback to basic modern
+  return sampleCVData['basic-modern'];
 };
 
 export const getSampleDatabase = (): CVData[] =>

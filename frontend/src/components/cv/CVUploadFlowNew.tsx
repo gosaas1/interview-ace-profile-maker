@@ -45,6 +45,7 @@ import { cvTemplates, getTemplatesByTier, getTemplateById } from '@/data/cvTempl
 import CVBuilderNew from './CVBuilderNew';
 import { useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
+import { normalizeCVData } from '@/lib/cv/normalize';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
@@ -346,230 +347,242 @@ const CVUploadFlowNew: React.FC<CVUploadFlowNewProps> = ({ onClose, onSuccess })
   );
 
   // Render preview step
-  const renderPreviewStep = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <FileCheck className="mx-auto h-12 w-12 text-green-600 mb-4" />
-        <h3 className="text-lg font-semibold">Data Extracted Successfully</h3>
-        <p className="text-muted-foreground">
-          We've extracted the following information from your CV. Review and edit as needed.
-        </p>
-      </div>
+  const renderPreviewStep = () => {
+    const normalizedCV = normalizeCVData(parsedData);
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <FileCheck className="mx-auto h-12 w-12 text-green-600 mb-4" />
+          <h3 className="text-lg font-semibold">Data Extracted Successfully</h3>
+          <p className="text-muted-foreground">
+            We've extracted the following information from your CV. Review and edit as needed.
+          </p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Extracted Information</span>
-            <Button variant="outline" size="sm" onClick={handleEditData}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Data
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Personal Information */}
-          <div>
-            <h4 className="font-semibold mb-3 flex items-center">
-              <Users className="mr-2 h-4 w-4" />
-              Personal Information
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Full Name</Label>
-                <p className="text-sm text-muted-foreground">{parsedData?.fullName}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Email</Label>
-                <p className="text-sm text-muted-foreground">{parsedData?.email}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Phone</Label>
-                <p className="text-sm text-muted-foreground">{parsedData?.phone}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Location</Label>
-                <p className="text-sm text-muted-foreground">{parsedData?.location}</p>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Extracted Information</span>
+              <Button variant="outline" size="sm" onClick={handleEditData}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Data
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Personal Information */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center">
+                <Users className="mr-2 h-4 w-4" />
+                Personal Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Full Name</Label>
+                  <p className="text-sm text-muted-foreground">{normalizedCV.personalInfo.fullName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Email</Label>
+                  <p className="text-sm text-muted-foreground">{normalizedCV.personalInfo.email}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Phone</Label>
+                  <p className="text-sm text-muted-foreground">{normalizedCV.personalInfo.phone}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Location</Label>
+                  <p className="text-sm text-muted-foreground">{normalizedCV.personalInfo.location}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Separator />
+            <Separator />
 
-          {/* Summary */}
-          <div>
-            <h4 className="font-semibold mb-3 flex items-center">
-              <FileText className="mr-2 h-4 w-4" />
-              Professional Summary
-            </h4>
-            <p className="text-sm text-muted-foreground">{parsedData?.summary}</p>
-          </div>
-
-          <Separator />
-
-          {/* Skills */}
-          <div>
-            <h4 className="font-semibold mb-3 flex items-center">
-              <Star className="mr-2 h-4 w-4" />
-              Skills
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {parsedData?.skills.map((skill, index) => (
-                <Badge key={index} variant="secondary">
-                  {skill}
-                </Badge>
-              ))}
+            {/* Summary */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center">
+                <FileText className="mr-2 h-4 w-4" />
+                Professional Summary
+              </h4>
+              <p className="text-sm text-muted-foreground">{normalizedCV.summary}</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="flex justify-center space-x-4">
-        <Button variant="outline" onClick={() => setCurrentStep('upload')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Upload
-        </Button>
-        <Button onClick={handleChooseTemplate}>
-          <Palette className="mr-2 h-4 w-4" />
-          Choose Template
-        </Button>
+            <Separator />
+
+            {/* Skills */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center">
+                <Star className="mr-2 h-4 w-4" />
+                Skills
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {normalizedCV.skills.map((skill, index) => (
+                  <Badge key={index} variant="secondary">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-center space-x-4">
+          <Button variant="outline" onClick={() => setCurrentStep('upload')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Upload
+          </Button>
+          <Button onClick={handleChooseTemplate}>
+            <Palette className="mr-2 h-4 w-4" />
+            Choose Template
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render edit step
-  const renderEditStep = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <Edit className="mx-auto h-12 w-12 text-blue-600 mb-4" />
-        <h3 className="text-lg font-semibold">Edit Your Information</h3>
-        <p className="text-muted-foreground">
-          Review and edit the extracted information before proceeding.
-        </p>
-      </div>
+  const renderEditStep = () => {
+    const normalizedCV = normalizeCVData(parsedData);
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <Edit className="mx-auto h-12 w-12 text-blue-600 mb-4" />
+          <h3 className="text-lg font-semibold">Edit Your Information</h3>
+          <p className="text-muted-foreground">
+            Review and edit the extracted information before proceeding.
+          </p>
+        </div>
 
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Full Name</Label>
+                <Input 
+                  value={normalizedCV.personalInfo.fullName || ''} 
+                  onChange={(e) => setParsedData(prev => prev ? {...prev, fullName: e.target.value} : null)}
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input 
+                  value={normalizedCV.personalInfo.email || ''} 
+                  onChange={(e) => setParsedData(prev => prev ? {...prev, email: e.target.value} : null)}
+                  placeholder="john.doe@email.com"
+                />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input 
+                  value={normalizedCV.personalInfo.phone || ''} 
+                  onChange={(e) => setParsedData(prev => prev ? {...prev, phone: e.target.value} : null)}
+                  placeholder="+44 123 456 7890"
+                />
+              </div>
+              <div>
+                <Label>Location</Label>
+                <Input 
+                  value={normalizedCV.personalInfo.location || ''} 
+                  onChange={(e) => setParsedData(prev => prev ? {...prev, location: e.target.value} : null)}
+                  placeholder="London, UK"
+                />
+              </div>
+            </div>
+            
             <div>
-              <Label>Full Name</Label>
-              <Input 
-                value={parsedData?.fullName || ''} 
-                onChange={(e) => setParsedData(prev => prev ? {...prev, fullName: e.target.value} : null)}
-                placeholder="John Doe"
+              <Label>Professional Summary</Label>
+              <Textarea 
+                value={normalizedCV.summary || ''} 
+                onChange={(e) => setParsedData(prev => prev ? {...prev, summary: e.target.value} : null)}
+                placeholder="Experienced professional with..."
+                rows={4}
               />
             </div>
+            
             <div>
-              <Label>Email</Label>
+              <Label>Skills (comma-separated)</Label>
               <Input 
-                value={parsedData?.email || ''} 
-                onChange={(e) => setParsedData(prev => prev ? {...prev, email: e.target.value} : null)}
-                placeholder="john.doe@email.com"
+                value={normalizedCV.skills.join(', ') || ''} 
+                onChange={(e) => setParsedData(prev => prev ? {...prev, skills: e.target.value.split(',').map(s => s.trim())} : null)}
+                placeholder="e.g., JavaScript, React, Node.js"
               />
             </div>
-            <div>
-              <Label>Phone</Label>
-              <Input 
-                value={parsedData?.phone || ''} 
-                onChange={(e) => setParsedData(prev => prev ? {...prev, phone: e.target.value} : null)}
-                placeholder="+44 123 456 7890"
-              />
-            </div>
-            <div>
-              <Label>Location</Label>
-              <Input 
-                value={parsedData?.location || ''} 
-                onChange={(e) => setParsedData(prev => prev ? {...prev, location: e.target.value} : null)}
-                placeholder="London, UK"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <Label>Professional Summary</Label>
-            <Textarea 
-              value={parsedData?.summary || ''} 
-              onChange={(e) => setParsedData(prev => prev ? {...prev, summary: e.target.value} : null)}
-              placeholder="Experienced professional with..."
-              rows={4}
-            />
-          </div>
-          
-          <div>
-            <Label>Skills (comma-separated)</Label>
-            <Input 
-              value={parsedData?.skills.join(', ') || ''} 
-              onChange={(e) => setParsedData(prev => prev ? {...prev, skills: e.target.value.split(',').map(s => s.trim())} : null)}
-              placeholder="e.g., JavaScript, React, Node.js"
-            />
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="flex justify-center space-x-4">
-        <Button variant="outline" onClick={() => setCurrentStep('preview')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Preview
-        </Button>
-        <Button onClick={handleChooseTemplate}>
-          <Palette className="mr-2 h-4 w-4" />
-          Choose Template
-        </Button>
+          </CardContent>
+        </Card>
+        
+        <div className="flex justify-center space-x-4">
+          <Button variant="outline" onClick={() => setCurrentStep('preview')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Preview
+          </Button>
+          <Button onClick={handleChooseTemplate}>
+            <Palette className="mr-2 h-4 w-4" />
+            Choose Template
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render template selection step
-  const renderTemplateStep = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <Palette className="mx-auto h-12 w-12 text-purple-600 mb-4" />
-        <h3 className="text-lg font-semibold">Choose Your Template</h3>
-        <p className="text-muted-foreground">
-          Select a template that best represents your professional style and industry.
-        </p>
+  const renderTemplateStep = () => {
+    const normalizedCV = normalizeCVData(parsedData);
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <Palette className="mx-auto h-12 w-12 text-purple-600 mb-4" />
+          <h3 className="text-lg font-semibold">Choose Your Template</h3>
+          <p className="text-muted-foreground">
+            Select a template that best represents your professional style and industry.
+          </p>
+        </div>
+        
+        <CVTemplateSelector
+          selectedTemplate={selectedTemplate}
+          onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
+          userTier="elite"
+        />
+        
+        <div className="flex justify-center space-x-4">
+          <Button variant="outline" onClick={() => setCurrentStep('edit')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Edit
+          </Button>
+          <Button onClick={handleProceedToBuilder}>
+            <Eye className="mr-2 h-4 w-4" />
+            Build CV
+          </Button>
+        </div>
       </div>
-      
-      <CVTemplateSelector
-        selectedTemplate={selectedTemplate}
-        onTemplateSelect={(templateId) => setSelectedTemplate(templateId)}
-        userTier="elite"
-      />
-      
-      <div className="flex justify-center space-x-4">
-        <Button variant="outline" onClick={() => setCurrentStep('edit')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Edit
-        </Button>
-        <Button onClick={handleProceedToBuilder}>
-          <Eye className="mr-2 h-4 w-4" />
-          Build CV
-        </Button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Render builder step
-  const renderBuilderStep = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <Eye className="mx-auto h-12 w-12 text-green-600 mb-4" />
-        <h3 className="text-lg font-semibold">Build Your CV</h3>
-        <p className="text-muted-foreground">
-          Customize your CV with the selected template and your extracted data.
-        </p>
+  const renderBuilderStep = () => {
+    const normalizedCV = normalizeCVData(parsedData);
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <Eye className="mx-auto h-12 w-12 text-green-600 mb-4" />
+          <h3 className="text-lg font-semibold">Build Your CV</h3>
+          <p className="text-muted-foreground">
+            Customize your CV with the selected template and your extracted data.
+          </p>
+        </div>
+        
+        {parsedData && (
+          <CVBuilderNew
+            onClose={() => setCurrentStep('template')}
+            onSuccess={() => {
+              saveCVToDatabase();
+              if (onSuccess) onSuccess();
+            }}
+          />
+        )}
       </div>
-      
-      {parsedData && (
-        <CVBuilderNew
-          onClose={() => setCurrentStep('template')}
-          onSuccess={() => {
-            saveCVToDatabase();
-            if (onSuccess) onSuccess();
-          }}
-        />
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>

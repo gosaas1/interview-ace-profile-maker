@@ -1,9 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(cors());
@@ -15,15 +22,23 @@ app.get('/', (req, res) => {
 });
 
 // Import and use route handlers
-const authRoutes = require('./routes/auth');
-const cvRoutes = require('./routes/cv');
-const interviewRoutes = require('./routes/interview');
-const jobRoutes = require('./routes/jobs');
+const authRoutes = (await import('../dist/routes/auth.js')).default;
+const cvRoutes = (await import('../dist/routes/cv.js')).default;
+const cvAIRoutes = (await import('../dist/routes/cv-ai.js')).default;
+const adminRoutes = (await import('../dist/routes/admin.js')).default;
+const interviewRoutes = (await import('../dist/routes/interview.js')).default;
+const jobRoutes = (await import('../dist/routes/jobs.js')).default;
+const analyticsRoutes = (await import('../dist/routes/analytics.js')).default;
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cv', cvRoutes);
+app.use('/api/cv', cvAIRoutes); // AI-enhanced CV routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/feedback', analyticsRoutes); // Feedback endpoint
+app.use('/api/contact', analyticsRoutes); // Contact endpoint
 
 // Error handling middleware
 app.use((err, req, res, next) => {

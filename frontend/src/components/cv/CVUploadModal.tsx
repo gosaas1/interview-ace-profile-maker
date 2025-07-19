@@ -19,6 +19,8 @@ import { cvTemplates, getTemplateById } from '@/data/cvTemplates';
 import { parseCVText, convertToCVBuilderFormat, type ParsedCVData } from '@/lib/cv/parser';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { normalizeCVData } from '@/lib/cv/normalize';
+import { cvAPI } from '@/lib/api';
 
 // Set up PDF.js worker to use local file
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
@@ -99,7 +101,54 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
       let rawText = '';
 
       if (uploadMethod === 'file' && uploadedFile) {
-        rawText = await extractFileContent(uploadedFile);
+        // Use backend parsing API for file uploads
+        try {
+          console.log('🔍 Using backend parsing API...');
+          const formData = new FormData();
+          formData.append('cvFile', uploadedFile);
+          
+          const response = await fetch('/api/cv/parse', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Failed to parse file' }));
+            throw new Error(errorData.message || 'Failed to parse file');
+          }
+
+          const parseResult = await response.json();
+          console.log('✅ Backend parsing completed:', {
+            method: parseResult.method,
+            contentLength: parseResult.contentLength,
+            warning: parseResult.warning
+          });
+
+          rawText = parseResult.parsedText;
+          
+          // Show parsing method info
+          const methodNames = {
+            textract: 'AWS Textract',
+            cohere: 'Cohere AI',
+            mammoth: 'Mammoth.js',
+            text: 'Text Parser'
+          };
+          
+          toast.success(`CV parsed using ${methodNames[parseResult.method]}`);
+          
+          if (parseResult.warning) {
+            toast.warning(parseResult.warning);
+          }
+
+        } catch (parseError: any) {
+          console.error('❌ Backend parsing failed, falling back to frontend:', parseError);
+          // Fallback to frontend parsing
+          rawText = await extractFileContent(uploadedFile);
+          toast.warning('Backend parsing failed, using frontend fallback');
+        }
       } else if (uploadMethod === 'text' && cvText.trim()) {
         rawText = cvText.trim();
       } else {
@@ -146,61 +195,22 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
     }
 
     try {
-      const cvData = {
-        user_id: user.id,
-        title: `${parsedCVData.full_name}'s CV`,
-        full_name: parsedCVData.full_name,
-        job_title: parsedCVData.job_title,
-        email: parsedCVData.email,
-        phone: parsedCVData.phone,
-        location: parsedCVData.location,
-        linkedin_url: parsedCVData.linkedin_url,
-        website: parsedCVData.website,
-        summary: parsedCVData.summary,
-        experiences: parsedCVData.experiences,
-        education: parsedCVData.education,
-        skills: parsedCVData.skills,
-        projects: parsedCVData.projects || [],
-        languages: parsedCVData.languages || [],
-        references: parsedCVData.references || [],
-        certifications: parsedCVData.certifications || '',
-        template_id: selectedTemplate,
+      const dbCVData = {
+        title: `${parsedCVData.full_name || 'Untitled CV'}'s CV`,
+        content: cvBuilderData,
         is_public: false,
-        is_primary: false,
+        template_id: selectedTemplate,
         ats_score: 0,
-        file_url: uploadedFile ? undefined : undefined, // Will be added if file upload is implemented
-        file_name: uploadedFile?.name,
-        file_size: uploadedFile?.size,
         content_type: uploadMethod === 'file' ? 'file' : 'manual',
-        content: cvBuilderData, // Store the full parsed content
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
       };
 
-      console.log('Saving CV data:', cvData);
-
-      const { data, error } = await supabase
-        .from('cvs')
-        .insert([cvData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('CV saved successfully:', data);
+      const data = await cvAPI.create(dbCVData);
       setUploadedCVId(data.id);
-      
       toast.success('CV saved successfully!');
-      
       if (onSuccess) {
         onSuccess();
       }
-      
       onClose();
-      
     } catch (error) {
       console.error('Error saving CV:', error);
       toast.error('Failed to save CV. Please try again.');
@@ -580,8 +590,7 @@ const CVUploadModal: React.FC<CVUploadModalProps> = ({ onClose, onSuccess }) => 
       </div>
       
       <CVTemplateSelector
-        selectedTemplate={selectedTemplate}
-        onTemplateSelect={handleTemplateSelect}
+        onSelectTemplate={handleTemplateSelect}
         userTier="elite" // Show all templates for now
         showAllTemplates={true}
       />
