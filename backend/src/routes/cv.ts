@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase.js';
 import mammoth from 'mammoth';
 // AWS Textract functionality removed - using Cohere parser only
 import { 
-  extractTextFromPDF as extractTextFromCohere 
+  extractTextFromPDF as extractTextFromCohere,
+  calculateFileHash
 } from '../lib/cohere-parser.js';
 
 const router = express.Router();
@@ -38,7 +39,7 @@ const upload = multer({
 });
 
 // Helper function to extract text from different file types
-async function extractTextFromFile(file: Express.Multer.File, userId?: string): Promise<string> {
+async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   try {
     const buffer = file.buffer;
     
@@ -122,25 +123,14 @@ router.post('/parse', upload.single('cvFile'), async (req: Request, res: Respons
       if (file.mimetype === 'application/pdf') {
         // Try Textract first, then Cohere fallback
         try {
-          console.log('🚀 Attempting AWS Textract...');
-          const textractResult = await extractTextFromTextract(file.buffer);
-          extractedText = textractResult.text;
-          parsingMethod = 'textract';
-          console.log('✅ Textract parsing successful');
-        } catch (textractError: any) {
-          console.error('❌ Textract failed:', textractError.message);
-          console.log('🔄 Falling back to Cohere...');
-          
-          try {
-            const cohereResult = await extractTextFromCohere(file.buffer);
-            extractedText = cohereResult.text;
-            parsingMethod = 'cohere';
-            warning = `Textract failed, used Cohere fallback: ${textractError.message}`;
-            console.log('✅ Cohere fallback successful');
-          } catch (cohereError: any) {
-            console.error('❌ Cohere fallback also failed:', cohereError.message);
-            throw new Error(`PDF parsing failed: Textract error - ${textractError.message}, Cohere error - ${cohereError.message}`);
-          }
+          console.log('🚀 Attempting Cohere parsing...');
+          const cohereResult = await extractTextFromCohere(file.buffer);
+          extractedText = cohereResult.text;
+          parsingMethod = 'cohere';
+          console.log('✅ Cohere parsing successful');
+        } catch (cohereError: any) {
+          console.error('❌ Cohere parsing failed:', cohereError.message);
+          throw new Error(`PDF parsing failed: ${cohereError.message}`);
         }
       } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
         const result = await mammoth.extractRawText({ buffer: file.buffer });
@@ -236,7 +226,7 @@ router.post('/upload', upload.single('cvFile'), async (req: Request, res: Respon
     // 1. Extract text content from file
     let extractedText: string;
     try {
-      extractedText = await extractTextFromFile(file, req.user?.id);
+      extractedText = await extractTextFromFile(file);
       console.log('📝 Text extracted, length:', extractedText.length);
       
       // If no text was extracted, provide a fallback message
