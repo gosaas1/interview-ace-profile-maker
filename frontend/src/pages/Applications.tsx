@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Building, MapPin, Loader2, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 
@@ -287,111 +287,6 @@ const Applications = () => {
             </div>
           )}
         </div>
-      </main>
-    </div>
-  );
-};
-
-export default Applications; 
-            <Card key={application.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                      {application.job_title}
-                    </h3>
-                    <div className="flex items-center text-gray-600 mb-2">
-                      <Building className="w-4 h-4 mr-1" />
-                      {application.company_name}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge className={getStatusColor(application.status)}>
-                      {application.status}
-                    </Badge>
-                    {application.match_score && (
-                      <Badge variant="secondary" className="text-xs">
-                        {application.match_score}% Match
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {application.location || 'Location not specified'}
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Applied: {new Date(application.application_date).toLocaleDateString()}
-                  </div>
-                  <div className="text-blue-600 font-semibold">
-                    {application.job_url && (
-                      <a 
-                        href={application.job_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="hover:underline"
-                      >
-                        View Job Posting
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {application.notes && (
-                  <p className="text-gray-700 mb-4">{application.notes}</p>
-                )}
-
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleViewDetails(application)}
-                  >
-                    View Details
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditApplication(application)}
-                  >
-                    Edit Application
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleAddNote(application)}
-                  >
-                    Add Note
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredApplications.length === 0 && (
-          <Card>
-            <CardContent className="text-center py-12">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {applications.length === 0 ? 'No applications yet' : 'No applications found'}
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {applications.length === 0 
-                  ? 'Start applying to jobs using our One Button Apply feature!' 
-                  : 'Try changing your filter or apply to new jobs.'
-                }
-              </p>
-              {applications.length === 0 && (
-                <Button onClick={() => navigate('/one-button-apply')}>
-                  Try One Button Apply
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </main>
     </div>
   );

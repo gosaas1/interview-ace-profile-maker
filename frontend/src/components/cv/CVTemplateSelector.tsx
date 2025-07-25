@@ -141,41 +141,15 @@ const CVTemplateSelector: React.FC<CVTemplateSelectorProps> = ({
 
                 {/* Style Badges */}
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {/* Header Color Badge */}
-                  <Badge
-                    variant="outline"
-                    className={`
-                      ${colorScheme.bg} ${colorScheme.text} ${colorScheme.border}
-                      transition-all duration-300 hover:scale-105
-                      flex items-center gap-1 text-xs
-                    `}
-                  >
-                    🎨 {template.colorScheme.charAt(0).toUpperCase() + template.colorScheme.slice(1)} Header
-                  </Badge>
-
-                  {/* Layout Badge */}
-                  <Badge
-                    variant="outline"
-                    className={`
-                      bg-gray-100 text-gray-700 border-gray-300
-                      transition-all duration-300 hover:scale-105
-                      flex items-center gap-1 text-xs
-                    `}
-                  >
-                    {layoutInfo.icon} {layoutInfo.label}
-                  </Badge>
-
-                  {/* Header Alignment Badge */}
-                  <Badge
-                    variant="outline"
-                    className={`
-                      bg-gray-100 text-gray-700 border-gray-300
-                      transition-all duration-300 hover:scale-105
-                      flex items-center gap-1 text-xs
-                    `}
-                  >
-                    {headerAlignInfo.icon} {headerAlignInfo.label}
-                  </Badge>
+                  {template.features.map((feature, idx) => (
+                    <Badge
+                      key={idx}
+                      variant="outline"
+                      className="bg-gray-100 text-gray-700 border-gray-300 transition-all duration-300 hover:scale-105 flex items-center gap-1 text-xs"
+                    >
+                      {feature}
+                    </Badge>
+                  ))}
                 </div>
               </CardHeader>
 
@@ -221,8 +195,11 @@ const CVTemplateSelector: React.FC<CVTemplateSelectorProps> = ({
                   </div>
 
                   <Button
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onSelectTemplate(template.id);
+                    }}
+                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg"
                   >
                     Use Template
                   </Button>

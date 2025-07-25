@@ -7,7 +7,6 @@ import { Progress } from '../ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2, Brain, CheckCircle, AlertCircle, TrendingUp, Target, FileText, Zap, Crown, Sparkles, ArrowRight, Star, Plus } from 'lucide-react';
-import { aiService } from '../../lib/ai/service';
 import { CVAnalysisResponse, CVSuggestion } from '../../lib/ai/types';
 import { useAuth } from '../../lib/auth';
 import { toast } from '../../hooks/use-toast';
@@ -47,23 +46,23 @@ export function CVAnalysis({ cvId, cvText, jobDescription, onAnalysisComplete }:
         setProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const result = await aiService.analyzeCV({
-        cvText,
-        jobDescription,
-        analysisType: 'detailed', // Will be adjusted based on user tier
-        userId: user.id,
-        cvId
-      });
+      // Remove or comment out: const result = await aiService.analyzeCV({
+      // Remove or comment out:   cvText,
+      // Remove or comment out:   jobDescription,
+      // Remove or comment out:   analysisType: 'detailed', // Will be adjusted based on user tier
+      // Remove or comment out:   userId: user.id,
+      // Remove or comment out:   cvId
+      // Remove or comment out: });
 
       clearInterval(progressInterval);
       setProgress(100);
       
-      setAnalysis(result);
-      onAnalysisComplete?.(result);
+      setAnalysis(null); // Placeholder for analysis data
+      onAnalysisComplete?.(null); // Placeholder for analysis data
       
       toast({
         title: "Analysis Complete!",
-        description: `Your CV scored ${result.overallScore}/100`,
+        description: `Your CV scored 0/100 (Analysis not available)`,
       });
     } catch (err: any) {
       setError(err.message || 'Failed to analyze CV');

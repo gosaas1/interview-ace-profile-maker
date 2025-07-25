@@ -35,8 +35,8 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="space-y-6">
+    <div className="flex flex-col h-full justify-center items-center p-4">
+      <div className="w-full max-w-xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -113,9 +113,10 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         </Card>
       </div>
       
-      <div className="hidden lg:block">
+      {/* Remove the small preview card from here */}
+      {/* <div className="hidden lg:block">
         <CVPreview cvData={cvData} />
-      </div>
+      </div> */}
     </div>
   );
 };

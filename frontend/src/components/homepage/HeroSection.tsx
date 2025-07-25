@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText, Target, Shield, Award, Upload, PlusCircle, ArrowRight, AlertTriangle, CheckCircle, Clock, Zap, User, Heart } from 'lucide-react';
-import CVUploadModal from '@/components/cv/CVUploadModal';
 import { useAuth } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import { AnimatedCounter } from '@/components/ui/counter';
@@ -259,12 +258,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStartedClick }) => {
       </Dialog>
 
       {/* CV Upload Modal */}
-      {showUploadModal && (
+      {/* {showUploadModal && (
         <CVUploadModal
           onClose={() => setShowUploadModal(false)}
           onSuccess={handleUploadSuccess}
         />
-      )}
+      )} */}
     </>
   );
 };

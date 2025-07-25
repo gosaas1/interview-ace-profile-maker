@@ -6,8 +6,6 @@ import { Plus, FileText, Eye, Edit, Trash2, Calendar, Upload, Brain } from 'luci
 import { CVData, cvOperations } from '@/lib/supabase';
 import { toast } from 'sonner';
 import CVPreviewModal from '@/components/cv/CVPreviewModal';
-import CVUploadModal from '@/components/cv/CVUploadModal';
-import { CVBuilderRefactored } from '@/components/cv/CVBuilderRefactored';
 import { CVAnalysis } from '@/components/cv/CVAnalysis';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -337,18 +335,6 @@ export const CVs = () => {
         />
       )}
 
-      {/* CV Upload Modal */}
-      {showUploadModal && (
-        <CVUploadModal
-          onClose={() => setShowUploadModal(false)}
-          onSuccess={() => {
-            setShowUploadModal(false);
-            loadCVs(); // Refresh CV list
-            toast.success('CV uploaded successfully!');
-          }}
-        />
-      )}
-
       {/* AI Analysis Modal */}
       {analyzingCV && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -378,19 +364,33 @@ export const CVs = () => {
 
       {/* CV Builder Modal */}
       {showCVBuilder && (
-        <CVBuilderRefactored
-          onClose={() => {
-            setShowCVBuilder(false);
-            setEditingCV(null);
-          }}
-          onSuccess={() => {
-            setShowCVBuilder(false);
-            setEditingCV(null);
-            loadCVs(); // Refresh CV list
-            toast.success('CV saved successfully!');
-          }}
-          editingCV={editingCV || undefined}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Create New CV</h2>
+              <Button 
+                variant="ghost" 
+                onClick={() => setShowCVBuilder(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                Use our CV builder to create a professional and optimized CV.
+                You can customize it with your own details and skills.
+              </p>
+              <Button 
+                onClick={() => navigate('/cv-builder')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Start Building Your CV
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -5,7 +5,7 @@ import ExperienceForm from './forms/ExperienceForm';
 import EducationForm from './forms/EducationForm';
 import SkillsForm from './forms/SkillsForm';
 import CertificationsForm from './forms/CertificationsForm';
-import { CVData } from '@/lib/supabase';
+import { CVData } from '@/lib/cv/types';
 import { normalizeCVData } from '@/lib/cv/normalize';
 
 interface CVFormProps {
@@ -24,7 +24,21 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
     portfolio_url?: string;
     summary: string;
   }) => {
-    onDataChange(normalizeCVData({ ...cvData, personal_info: personalInfo }));
+    onDataChange(
+      normalizeCVData({
+        ...cvData,
+        personalInfo: {
+          fullName: personalInfo.full_name,
+          jobTitle: personalInfo.job_title,
+          email: personalInfo.email,
+          phone: personalInfo.phone,
+          location: personalInfo.location,
+          linkedIn: personalInfo.linkedin_url,
+          website: personalInfo.portfolio_url,
+          summary: personalInfo.summary,
+        },
+      })
+    );
   };
 
   const updateExperience = (experience: Array<{
@@ -33,7 +47,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
     duration: string;
     description: string;
   }>) => {
-    onDataChange(normalizeCVData({ ...cvData, experiences: experience }));
+    onDataChange(normalizeCVData({ ...cvData, experience }));
   };
 
   const updateEducation = (education: Array<{
@@ -50,7 +64,15 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
   };
 
   const updateCertifications = (certifications: string) => {
-    onDataChange(normalizeCVData({ ...cvData, certifications }));
+    onDataChange(
+      normalizeCVData({
+        ...cvData,
+        certifications: certifications
+          .split('\n')
+          .map((c: string) => c.trim())
+          .filter(Boolean),
+      })
+    );
   };
 
   return (
@@ -65,14 +87,13 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         <CardContent>
           <PersonalInfoForm
             data={{
-              full_name: cvData.personal_info.full_name,
-              job_title: cvData.personal_info.job_title,
-              email: cvData.personal_info.email,
-              phone: cvData.personal_info.phone,
-              location: cvData.personal_info.location,
-              linkedin_url: cvData.personal_info.linkedin_url,
-              portfolio_url: cvData.personal_info.portfolio_url,
-              summary: cvData.personal_info.summary
+              full_name: cvData.personalInfo.fullName,
+              email: cvData.personalInfo.email,
+              phone: cvData.personalInfo.phone,
+              location: cvData.personalInfo.location,
+              linkedin_url: cvData.personalInfo.linkedIn,
+              portfolio_url: cvData.personalInfo.website,
+              summary: cvData.personalInfo.summary,
             }}
             onChange={updatePersonalInfo}
           />
@@ -88,7 +109,12 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         </CardHeader>
         <CardContent>
           <ExperienceForm
-            data={cvData.experiences}
+            data={cvData.experience.map(exp => ({
+              company: exp.company,
+              role: exp.position || '',
+              duration: '', // Could be derived from startDate/endDate if needed
+              description: exp.description
+            }))}
             onChange={updateExperience}
           />
         </CardContent>
@@ -103,7 +129,12 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         </CardHeader>
         <CardContent>
           <EducationForm
-            data={cvData.education}
+            data={cvData.education.map(edu => ({
+              institution: edu.institution,
+              degree: edu.degree,
+              year: edu.startDate || edu.endDate || '',
+              gpa: edu.gpa || ''
+            }))}
             onChange={updateEducation}
           />
         </CardContent>
@@ -118,7 +149,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         </CardHeader>
         <CardContent>
           <SkillsForm
-            data={cvData.skills ? cvData.skills.split(',').map(s => s.trim()).filter(s => s) : []}
+            data={Array.isArray(cvData.skills) ? cvData.skills : []}
             onChange={updateSkills}
           />
         </CardContent>
@@ -133,7 +164,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         </CardHeader>
         <CardContent>
           <CertificationsForm
-            data={cvData.certifications}
+            data={Array.isArray(cvData.certifications) ? cvData.certifications.join('\n') : ''}
             onChange={updateCertifications}
           />
         </CardContent>

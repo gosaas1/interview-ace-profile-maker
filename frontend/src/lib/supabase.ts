@@ -286,6 +286,22 @@ export const cvOperations = {
   }
 };
 
+export async function fetchUserCV(userId: string) {
+  const { data, error } = await supabase
+    .from('cvs')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  return { data, error };
+}
+
+export async function upsertUserCV(userId: string, cvData: any) {
+  const { data, error } = await supabase
+    .from('cvs')
+    .upsert({ user_id: userId, content: cvData }, { onConflict: 'user_id' });
+  return { data, error };
+}
+
 // Interview Database Operations
 export const interviewOperations = {
   async createSession(sessionData: Omit<InterviewSession, 'id' | 'user_id' | 'created_at' | 'updated_at'>) {

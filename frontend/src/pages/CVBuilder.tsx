@@ -10,6 +10,8 @@ import { cvTemplates, getTemplateById } from '@/data/cvTemplates';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { CVData } from '@/lib/cv/types';
+import { supabase } from '@/lib/supabase';
+import { fetchUserCV, upsertUserCV } from '@/lib/supabase';
 
 interface CVBuilderProps {
   // Add any props if needed
@@ -44,6 +46,15 @@ const CVBuilder: React.FC<CVBuilderProps> = () => {
     certifications: []
   });
 
+  useEffect(() => {
+    const loadCV = async () => {
+      if (!user) return;
+      const { data } = await fetchUserCV(user.id);
+      if (data) setCvData(data.content);
+    };
+    loadCV();
+  }, [user]);
+
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -57,11 +68,10 @@ const CVBuilder: React.FC<CVBuilderProps> = () => {
       toast.error('Please log in to save your CV');
       return;
     }
-
     setIsSaving(true);
     try {
-      // Here you would save the CV data to your backend
-      // For now, we'll just show a success message
+      const { error } = await upsertUserCV(user.id, cvData);
+      if (error) throw error;
       toast.success('CV saved successfully!');
     } catch (error) {
       console.error('Save error:', error);

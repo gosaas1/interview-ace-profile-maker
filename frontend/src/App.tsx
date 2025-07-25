@@ -1,40 +1,34 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/lib/auth';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/toaster';
+import { TopNavigation } from '@/components/navigation/TopNavigation';
+import { AppLayout } from '@/components/layout/AppLayout';
+import PaymentSuccess from '@/pages/PaymentSuccess';
+import PaymentFailed from '@/pages/PaymentFailed';
 import Index from '@/pages/Index';
+import Dashboard from '@/components/dashboard/Dashboard';
+import CVs from '@/pages/CVs';
+import CVBuilderPage from '@/pages/CVBuilderPage';
+import Applications from '@/pages/Applications';
+import Analytics from '@/pages/Analytics';
+import AdminDashboard from '@/pages/AdminDashboard';
+import AdminLogin from '@/pages/admin-login';
+import AdminAPIUsage from '@/pages/admin/api-usage';
+import AdminUserManagement from '@/pages/admin/users';
+import AdminTierManagement from '@/pages/admin/tier';
+import AdminCostTracking from '@/pages/admin/dashboard';
+import EliteExecutive from '@/pages/EliteExecutive';
 import AuthForm from '@/components/auth/AuthForm';
 import ResetPassword from '@/components/auth/ResetPassword';
 import VerifyEmail from '@/components/auth/VerifyEmail';
-import Dashboard from '@/components/dashboard/Dashboard';
-import { CVs } from '@/pages/CVs';
-import CVBuilderPage from '@/pages/CVBuilderPage';
+import AuthCallback from '@/components/auth/AuthCallback';
 import { Interviews } from '@/pages/Interviews';
 import { Jobs } from '@/pages/Jobs';
-import AuthCallback from '@/components/auth/AuthCallback';
-import CoverLetterPage from '@/pages/CoverLetterPage';
-import JobApplyPage from '@/pages/JobApplyPage';
 import UsageDashboard from '@/pages/UsageDashboard';
 import AdminPanel from '@/pages/AdminPanel';
-import OneClickApplyPage from '@/pages/OneClickApplyPage';
+import CoverLetterPage from '@/pages/CoverLetterPage';
 import InterviewCoachPage from '@/pages/InterviewCoachPage';
-import { TopNavigation } from '@/components/navigation/TopNavigation';
-import { AppLayout } from '@/components/layout/AppLayout';
-import BackendTest from '@/components/debug/BackendTest';
-import LinkedInDebug from '@/components/debug/LinkedInDebug';
-import LinkedInOAuthTest from '@/components/debug/LinkedInOAuthTest';
-import LinkedInMainAuthTest from '@/components/debug/LinkedInMainAuthTest';
-import { KeywordTest } from '@/components/debug/KeywordTest';
-import PaymentSuccess from '@/pages/PaymentSuccess';
-import PaymentFailed from '@/pages/PaymentFailed';
-import PaymentTest from '@/components/debug/PaymentTest';
-import StripeSetup from '@/components/debug/StripeSetup';
-import PaymentDebug from '@/components/debug/PaymentDebug';
-import { TemplateTest } from '@/components/debug/TemplateTest';
-import { DatabaseSchemaTest } from '@/components/debug/DatabaseSchemaTest';
-import SSOTest from '@/components/debug/SSOTest';
-import EliteExecutive from '@/pages/EliteExecutive';
-import Analytics from '@/pages/Analytics';
-import TemplatePreviewGenerator from '@/pages/TemplatePreviewGenerator';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -94,18 +88,7 @@ function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
-        <Toaster 
-          position="top-right" 
-          richColors
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'white',
-              border: '1px solid #e2e8f0',
-              color: '#1e293b',
-            },
-          }}
-        />
+        <Toaster />
         <Routes>
           {/* Public routes without top navigation */}
           <Route path="/" element={<AppLayout><Index /></AppLayout>} />
@@ -115,9 +98,6 @@ function App() {
           <Route path="/auth/reset-password" element={<AppLayout showTopNav={false}><ResetPassword /></AppLayout>} />
           <Route path="/auth/verify" element={<AppLayout showTopNav={false}><VerifyEmail /></AppLayout>} />
           <Route path="/auth/callback" element={<AppLayout showTopNav={false}><AuthCallback /></AppLayout>} />
-          
-          {/* Template Preview Generator (no auth required) */}
-          <Route path="/template-preview" element={<AppLayout showTopNav={false}><TemplatePreviewGenerator /></AppLayout>} />
           
           {/* Payment routes */}
           <Route path="/payment-success" element={<AppLayout showTopNav={false}><PaymentSuccess /></AppLayout>} />
@@ -255,125 +235,11 @@ function App() {
             }
           />
           <Route
-            path="/apply"
-            element={
-              <AppLayout>
-                <PrivateRoute>
-                  <OneClickApplyPage />
-                </PrivateRoute>
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/apply/:jobId"
-            element={
-              <AppLayout>
-                <PrivateRoute>
-                  <OneClickApplyPage />
-                </PrivateRoute>
-              </AppLayout>
-            }
-          />
-          <Route
             path="/interview-coach"
             element={
               <AppLayout>
                 <PrivateRoute>
                   <InterviewCoachPage />
-                </PrivateRoute>
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug"
-            element={
-              <AppLayout>
-                <PrivateRoute>
-                  <BackendTest />
-                </PrivateRoute>
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/linkedin"
-            element={
-              <AppLayout>
-                <LinkedInDebug />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/linkedin-oauth"
-            element={
-              <AppLayout>
-                <LinkedInOAuthTest />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/linkedin-main"
-            element={
-              <AppLayout>
-                <LinkedInMainAuthTest />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/keywords"
-            element={
-              <AppLayout>
-                <KeywordTest />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/payments"
-            element={
-              <AppLayout>
-                <PaymentTest />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/stripe-setup"
-            element={
-              <AppLayout>
-                <StripeSetup />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/payment-debug"
-            element={
-              <AppLayout>
-                <PaymentDebug />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/template-test"
-            element={
-              <AppLayout>
-                <TemplateTest />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/database-schema"
-            element={
-              <AppLayout>
-                <PrivateRoute>
-                  <DatabaseSchemaTest />
-                </PrivateRoute>
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/debug/sso-test"
-            element={
-              <AppLayout>
-                <PrivateRoute>
-                  <SSOTest />
                 </PrivateRoute>
               </AppLayout>
             }

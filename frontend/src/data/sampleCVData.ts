@@ -1955,6 +1955,569 @@ export const sampleCVData: SampleCVData = {
       { id: '1', name: 'Jane Doe', title: 'Manager', company: 'TechCorp', email: 'jane.doe@techcorp.com', phone: '+1 (555) 111-2222' }
     ],
     isSampleDatabase: false
+  },
+  'stunning-cv': {
+    personalInfo: {
+      fullName: 'Stella Carter',
+      email: 'stella.carter@executive.com',
+      phone: '+1 (555) 888-9999',
+      location: 'New York, NY',
+      linkedIn: 'https://linkedin.com/in/stella-carter',
+      website: 'https://stellacarter.com',
+      summary: 'C-level executive with 20+ years of experience leading global teams and driving business transformation in Fortune 500 companies. Expert in M&A, digital strategy, and operational excellence.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'Global Holdings',
+        position: 'Chief Executive Officer',
+        location: 'New York, NY',
+        startDate: '2015-01-01',
+        endDate: '',
+        current: true,
+        description: 'Led a $2B global enterprise through digital transformation, resulting in 40% revenue growth and 30% cost reduction. Oversaw 10,000+ employees across 15 countries.'
+      },
+      {
+        id: '2',
+        company: 'Tech Innovators',
+        position: 'Chief Operating Officer',
+        location: 'San Francisco, CA',
+        startDate: '2010-06-01',
+        endDate: '2014-12-31',
+        current: false,
+        description: 'Implemented operational excellence programs, increasing productivity by 25% and reducing time-to-market for new products.'
+      },
+      {
+        id: '3',
+        company: 'Finance Group',
+        position: 'VP of Strategy',
+        location: 'London, UK',
+        startDate: '2005-03-01',
+        endDate: '2010-05-31',
+        current: false,
+        description: 'Developed and executed M&A strategy, completing 12 successful acquisitions.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'Harvard Business School',
+        degree: 'MBA',
+        field: 'Business Administration',
+        startDate: '2002-09-01',
+        endDate: '2004-06-15',
+        gpa: '3.9'
+      },
+      {
+        id: '2',
+        institution: 'University of Oxford',
+        degree: 'BA Economics',
+        field: 'Economics',
+        startDate: '1998-09-01',
+        endDate: '2001-06-15',
+        gpa: '3.8'
+      }
+    ],
+    skills: ['Leadership', 'Mergers & Acquisitions', 'Digital Strategy', 'Operational Excellence', 'Global Expansion', 'Change Management', 'Board Relations', 'Financial Analysis', 'Public Speaking'],
+    certifications: [
+      { id: '1', name: 'Certified M&A Professional', issuer: 'M&A Institute', date: '2012-05-01', expiryDate: '' },
+      { id: '2', name: 'Six Sigma Black Belt', issuer: 'ASQ', date: '2010-09-01', expiryDate: '' }
+    ],
+    projects: [
+      { id: '1', name: 'Global Digital Transformation', description: 'Led a company-wide digital transformation initiative.', technologies: 'Cloud, AI, ERP', url: 'https://stellacarter.com/projects/digital' },
+      { id: '2', name: 'M&A Integration', description: 'Integrated 12 acquired companies into a unified global operation.', technologies: 'M&A, Integration', url: 'https://stellacarter.com/projects/ma' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'French', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'John Lee', title: 'Chairman', company: 'Global Holdings', email: 'john.lee@global.com', phone: '+1 (555) 333-5555' },
+      { id: '2', name: 'Maria Gomez', title: 'CFO', company: 'Tech Innovators', email: 'maria.gomez@techinnovators.com', phone: '+1 (555) 444-6666' }
+    ],
+    isSampleDatabase: false
+  },
+  'founder-visionary': {
+    personalInfo: {
+      fullName: 'Ava Patel',
+      email: 'ava.patel@visionary.com',
+      phone: '+1 (555) 123-4567',
+      location: 'San Francisco, CA',
+      linkedIn: 'https://linkedin.com/in/ava-patel',
+      website: 'https://avapatel.com',
+      summary: 'Serial founder and visionary leader with 15+ years building and scaling tech startups. Expert in fundraising, product strategy, and global expansion.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'NextGen AI',
+        position: 'Founder & CEO',
+        location: 'San Francisco, CA',
+        startDate: '2017-04-01',
+        endDate: '',
+        current: true,
+        description: 'Founded and scaled an AI SaaS company to $100M ARR. Raised $50M in venture funding and led global expansion to 10 countries.'
+      },
+      {
+        id: '2',
+        company: 'HealthTech Solutions',
+        position: 'Co-Founder & CTO',
+        location: 'New York, NY',
+        startDate: '2012-01-01',
+        endDate: '2017-03-31',
+        current: false,
+        description: 'Built a telemedicine platform used by 1M+ patients. Led product and engineering teams.'
+      },
+      {
+        id: '3',
+        company: 'Startup Accelerator',
+        position: 'Mentor',
+        location: 'Remote',
+        startDate: '2018-01-01',
+        endDate: '',
+        current: true,
+        description: 'Mentored 30+ early-stage founders on fundraising, go-to-market, and product development.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'Stanford University',
+        degree: 'MS Computer Science',
+        field: 'Artificial Intelligence',
+        startDate: '2008-09-01',
+        endDate: '2010-06-15',
+        gpa: '3.9'
+      },
+      {
+        id: '2',
+        institution: 'UC Berkeley',
+        degree: 'BS Electrical Engineering',
+        field: 'Electrical Engineering',
+        startDate: '2004-09-01',
+        endDate: '2008-06-15',
+        gpa: '3.8'
+      }
+    ],
+    skills: ['Fundraising', 'Product Strategy', 'AI/ML', 'Global Expansion', 'Team Building', 'Public Speaking', 'Board Relations', 'Growth Hacking'],
+    certifications: [
+      { id: '1', name: 'Certified Scrum Product Owner', issuer: 'Scrum Alliance', date: '2015-05-01', expiryDate: '' },
+      { id: '2', name: 'Executive Leadership Program', issuer: 'Harvard Business School', date: '2019-09-01', expiryDate: '' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'Hindi', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Elon Musk', title: 'CEO', company: 'SpaceX', email: 'elon@spacex.com', phone: '+1 (555) 999-8888' },
+      { id: '2', name: 'Susan Lee', title: 'Partner', company: 'VC Partners', email: 'susan.lee@vcpartners.com', phone: '+1 (555) 777-6666' }
+    ],
+    isSampleDatabase: false
+  },
+  'executive-premium': {
+    personalInfo: {
+      fullName: 'Michael Grant',
+      email: 'michael.grant@executive.com',
+      phone: '+1 (555) 222-3333',
+      location: 'Chicago, IL',
+      linkedIn: 'https://linkedin.com/in/michael-grant',
+      website: 'https://michaelgrant.com',
+      summary: 'Executive leader with 18+ years in finance and operations, specializing in scaling global businesses and driving profitability.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'FinServe Global',
+        position: 'Chief Financial Officer',
+        location: 'Chicago, IL',
+        startDate: '2016-01-01',
+        endDate: '',
+        current: true,
+        description: 'Oversaw financial strategy for a $5B multinational. Led IPO and M&A activities, increasing shareholder value by 60%.'
+      },
+      {
+        id: '2',
+        company: 'RetailTech Inc.',
+        position: 'VP of Operations',
+        location: 'New York, NY',
+        startDate: '2010-05-01',
+        endDate: '2015-12-31',
+        current: false,
+        description: 'Implemented operational improvements, reducing costs by $20M annually.'
+      },
+      {
+        id: '3',
+        company: 'Consulting Partners',
+        position: 'Senior Consultant',
+        location: 'Boston, MA',
+        startDate: '2005-06-01',
+        endDate: '2010-04-30',
+        current: false,
+        description: 'Advised Fortune 500 clients on financial restructuring and growth strategies.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'University of Chicago Booth School of Business',
+        degree: 'MBA',
+        field: 'Finance',
+        startDate: '2002-09-01',
+        endDate: '2004-06-15',
+        gpa: '3.8'
+      },
+      {
+        id: '2',
+        institution: 'Northwestern University',
+        degree: 'BS Economics',
+        field: 'Economics',
+        startDate: '1998-09-01',
+        endDate: '2002-06-15',
+        gpa: '3.7'
+      }
+    ],
+    skills: ['Financial Strategy', 'IPO', 'M&A', 'Operational Excellence', 'Risk Management', 'Leadership', 'Global Expansion', 'Cost Reduction'],
+    certifications: [
+      { id: '1', name: 'Chartered Financial Analyst (CFA)', issuer: 'CFA Institute', date: '2008-06-01', expiryDate: '' },
+      { id: '2', name: 'Six Sigma Black Belt', issuer: 'ASQ', date: '2012-09-01', expiryDate: '' }
+    ],
+    projects: [
+      { id: '1', name: 'IPO Launch', description: 'Led successful IPO for FinServe Global.', technologies: 'Finance, Legal, Compliance', url: 'https://michaelgrant.com/projects/ipo' },
+      { id: '2', name: 'Cost Optimization', description: 'Reduced operational costs by $20M.', technologies: 'Operations, Analytics', url: 'https://michaelgrant.com/projects/cost' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'German', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Linda Brown', title: 'CEO', company: 'FinServe Global', email: 'linda.brown@finserve.com', phone: '+1 (555) 444-5555' },
+      { id: '2', name: 'James Smith', title: 'Partner', company: 'Consulting Partners', email: 'james.smith@consulting.com', phone: '+1 (555) 666-7777' }
+    ],
+    isSampleDatabase: false
+  },
+  'creative-designer': {
+    personalInfo: {
+      fullName: 'Lena Kim',
+      email: 'lena.kim@creativedesigner.com',
+      phone: '+1 (555) 333-4444',
+      location: 'Los Angeles, CA',
+      linkedIn: 'https://linkedin.com/in/lena-kim',
+      website: 'https://lenakim.com',
+      summary: 'Award-winning creative director with 12+ years in branding, UX/UI, and digital product design. Led creative teams for global brands and startups.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'BrandLab',
+        position: 'Creative Director',
+        location: 'Los Angeles, CA',
+        startDate: '2016-02-01',
+        endDate: '',
+        current: true,
+        description: 'Directed creative vision for 50+ global campaigns. Won 8 industry awards for design excellence.'
+      },
+      {
+        id: '2',
+        company: 'UX Studio',
+        position: 'Lead UX Designer',
+        location: 'San Francisco, CA',
+        startDate: '2012-06-01',
+        endDate: '2016-01-31',
+        current: false,
+        description: 'Designed digital products for Fortune 500 clients, increasing user engagement by 200%.'
+      },
+      {
+        id: '3',
+        company: 'Freelance',
+        position: 'Designer',
+        location: 'Remote',
+        startDate: '2009-01-01',
+        endDate: '2012-05-31',
+        current: false,
+        description: 'Delivered branding and web design for 30+ startups.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'Rhode Island School of Design',
+        degree: 'MFA Graphic Design',
+        field: 'Graphic Design',
+        startDate: '2007-09-01',
+        endDate: '2009-06-15',
+        gpa: '3.9'
+      },
+      {
+        id: '2',
+        institution: 'UCLA',
+        degree: 'BA Design Media Arts',
+        field: 'Design',
+        startDate: '2003-09-01',
+        endDate: '2007-06-15',
+        gpa: '3.8'
+      }
+    ],
+    skills: ['Branding', 'UX/UI', 'Art Direction', 'Team Leadership', 'Adobe Creative Suite', 'Figma', 'Prototyping', 'User Research'],
+    certifications: [
+      { id: '1', name: 'Certified UX Professional', issuer: 'Nielsen Norman Group', date: '2015-04-01', expiryDate: '' },
+      { id: '2', name: 'Adobe Certified Expert', issuer: 'Adobe', date: '2013-09-01', expiryDate: '' }
+    ],
+    projects: [
+      { id: '1', name: 'Brand Redesign', description: 'Led rebranding for a Fortune 100 company.', technologies: 'Branding, Design', url: 'https://lenakim.com/projects/brand' },
+      { id: '2', name: 'Mobile App UX', description: 'Designed award-winning mobile app.', technologies: 'UX, Mobile', url: 'https://lenakim.com/projects/app' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'Korean', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Alex Chen', title: 'CEO', company: 'BrandLab', email: 'alex.chen@brandlab.com', phone: '+1 (555) 555-6666' },
+      { id: '2', name: 'Maria Lopez', title: 'Creative Lead', company: 'UX Studio', email: 'maria.lopez@uxstudio.com', phone: '+1 (555) 777-8888' }
+    ],
+    isSampleDatabase: false
+  },
+  'consultant-elite': {
+    personalInfo: {
+      fullName: 'Sophie Laurent',
+      email: 'sophie.laurent@consultantelite.com',
+      phone: '+33 1 23 45 67 89',
+      location: 'Paris, France',
+      linkedIn: 'https://linkedin.com/in/sophie-laurent',
+      website: 'https://sophielaurent.com',
+      summary: 'Elite management consultant with 15+ years advising Fortune 500 companies on strategy, transformation, and M&A.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'McKinsey & Company',
+        position: 'Partner',
+        location: 'Paris, France',
+        startDate: '2014-01-01',
+        endDate: '',
+        current: true,
+        description: 'Led global strategy projects for top-tier clients. Managed teams of 20+ consultants.'
+      },
+      {
+        id: '2',
+        company: 'BCG',
+        position: 'Principal',
+        location: 'London, UK',
+        startDate: '2008-06-01',
+        endDate: '2013-12-31',
+        current: false,
+        description: 'Drove digital transformation and M&A integration for multinational clients.'
+      },
+      {
+        id: '3',
+        company: 'Accenture',
+        position: 'Consultant',
+        location: 'New York, NY',
+        startDate: '2005-09-01',
+        endDate: '2008-05-31',
+        current: false,
+        description: 'Delivered operational improvement projects for Fortune 100 companies.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'HEC Paris',
+        degree: 'MBA',
+        field: 'Business Administration',
+        startDate: '2003-09-01',
+        endDate: '2005-06-15',
+        gpa: '3.9'
+      },
+      {
+        id: '2',
+        institution: 'Sciences Po',
+        degree: 'BA Political Science',
+        field: 'Political Science',
+        startDate: '2000-09-01',
+        endDate: '2003-06-15',
+        gpa: '3.8'
+      }
+    ],
+    skills: ['Strategy', 'M&A', 'Digital Transformation', 'Leadership', 'Change Management', 'Client Relations', 'Analytics'],
+    certifications: [
+      { id: '1', name: 'Certified Management Consultant', issuer: 'ICMCI', date: '2010-04-01', expiryDate: '' },
+      { id: '2', name: 'Six Sigma Black Belt', issuer: 'ASQ', date: '2012-09-01', expiryDate: '' }
+    ],
+    projects: [
+      { id: '1', name: 'Global Strategy Rollout', description: 'Implemented global strategy for a Fortune 100 company.', technologies: 'Strategy, Analytics', url: 'https://sophielaurent.com/projects/strategy' },
+      { id: '2', name: 'M&A Integration', description: 'Integrated two multinational companies post-merger.', technologies: 'M&A, Integration', url: 'https://sophielaurent.com/projects/ma' }
+    ],
+    languages: [
+      { id: '1', language: 'French', proficiency: 'Native' },
+      { id: '2', language: 'English', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Jean Dupont', title: 'CEO', company: 'Global Corp', email: 'jean.dupont@global.com', phone: '+33 1 23 45 67 00' },
+      { id: '2', name: 'Emily Clark', title: 'Partner', company: 'BCG', email: 'emily.clark@bcg.com', phone: '+44 20 1234 5678' }
+    ],
+    isSampleDatabase: false
+  },
+  'research-scientist': {
+    personalInfo: {
+      fullName: 'Dr. Emily Zhang',
+      email: 'emily.zhang@researchlab.com',
+      phone: '+1 (555) 555-8888',
+      location: 'Boston, MA',
+      linkedIn: 'https://linkedin.com/in/emily-zhang',
+      website: 'https://emilyzhang.com',
+      summary: 'Senior research scientist with 15+ years in biomedical research, published in Nature and Science, and leader of multi-institutional projects.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'Harvard Medical School',
+        position: 'Principal Investigator',
+        location: 'Boston, MA',
+        startDate: '2015-01-01',
+        endDate: '',
+        current: true,
+        description: 'Led NIH-funded research on cancer genomics. Managed a team of 12 scientists.'
+      },
+      {
+        id: '2',
+        company: 'MIT',
+        position: 'Research Scientist',
+        location: 'Cambridge, MA',
+        startDate: '2010-06-01',
+        endDate: '2014-12-31',
+        current: false,
+        description: 'Developed novel CRISPR-based gene editing techniques.'
+      },
+      {
+        id: '3',
+        company: 'Genentech',
+        position: 'Postdoctoral Fellow',
+        location: 'San Francisco, CA',
+        startDate: '2007-09-01',
+        endDate: '2010-05-31',
+        current: false,
+        description: 'Published 8 papers on protein engineering and drug discovery.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'Stanford University',
+        degree: 'PhD Bioengineering',
+        field: 'Bioengineering',
+        startDate: '2003-09-01',
+        endDate: '2007-06-15',
+        gpa: '4.0'
+      },
+      {
+        id: '2',
+        institution: 'Tsinghua University',
+        degree: 'BS Biology',
+        field: 'Biology',
+        startDate: '1999-09-01',
+        endDate: '2003-06-15',
+        gpa: '3.9'
+      }
+    ],
+    skills: ['Genomics', 'CRISPR', 'Bioinformatics', 'Project Leadership', 'Scientific Writing', 'Grant Management', 'Team Management'],
+    certifications: [
+      { id: '1', name: 'NIH Grant PI', issuer: 'NIH', date: '2016-01-01', expiryDate: '' },
+      { id: '2', name: 'Certified Project Manager', issuer: 'PMI', date: '2018-09-01', expiryDate: '' }
+    ],
+    projects: [
+      { id: '1', name: 'Cancer Genomics Initiative', description: 'Led multi-institutional cancer genomics project.', technologies: 'Genomics, Bioinformatics', url: 'https://emilyzhang.com/projects/cancer' },
+      { id: '2', name: 'CRISPR Gene Editing', description: 'Developed new CRISPR techniques.', technologies: 'CRISPR, Gene Editing', url: 'https://emilyzhang.com/projects/crispr' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'Mandarin', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Dr. Alan Turing', title: 'Director', company: 'Harvard Medical School', email: 'alan.turing@harvard.edu', phone: '+1 (555) 111-2222' },
+      { id: '2', name: 'Dr. Grace Hopper', title: 'Lab Head', company: 'MIT', email: 'grace.hopper@mit.edu', phone: '+1 (555) 333-4444' }
+    ],
+    isSampleDatabase: false
+  },
+  'harvard-elite': {
+    personalInfo: {
+      fullName: 'Dr. William Carter',
+      email: 'william.carter@harvard.edu',
+      phone: '+1 (555) 111-2222',
+      location: 'Cambridge, MA',
+      linkedIn: 'https://linkedin.com/in/william-carter',
+      website: 'https://williamcarter.com',
+      summary: 'Elite academic leader with 25+ years in higher education, published author, and former dean at top universities.'
+    },
+    experience: [
+      {
+        id: '1',
+        company: 'Harvard University',
+        position: 'Dean of Faculty',
+        location: 'Cambridge, MA',
+        startDate: '2010-01-01',
+        endDate: '',
+        current: true,
+        description: 'Oversaw academic programs and faculty development for 2,000+ staff.'
+      },
+      {
+        id: '2',
+        company: 'Yale University',
+        position: 'Professor of History',
+        location: 'New Haven, CT',
+        startDate: '2000-09-01',
+        endDate: '2009-12-31',
+        current: false,
+        description: 'Taught graduate and undergraduate courses, published 5 books.'
+      },
+      {
+        id: '3',
+        company: 'Oxford University',
+        position: 'Visiting Scholar',
+        location: 'Oxford, UK',
+        startDate: '1995-09-01',
+        endDate: '2000-08-31',
+        current: false,
+        description: 'Conducted research in European history and mentored PhD students.'
+      }
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'Harvard University',
+        degree: 'PhD History',
+        field: 'History',
+        startDate: '1988-09-01',
+        endDate: '1994-06-15',
+        gpa: '4.0'
+      },
+      {
+        id: '2',
+        institution: 'Princeton University',
+        degree: 'BA History',
+        field: 'History',
+        startDate: '1984-09-01',
+        endDate: '1988-06-15',
+        gpa: '3.9'
+      }
+    ],
+    skills: ['Academic Leadership', 'Research', 'Teaching', 'Publishing', 'Faculty Development', 'Grant Writing', 'Public Speaking'],
+    certifications: [
+      { id: '1', name: 'Fulbright Scholar', issuer: 'US State Department', date: '2005-01-01', expiryDate: '' },
+      { id: '2', name: 'Certified Academic Leader', issuer: 'AACU', date: '2012-09-01', expiryDate: '' }
+    ],
+    projects: [
+      { id: '1', name: 'Faculty Development Initiative', description: 'Launched faculty mentoring and development program.', technologies: 'Education, Leadership', url: 'https://williamcarter.com/projects/faculty' },
+      { id: '2', name: 'History Textbook Series', description: 'Authored a 3-volume history textbook.', technologies: 'Publishing, Research', url: 'https://williamcarter.com/projects/textbook' }
+    ],
+    languages: [
+      { id: '1', language: 'English', proficiency: 'Native' },
+      { id: '2', language: 'French', proficiency: 'Professional' }
+    ],
+    references: [
+      { id: '1', name: 'Dr. Susan Lee', title: 'Provost', company: 'Harvard University', email: 'susan.lee@harvard.edu', phone: '+1 (555) 333-4444' },
+      { id: '2', name: 'Dr. John Smith', title: 'Dean', company: 'Yale University', email: 'john.smith@yale.edu', phone: '+1 (555) 555-6666' }
+    ],
+    isSampleDatabase: false
   }
 };
 

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, FileText, Briefcase, Users, BarChart3, Settings, LogOut, Search, Bell, User, Crown, Sparkles, TrendingUp, Award, Zap, Target, Send } from 'lucide-react';
-import CVUploadModal from '../cv/CVUploadModal';
 import JobFoldersList from '../folders/JobFoldersList';
 import UsageTrackingCard from './UsageTrackingCard';
 import { useAuth } from '@/lib/auth';
@@ -424,7 +423,7 @@ const Dashboard = () => {
       </div>
 
       {/* CV Upload Modal */}
-      {showCVUpload && (
+      {/* {showCVUpload && (
         <CVUploadModal
           onClose={() => setShowCVUpload(false)}
           onSuccess={() => {
@@ -433,7 +432,7 @@ const Dashboard = () => {
             navigate('/cvs');
           }}
         />
-      )}
+      )} */}
     </div>
     </>
   );
