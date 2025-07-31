@@ -153,6 +153,13 @@ export async function printCV({ cvData, template, userTier = 'free', mode }: Pri
     </div>
   ` : '';
 
+  // Create footer for free tier
+  const footer = userTier === 'free' ? `
+    <footer class="footer" style="text-align: center; font-size: 12px; color: #9ca3af; margin-top: 48px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+      Created by <span style="font-weight: 600; color: #6b7280;">ApplyAce</span> 👑
+    </footer>
+  ` : '';
+
   // Create the complete HTML document
   const htmlContent = `
     <!DOCTYPE html>
@@ -167,15 +174,18 @@ export async function printCV({ cvData, template, userTier = 'free', mode }: Pri
           body { margin: 0; }
           .cv-container { max-width: none; }
           .watermark { display: block !important; }
+          .footer { display: block !important; }
         }
         .cv-container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .watermark { display: none; }
+        .watermark { display: block; }
+        .footer { display: block; }
       </style>
     </head>
     <body>
       <div class="cv-container bg-white text-gray-900 font-sans">
         ${personalInfoBlock}
         ${cvContent}
+        ${footer}
         ${watermark}
       </div>
     </body>

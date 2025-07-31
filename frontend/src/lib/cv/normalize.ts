@@ -8,6 +8,7 @@ import { CVData } from './types';
  * This function handles both:
  * 1. Frontend format (personalInfo.fullName) -> Backend format (full_name)
  * 2. Backend format (full_name) -> Frontend format (personalInfo.fullName)
+ * 3. Database format (content field contains full JSON) -> Frontend format
  */
 export function normalizeCVData(input: any): CVData {
   // Helper function to trim and clean strings
@@ -27,54 +28,65 @@ export function normalizeCVData(input: any): CVData {
     return '';
   };
 
+  // Handle database format where data is stored in content field
+  let dataToProcess = input;
+  if (input.content && typeof input.content === 'string') {
+    try {
+      const parsedContent = JSON.parse(input.content);
+      dataToProcess = { ...input, ...parsedContent };
+    } catch (error) {
+      console.error('Failed to parse CV content:', error);
+    }
+  }
+
   // Handle both frontend and backend formats
   const personalInfo = {
     fullName: cleanString(
-      input.personalInfo?.fullName || 
-      input.fullName || 
-      input.full_name || 
-      input.name || 
+      dataToProcess.personalInfo?.fullName || 
+      dataToProcess.fullName || 
+      dataToProcess.full_name || 
+      dataToProcess.name || 
       ''
     ),
     email: cleanString(
-      input.personalInfo?.email || 
-      input.email || 
+      dataToProcess.personalInfo?.email || 
+      dataToProcess.email || 
       ''
     ),
     phone: cleanString(
-      input.personalInfo?.phone || 
-      input.phone || 
+      dataToProcess.personalInfo?.phone || 
+      dataToProcess.phone || 
       ''
     ),
     location: cleanString(
-      input.personalInfo?.location || 
-      input.location || 
+      dataToProcess.personalInfo?.location || 
+      dataToProcess.location || 
       ''
     ),
     linkedin: cleanString(
-      input.personalInfo?.linkedin || 
-      input.linkedin || 
-      input.linkedIn || 
-      input.linkedin_url || 
+      dataToProcess.personalInfo?.linkedin || 
+      dataToProcess.linkedin || 
+      dataToProcess.linkedIn || 
+      dataToProcess.linkedin_url || 
       ''
     ),
     website: cleanString(
-      input.personalInfo?.website || 
-      input.website || 
-      input.portfolio_url || 
+      dataToProcess.personalInfo?.website || 
+      dataToProcess.website || 
+      dataToProcess.portfolio_url || 
       ''
     ),
     summary: cleanString(
-      input.personalInfo?.summary || 
-      input.summary || 
+      dataToProcess.personalInfo?.summary || 
+      dataToProcess.summary || 
       ''
     ),
   };
 
   return {
     personalInfo,
-    experiences: Array.isArray(input.experiences || input.experience)
-      ? (input.experiences || input.experience).map((exp: any, i: number) => ({
+    experiences: Array.isArray(dataToProcess.experiences || dataToProcess.experience)
+      ? (dataToProcess.experiences || dataToProcess.experience).map((exp: any, i: number) => ({
           id: exp.id || String(i),
           company: cleanString(exp.company || ''),
           position: cleanString(exp.position || exp.role || ''),
@@ -85,8 +97,8 @@ export function normalizeCVData(input: any): CVData {
           description: cleanString(exp.description || ''),
         }))
       : [],
-    education: Array.isArray(input.education)
-      ? input.education.map((edu: any, i: number) => ({
+    education: Array.isArray(dataToProcess.education)
+      ? dataToProcess.education.map((edu: any, i: number) => ({
           id: edu.id || String(i),
           institution: cleanString(edu.institution || ''),
           degree: cleanString(edu.degree || ''),
@@ -96,8 +108,8 @@ export function normalizeCVData(input: any): CVData {
           gpa: cleanString(edu.gpa || ''),
         }))
       : [],
-    skills: Array.isArray(input.skills)
-      ? input.skills.map((skill: any) => {
+    skills: Array.isArray(dataToProcess.skills)
+      ? dataToProcess.skills.map((skill: any) => {
           if (typeof skill === 'string') return { id: String(Math.random()), name: cleanString(skill) };
           if (skill && typeof skill === 'object' && skill.name) {
             return { id: skill.id || String(Math.random()), name: cleanString(skill.name), level: cleanString(skill.level || '') };
@@ -105,24 +117,24 @@ export function normalizeCVData(input: any): CVData {
           return { id: String(Math.random()), name: String(skill) };
         }).filter(skill => skill.name)
       : [],
-    certifications: Array.isArray(input.certifications)
-      ? input.certifications.map((cert: any, i: number) => ({
+    certifications: Array.isArray(dataToProcess.certifications)
+      ? dataToProcess.certifications.map((cert: any, i: number) => ({
           id: cert.id || String(i),
           name: cleanString(cert.name || cert || ''),
           issuer: cleanString(cert.issuer || ''),
           date: cleanDate(cert.date || ''),
           expiryDate: cleanDate(cert.expiryDate || ''),
         }))
-      : typeof input.certifications === 'string' && input.certifications.trim() !== ''
-      ? input.certifications.split(',').map((c: string, i: number) => ({
+      : typeof dataToProcess.certifications === 'string' && dataToProcess.certifications.trim() !== ''
+      ? dataToProcess.certifications.split(',').map((c: string, i: number) => ({
           id: String(i),
           name: cleanString(c),
           issuer: '',
           date: '',
         }))
       : [],
-    projects: Array.isArray(input.projects)
-      ? input.projects.map((proj: any, i: number) => ({
+    projects: Array.isArray(dataToProcess.projects)
+      ? dataToProcess.projects.map((proj: any, i: number) => ({
           id: proj.id || String(i),
           name: cleanString(proj.name || ''),
           description: cleanString(proj.description || ''),
@@ -131,8 +143,8 @@ export function normalizeCVData(input: any): CVData {
           date: cleanString(proj.date || ''),
         }))
       : [],
-    languages: Array.isArray(input.languages)
-      ? input.languages.map((lang: any, i: number) => ({
+    languages: Array.isArray(dataToProcess.languages)
+      ? dataToProcess.languages.map((lang: any, i: number) => ({
           id: lang.id || String(i),
           language: cleanString(lang.language || lang || ''),
           proficiency: cleanString(lang.proficiency || lang.level || ''),
@@ -140,8 +152,8 @@ export function normalizeCVData(input: any): CVData {
           certification_name: cleanString(lang.certification_name || ''),
         }))
       : [],
-    references: Array.isArray(input.references)
-      ? input.references.map((ref: any, i: number) => ({
+    references: Array.isArray(dataToProcess.references)
+      ? dataToProcess.references.map((ref: any, i: number) => ({
           id: ref.id || String(i),
           name: cleanString(ref.name || ''),
           title: cleanString(ref.title || ''),

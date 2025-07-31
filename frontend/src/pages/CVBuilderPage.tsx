@@ -25,7 +25,10 @@ export default function CVBuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cvId } = useParams<{ cvId: string }>();
+  const { cvId: urlCvId } = useParams<{ cvId: string }>();
+  
+  // Get CV ID from either URL params or location state
+  const cvId = urlCvId || location.state?.cvId;
   
   // Get initial data from upload flow or use defaults
   const uploadData = location.state?.initialData;
@@ -242,6 +245,7 @@ export default function CVBuilderPage() {
   // Load CV from database if cvId is provided
   useEffect(() => {
     if (cvId && user) {
+      console.log('🟡 Loading CV with ID:', cvId, 'from URL params:', !!urlCvId, 'from state:', !!location.state?.cvId);
       loadCVFromId(cvId);
     }
   }, [cvId, user]);
@@ -370,6 +374,42 @@ export default function CVBuilderPage() {
     }
   };
 
+  // Update CV function that works with our new format
+  const updateCV = async (id: string, cvData: any) => {
+    try {
+      console.log('🟡 Updating CV via backend API with data:', cvData);
+      console.log('CV ID:', id);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.error('🟡 No valid session token found for update');
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const response = await fetch(`/api/cv/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(cvData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('🟡 Backend API error for update:', result);
+        return { success: false, error: result.error || 'Failed to update CV' };
+      }
+
+      console.log('🟡 CV updated successfully via backend:', result);
+      return { success: true, data: result, error: null };
+    } catch (error: any) {
+      console.error('🟡 CV update error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   // Save CV - Unified Logic
   const handleSaveCV = async () => {
     console.log('🟡 handleSaveCV called');
@@ -426,6 +466,7 @@ export default function CVBuilderPage() {
       console.log('Saving CV with data:', pendingSaveData);
       console.log('CV name to save:', cvNameInput);
       console.log('Template ID:', selectedTemplate);
+      console.log('CV ID (for edit):', cvId);
       
       // Simplified backend format - just send the normalized CV data
       const backendFormat = {
@@ -441,14 +482,27 @@ export default function CVBuilderPage() {
       const saveBody = backendFormat;
       console.log('Save body:', saveBody);
       
-      // Call createCV function and log the result
-      const { success, error } = await createCV(saveBody);
-      console.log("🟢 Save Result:", { success, error });
+      let result;
       
-      if (success) {
-        console.log("✅ CV saved successfully, data:", success);
+      // Check if we're editing an existing CV
+      if (cvId) {
+        console.log("🟡 Updating existing CV with ID:", cvId);
+        // Call update CV function
+        const { success, error } = await updateCV(cvId, saveBody);
+        result = { success, error };
+      } else {
+        console.log("🟡 Creating new CV");
+        // Call create CV function
+        const { success, error } = await createCV(saveBody);
+        result = { success, error };
+      }
+      
+      console.log("🟢 Save Result:", result);
+      
+      if (result.success) {
+        console.log("✅ CV saved successfully, data:", result.success);
         setLastSaved(new Date());
-        toast.success('CV saved successfully!');
+        toast.success(cvId ? 'CV updated successfully!' : 'CV saved successfully!');
         
         // Navigate to CVs section with multiple fallback options
         console.log("✅ Save succeeded, redirecting to /cvs");
@@ -480,7 +534,7 @@ export default function CVBuilderPage() {
           }
         }
       } else {
-        console.error('Save failed:', error);
+        console.error('Save failed:', result.error);
         toast.error('Failed to save CV. Please try again.');
       }
     } catch (error) {

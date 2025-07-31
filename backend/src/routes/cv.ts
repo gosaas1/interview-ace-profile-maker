@@ -494,6 +494,130 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// PUT /api/cv/:id - Update existing CV
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('✅ CV UPDATE: User authenticated:', req.user);
+    
+    const { id } = req.params;
+    const { title, content, template_id, is_public } = req.body;
+
+    if (!id) {
+      res.status(400).json({ 
+        error: 'MISSING_ID', 
+        details: 'CV ID is required' 
+      });
+      return;
+    }
+
+    if (!content) {
+      res.status(400).json({ 
+        error: 'MISSING_CONTENT', 
+        details: 'CV content is required' 
+      });
+      return;
+    }
+
+    // 1. Check if CV exists and belongs to user
+    const { data: existingCV, error: fetchError } = await supabase
+      .from('cvs')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', req.user?.id)
+      .single();
+
+    if (fetchError || !existingCV) {
+      console.error('❌ CV not found or access denied:', fetchError);
+      res.status(404).json({ 
+        error: 'CV_NOT_FOUND', 
+        details: 'CV not found or access denied' 
+      });
+      return;
+    }
+
+    // 2. Normalize and validate content
+    console.log('🔍 DEBUG: Raw content received for update:', content);
+    const normalizedContent = normalizeCVContent(content);
+    console.log('🔍 DEBUG: Normalized content for update:', normalizedContent);
+    const isValid = validateCVContent(normalizedContent);
+    
+    if (!isValid) {
+      res.status(400).json({ 
+        error: 'INVALID_CONTENT', 
+        details: 'CV content validation failed' 
+      });
+      return;
+    }
+
+    // 3. Prepare CV data for database update
+    const cvData = {
+      title: title?.trim() || existingCV.title,
+      cv_filename: title?.trim() || existingCV.cv_filename,
+      content: JSON.stringify(normalizedContent),
+      // Extract individual fields from normalized content for database columns
+      full_name: normalizedContent.full_name || null,
+      email: normalizedContent.email || null,
+      phone: normalizedContent.phone || null,
+      location: normalizedContent.location || null,
+      summary: normalizedContent.summary || null,
+      linkedin_url: normalizedContent.linkedin_url || null,
+      portfolio_url: normalizedContent.portfolio_url || null,
+      experience: normalizedContent.experience ? JSON.stringify(normalizedContent.experience) : null,
+      education: normalizedContent.education ? JSON.stringify(normalizedContent.education) : null,
+      skills: normalizedContent.skills ? JSON.stringify(normalizedContent.skills) : null,
+      certifications: normalizedContent.certifications ? JSON.stringify(normalizedContent.certifications) : null,
+      projects: normalizedContent.projects ? JSON.stringify(normalizedContent.projects) : null,
+      languages: normalizedContent.languages ? JSON.stringify(normalizedContent.languages) : null,
+      references: normalizedContent.references ? JSON.stringify(normalizedContent.references) : null,
+      template_id: template_id || existingCV.template_id,
+      is_public: is_public !== undefined ? is_public : existingCV.is_public,
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('📝 Attempting to update CV with data:', cvData);
+
+    // 4. Update in database
+    const { data: cv, error } = await supabase
+      .from('cvs')
+      .update(cvData)
+      .eq('id', id)
+      .eq('user_id', req.user?.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Database update error:', error);
+      res.status(500).json({ 
+        error: 'DATABASE_ERROR', 
+        details: error.message 
+      });
+      return;
+    }
+
+    console.log('✅ CV updated successfully:', cv);
+
+    // 5. Return success response
+    res.status(200).json({
+      success: true,
+      cv: {
+        id: cv.id,
+        title: cv.title,
+        template_id: cv.template_id,
+        is_public: cv.is_public,
+        created_at: cv.created_at,
+        updated_at: cv.updated_at
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ CV UPDATE ERROR:', error);
+    res.status(500).json({ 
+      error: 'INTERNAL_ERROR', 
+      details: 'Failed to update CV' 
+    });
+  }
+});
+
 // GET /api/cv/history - Fetch all uploaded CVs for the current user
 router.get('/history', async (req: Request, res: Response): Promise<void> => {
   try {
