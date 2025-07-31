@@ -15,6 +15,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface CVData {
   id: string;
   user_id: string;
+  title?: string;
+  cv_filename?: string;
   full_name: string;
   job_title?: string;
   email: string;

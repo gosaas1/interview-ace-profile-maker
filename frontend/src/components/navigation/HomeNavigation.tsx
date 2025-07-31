@@ -22,6 +22,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'My CVs', href: '/cvs', icon: FileText },
+      { name: 'CV Manager', href: '/cvs', icon: FileText },
   { name: 'Upload CV', href: '/upload', icon: Upload },
   { name: 'Interviews', href: '/interviews', icon: MessageSquare },
   { name: 'Job Matches', href: '/jobs', icon: Briefcase },

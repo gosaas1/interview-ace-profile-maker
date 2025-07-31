@@ -8,13 +8,13 @@ import TestimonialsSection from '@/components/homepage/TestimonialsSection';
 import PricingSection from '@/components/homepage/PricingSection';
 import Footer from '@/components/homepage/Footer';
 
-export default function HomePage() {
+export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, loading } = useAuth();
-  
+
   const handleAuthClick = () => navigate('/auth');
-  
+
   // Auto-scroll to pricing section when navigating to /pricing
   useEffect(() => {
     if (location.pathname === '/pricing') {
@@ -22,18 +22,16 @@ export default function HomePage() {
       const timer = setTimeout(() => {
         const pricingSection = document.getElementById('pricing');
         if (pricingSection) {
-          pricingSection.scrollIntoView({ 
+          pricingSection.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'start',
           });
         }
       }, 100);
-      
       return () => clearTimeout(timer);
     }
   }, [location.pathname]);
-  
-  // Show loading while checking authentication
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -57,4 +55,4 @@ export default function HomePage() {
       <Footer />
     </div>
   );
-}
+} 

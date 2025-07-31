@@ -3434,3 +3434,70 @@ body {
   flex-direction: column;
   justify-content: space-between;
 }
+
+/* CV Watermark Print Styles */
+@media print {
+  html, body {
+    margin: 0;
+    height: auto;
+    overflow: visible;
+  }
+  
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  
+  /* CV Section Page Break Rules */
+  .cv-section, 
+  .border-t,
+  .border-gray-200,
+  [class*="border-t"],
+  [class*="border-gray"] {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Ensure sections don't break across pages */
+  .cv-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  
+  /* Add page breaks where needed for clean layout */
+  .page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  /* Watermark - First page only */
+  #applyace-watermark {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    color: #999;
+    font-size: 10px;
+    display: block !important;
+    z-index: 9999;
+  }
+  
+  /* Hide watermark on pages after the first */
+  @page :first {
+    #applyace-watermark {
+      display: block !important;
+    }
+  }
+  
+  @page :left {
+    #applyace-watermark {
+      display: none !important;
+    }
+  }
+  
+  @page :right {
+    #applyace-watermark {
+      display: none !important;
+    }
+  }
+}

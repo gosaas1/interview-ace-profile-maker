@@ -29,6 +29,7 @@ const adminRoutes = (await import('../dist/routes/admin.js')).default;
 const interviewRoutes = (await import('../dist/routes/interview.js')).default;
 const jobRoutes = (await import('../dist/routes/jobs.js')).default;
 const analyticsRoutes = (await import('../dist/routes/analytics.js')).default;
+const tierRoutes = (await import('../dist/routes/tier.js')).default;
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cv', cvRoutes);
@@ -37,6 +38,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/tier', tierRoutes); // Tier info endpoint
 app.use('/api/feedback', analyticsRoutes); // Feedback endpoint
 app.use('/api/contact', analyticsRoutes); // Contact endpoint
 

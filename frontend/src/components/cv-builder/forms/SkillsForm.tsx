@@ -4,24 +4,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X } from 'lucide-react';
+import { Skill } from '@/lib/cv/types';
 
 interface SkillsFormProps {
-  data: string[];
-  onChange: (data: string[]) => void;
+  data: Skill[];
+  onChange: (data: Skill[]) => void;
 }
 
 const SkillsForm: React.FC<SkillsFormProps> = ({ data, onChange }) => {
   const [newSkill, setNewSkill] = useState('');
 
+  // Ensure data is always an array
+  const skillsArray = Array.isArray(data) ? data : [];
+
   const addSkill = () => {
-    if (newSkill.trim() && !data.includes(newSkill.trim())) {
-      onChange([...data, newSkill.trim()]);
+    if (newSkill.trim() && !skillsArray.some(skill => skill.name === newSkill.trim())) {
+      const newSkillObj: Skill = {
+        id: `skill-${Date.now()}-${Math.random()}`,
+        name: newSkill.trim()
+      };
+      onChange([...skillsArray, newSkillObj]);
       setNewSkill('');
     }
   };
 
-  const removeSkill = (skillToRemove: string) => {
-    onChange(data.filter(skill => skill !== skillToRemove));
+  const removeSkill = (skillToRemove: Skill) => {
+    onChange(skillsArray.filter(skill => skill.id !== skillToRemove.id));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -37,7 +45,7 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ data, onChange }) => {
     'Leadership', 'Problem Solving', 'Time Management', 'Team Collaboration'
   ];
 
-  const availableSkills = suggestedSkills.filter(skill => !data.includes(skill));
+  const availableSkills = suggestedSkills.filter(skill => !skillsArray.some(existingSkill => existingSkill.name === skill));
 
   return (
     <div className="space-y-6">
@@ -72,7 +80,11 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ data, onChange }) => {
                   variant="outline"
                   className="cursor-pointer hover:bg-blue-50 hover:border-blue-300"
                   onClick={() => {
-                    onChange([...data, skill]);
+                    const newSkillObj: Skill = {
+                      id: `skill-${Date.now()}-${Math.random()}`,
+                      name: skill
+                    };
+                    onChange([...skillsArray, newSkillObj]);
                   }}
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -84,16 +96,16 @@ const SkillsForm: React.FC<SkillsFormProps> = ({ data, onChange }) => {
         )}
       </div>
 
-      {data.length > 0 && (
+      {skillsArray.length > 0 && (
         <div className="space-y-2">
-          <Label>Your Skills ({data.length})</Label>
+          <Label>Your Skills ({skillsArray.length})</Label>
           <div className="flex flex-wrap gap-2">
-            {data.map(skill => (
+            {skillsArray.map(skill => (
               <Badge
-                key={skill}
+                key={skill.id}
                 className="bg-blue-100 text-blue-800 hover:bg-blue-200"
               >
-                {skill}
+                {skill.name}
                 <Button
                   variant="ghost"
                   size="sm"

@@ -109,7 +109,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
         </CardHeader>
         <CardContent>
           <ExperienceForm
-            data={cvData.experience.map(exp => ({
+            data={(cvData.experiences || []).map(exp => ({
               company: exp.company,
               role: exp.position || '',
               duration: '', // Could be derived from startDate/endDate if needed

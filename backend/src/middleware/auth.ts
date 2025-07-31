@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAuthToken } from '../lib/supabase.js';
+import { verifyAuthToken, supabase } from '../lib/supabase.js';
 
 // Extend Express Request interface to include user
 declare global {
@@ -9,6 +9,7 @@ declare global {
         id: string;
         email: string;
         full_name?: string;
+        isAdmin?: boolean; // Added isAdmin flag
       };
     }
   }
@@ -97,8 +98,29 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
         return;
       }
 
-      // Check if user is admin (you can implement your own admin logic)
-      const isAdmin = req.user?.email?.includes('admin') || req.user?.id === 'admin-user-id';
+      // Check if user exists and has admin role in metadata
+      if (!req.user || !req.user.id) {
+        res.status(401).json({
+          error: 'Authentication required',
+          code: 'AUTH_REQUIRED'
+        });
+        return;
+      }
+
+      // Get user's metadata from Supabase
+      const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(req.user.id);
+
+      if (userError || !user) {
+        console.error('Admin auth error:', userError);
+        res.status(401).json({
+          error: 'Invalid user',
+          code: 'INVALID_USER'
+        });
+        return;
+      }
+
+      // Check for admin role in metadata
+      const isAdmin = user.user_metadata?.role === 'admin';
       
       if (!isAdmin) {
         res.status(403).json({
@@ -108,6 +130,8 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
         return;
       }
 
+      // Add admin flag to request
+      req.user.isAdmin = true;
       next();
     });
   } catch (error: any) {

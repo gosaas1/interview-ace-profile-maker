@@ -11,7 +11,22 @@ interface EducationFormProps {
   onChange: (data: CVData['education']) => void;
 }
 
+// Helper function to format date to YYYY-MM for input type="month"
+const formatDateToYYYYMM = (dateString: string): string => {
+  if (!dateString) return '';
+  // If it's already in YYYY-MM format, return as is
+  if (/^\d{4}-\d{2}$/.test(dateString)) return dateString;
+  // If it's a full date, extract YYYY-MM
+  if (dateString.includes('-')) {
+    return dateString.slice(0, 7);
+  }
+  return dateString;
+};
+
 const EducationForm: React.FC<EducationFormProps> = ({ data, onChange }) => {
+  // Ensure data is always an array
+  const educationArray = Array.isArray(data) ? data : [];
+
   const addEducation = () => {
     const newEducation = {
       id: Date.now().toString(),
@@ -22,23 +37,23 @@ const EducationForm: React.FC<EducationFormProps> = ({ data, onChange }) => {
       endDate: '',
       gpa: ''
     };
-    onChange([...data, newEducation]);
+    onChange([...educationArray, newEducation]);
   };
 
   const removeEducation = (id: string) => {
-    onChange(data.filter(edu => edu.id !== id));
+    onChange(educationArray.filter(edu => edu.id !== id));
   };
 
   const updateEducation = (id: string, field: string, value: string) => {
-    onChange(data.map(edu => 
+    onChange(educationArray.map(edu => 
       edu.id === id ? { ...edu, [field]: value } : edu
     ));
   };
 
   return (
     <div className="space-y-6">
-      {data.map((education, index) => (
-        <Card key={education.id} className="relative">
+      {educationArray.map((education, index) => (
+        <Card key={education.id || index} className="relative">
           <CardHeader className="pb-4">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">
@@ -92,7 +107,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ data, onChange }) => {
                 <Label>Start Date</Label>
                 <Input
                   type="month"
-                  value={education.startDate}
+                  value={formatDateToYYYYMM(education.startDate)}
                   onChange={(e) => updateEducation(education.id, 'startDate', e.target.value)}
                 />
               </div>
@@ -100,7 +115,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ data, onChange }) => {
                 <Label>End Date</Label>
                 <Input
                   type="month"
-                  value={education.endDate}
+                  value={formatDateToYYYYMM(education.endDate)}
                   onChange={(e) => updateEducation(education.id, 'endDate', e.target.value)}
                 />
               </div>

@@ -38,10 +38,10 @@ const CVPreview: React.FC<CVPreviewProps> = ({ cvData, templateId = 'modern-prof
   const getContentLength = () => {
     let length = 0;
     length += cvData.personalInfo.summary?.length || 0;
-    length += cvData.experience.reduce((acc, exp) => acc + (exp.description?.length || 0), 0);
-    length += cvData.education.length * 100;
-    length += cvData.skills.length * 20;
-    length += cvData.certifications.length * 80;
+    length += (cvData.experiences || []).reduce((acc, exp) => acc + (exp.description?.length || 0), 0);
+    length += (cvData.education || []).length * 100;
+    length += (cvData.skills || []).length * 20;
+    length += (cvData.certifications || []).length * 80;
     return length;
   };
 
@@ -241,7 +241,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ cvData, templateId = 'modern-prof
   const renderExperience = () => (
     <div className="mb-6">
       {renderSectionHeading('Experience')}
-      {cvData.experience.map((exp, index) => (
+              {(cvData.experiences || []).map((exp, index) => (
         <div key={index} className="mb-4" style={templateStyles.sectionDivider}>
           <div className="flex justify-between items-start mb-1">
             <h3 className="text-sm font-medium text-gray-900" style={{ fontFamily: templateStyles.fontFamily }}>
@@ -311,7 +311,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({ cvData, templateId = 'modern-prof
                 className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
                 style={{ fontFamily: templateStyles.fontFamily }}
               >
-                {skill}
+                {typeof skill === 'string' ? skill : (skill as any)?.name || String(skill)}
               </span>
             ))}
           </div>

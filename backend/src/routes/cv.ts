@@ -383,7 +383,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 
     const { data, error } = await supabase
       .from('cvs')
-      .select('id, user_id, content, created_at, title, job_title, file_name, file_url, ats_score, is_active, version, is_primary')
+      .select('*')
       .eq('id', id)
       .eq('user_id', userId)
       .single();
@@ -406,28 +406,80 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Parse the content to extract parsed_text and method
-    let parsedText = '';
-    let method = 'unknown';
+    // Parse individual fields from database
+    let parsedData: any = {};
+    
+    console.log('🔍 Raw database data:', {
+      full_name: data.full_name,
+      email: data.email,
+      experience: data.experience,
+      education: data.education,
+      skills: data.skills,
+      certifications: data.certifications
+    });
     
     try {
-      const content = JSON.parse(data.content);
-      parsedText = content.raw_text || content.summary || '';
-      method = content.parsing_method || 'unknown';
+      // Use individual database columns as the primary source
+      parsedData = {
+        // Personal info structure that templates expect
+        personalInfo: {
+          fullName: data.full_name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          location: data.location || '',
+          linkedin: data.linkedin_url || '',
+          website: data.portfolio_url || '',
+          summary: data.summary || ''
+        },
+        // Array fields
+        experiences: data.experience ? JSON.parse(data.experience) : [],
+        education: data.education ? JSON.parse(data.education) : [],
+        skills: data.skills ? JSON.parse(data.skills) : [],
+        certifications: data.certifications ? JSON.parse(data.certifications) : [],
+        projects: data.projects ? JSON.parse(data.projects) : [],
+        languages: data.languages ? JSON.parse(data.languages) : [],
+        references: data.references ? JSON.parse(data.references) : []
+      };
+      
+      console.log('✅ Parsed data structure:', {
+        personalInfo: parsedData.personalInfo,
+        experiencesCount: parsedData.experiences.length,
+        educationCount: parsedData.education.length,
+        skillsCount: parsedData.skills.length,
+        certificationsCount: parsedData.certifications.length
+      });
+      
+      // Fallback to content field if individual fields are empty
+      if (!data.full_name && data.content) {
+        try {
+          const content = JSON.parse(data.content);
+          // Merge content data, prioritizing already parsed individual fields
+          parsedData = { 
+            ...content, 
+            personalInfo: { ...content.personalInfo, ...parsedData.personalInfo },
+            experiences: [...(content.experiences || []), ...(parsedData.experiences || [])],
+            education: [...(content.education || []), ...(parsedData.education || [])],
+            skills: [...(content.skills || []), ...(parsedData.skills || [])],
+            certifications: [...(content.certifications || []), ...(parsedData.certifications || [])],
+            projects: [...(content.projects || []), ...(parsedData.projects || [])],
+            languages: [...(content.languages || []), ...(parsedData.languages || [])],
+            references: [...(content.references || []), ...(parsedData.references || [])],
+          };
+        } catch (parseError) {
+          console.warn('⚠️ Could not parse fallback content:', parseError);
+        }
+      }
     } catch (parseError) {
-      console.warn('⚠️ Could not parse CV content:', parseError);
-      parsedText = 'Content parsing failed';
+      console.warn('⚠️ Could not parse CV data:', parseError);
     }
 
     const response = {
       id: data.id,
       user_id: data.user_id,
-      parsed_text: parsedText,
       created_at: data.created_at,
       title: data.title,
-      job_title: data.job_title,
-      file_type: data.file_name ? data.file_name.split('.').pop() : null,
-      method: method
+      template_id: data.template_id,
+      content: parsedData
     };
 
     console.log('✅ CV fetched successfully:', data.id);
@@ -518,7 +570,9 @@ router.post('/create', async (req: Request, res: Response): Promise<void> => {
     }
 
     // 2. Normalize and validate content
+    console.log('🔍 DEBUG: Raw content received:', content);
     const normalizedContent = normalizeCVContent(content);
+    console.log('🔍 DEBUG: Normalized content:', normalizedContent);
     const isValid = validateCVContent(normalizedContent);
     
     if (!isValid) {
@@ -531,8 +585,25 @@ router.post('/create', async (req: Request, res: Response): Promise<void> => {
 
     // 3. Prepare CV data for database
     const cvData = {
-      title: title.trim(),
+      title: title.trim(), // This is the CV filename (kept for backward compatibility)
+      cv_filename: title.trim(), // Separate field for CV filename
       content: JSON.stringify(normalizedContent),
+      // Extract individual fields from normalized content for database columns
+      // normalizedContent is now a flat structure from normalizeCVContent()
+      full_name: normalizedContent.full_name || null,
+      email: normalizedContent.email || null,
+      phone: normalizedContent.phone || null,
+      location: normalizedContent.location || null,
+      summary: normalizedContent.summary || null,
+      linkedin_url: normalizedContent.linkedin_url || null,
+      portfolio_url: normalizedContent.portfolio_url || null,
+      experience: normalizedContent.experience ? JSON.stringify(normalizedContent.experience) : null,
+      education: normalizedContent.education ? JSON.stringify(normalizedContent.education) : null,
+      skills: normalizedContent.skills ? JSON.stringify(normalizedContent.skills) : null,
+      certifications: normalizedContent.certifications ? JSON.stringify(normalizedContent.certifications) : null,
+      projects: normalizedContent.projects ? JSON.stringify(normalizedContent.projects) : null,
+      languages: normalizedContent.languages ? JSON.stringify(normalizedContent.languages) : null,
+      references: normalizedContent.references ? JSON.stringify(normalizedContent.references) : null,
       template_id,
       is_public,
       user_id: req.user?.id,

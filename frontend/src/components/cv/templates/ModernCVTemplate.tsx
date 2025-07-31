@@ -1,16 +1,52 @@
 import React from 'react';
 
 export function ModernCVTemplate({ data }: { data: any }) {
-  const { personalInfo = {}, experience = [], education = [], skills = [], certifications = [], languages = [], references = [] } = data || {};
+  const { personalInfo = {}, experiences = [], education = [], skills = [], certifications = [], languages = [], references = [] } = data || {};
+  // Defensive check for skills to prevent [object Object] rendering
+  const renderSkills = (skills: any) => {
+    if (!skills) return [];
+    if (Array.isArray(skills)) {
+      return skills.map((skill: any) => {
+        if (typeof skill === 'string') return skill;
+        if (skill && typeof skill === 'object' && skill.name) return skill.name;
+        return String(skill);
+      });
+    }
+    if (typeof skills === 'string') return skills.split(',').map((s: string) => s.trim());
+    return [];
+  };
   return (
-    <div className="bg-white p-8 rounded shadow text-gray-900 max-w-2xl mx-auto space-y-6 font-[Roboto]">
-      <div className="text-2xl font-bold mb-1 text-blue-900 text-center">{personalInfo.fullName}</div>
-      <div className="text-sm mb-2 text-blue-700 text-center">{personalInfo.email}</div>
-      <div className="italic mb-2 text-gray-600 text-center">{personalInfo.summary}</div>
-      <div className="border-t border-blue-200 pt-4 mt-4">
-        <div className="font-bold text-blue-700 text-lg mb-2">Experience</div>
+    <div className="bg-white p-8 rounded shadow text-gray-900 max-w-2xl mx-auto space-y-6 font-[Inter]">
+      {/* Personal Info Block - Complete with all contact details */}
+      <div className="mb-4 text-center border-b border-gray-200 pb-2">
+        <div className="text-2xl font-bold mb-1">{personalInfo?.fullName || ''}</div>
+        <div className="text-sm text-gray-700 space-y-1">
+          {personalInfo?.email && <div>{personalInfo.email}</div>}
+          {personalInfo?.phone && <div>{personalInfo.phone}</div>}
+          {personalInfo?.location && <div>{personalInfo.location}</div>}
+          {(personalInfo?.linkedin || personalInfo?.website) && (
+            <div className="flex justify-center gap-4 text-gray-600">
+              {personalInfo?.linkedin && (
+                <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer">
+                  LinkedIn
+                </a>
+              )}
+              {personalInfo?.website && (
+                <a href={personalInfo.website} target="_blank" rel="noopener noreferrer">
+                  Website
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+        {personalInfo?.summary && (
+          <div className="mt-3 italic text-gray-700">{personalInfo.summary}</div>
+        )}
+      </div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Experience</div>
         <ul className="list-disc pl-8 space-y-3 text-left">
-          {experience.map((exp: any, idx: number) => (
+          {experiences.map((exp: any, idx: number) => (
             <li key={idx}>
               <div className="font-semibold">{exp.position} – {exp.company}</div>
               <div className="text-xs text-gray-600">{exp.startDate} - {exp.endDate} | {exp.location}</div>
@@ -19,8 +55,8 @@ export function ModernCVTemplate({ data }: { data: any }) {
           ))}
         </ul>
       </div>
-      <div className="border-t border-blue-200 pt-4 mt-4">
-        <div className="font-bold text-blue-700 text-lg mb-2">Education</div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Education</div>
         <ul className="list-disc pl-8 space-y-3 text-left">
           {education.map((edu: any, idx: number) => (
             <li key={idx}>
@@ -31,24 +67,24 @@ export function ModernCVTemplate({ data }: { data: any }) {
           ))}
         </ul>
       </div>
-      <div className="border-t border-blue-200 pt-4 mt-4">
-        <div className="font-bold text-blue-700 text-lg mb-2">Skills</div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Skills</div>
         <div className="flex flex-wrap gap-1 mb-4">
-          {skills.map((skill: string, idx: number) => (
-            <span key={idx} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{skill}</span>
+          {renderSkills(skills).map((skill: string, idx: number) => (
+            <span key={idx} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">{skill}</span>
           ))}
         </div>
       </div>
-      <div className="border-t border-blue-200 pt-4 mt-4">
-        <div className="font-bold text-blue-700 text-lg mb-2">Certifications</div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Certifications</div>
         <ul className="list-disc pl-8 space-y-3 text-left">
           {certifications.map((cert: any, idx: number) => (
             <li key={idx}>{cert.name} – {cert.issuer} ({cert.date})</li>
           ))}
         </ul>
       </div>
-      <div className="border-t border-blue-200 pt-4 mt-4">
-        <div className="font-bold text-blue-700 text-lg mb-2">Languages</div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Languages</div>
         <ul className="list-disc pl-8 space-y-3 text-left">
           {languages.map((lang: any, idx: number) => (
             <li key={idx}>{lang.language} ({lang.proficiency})</li>
@@ -56,8 +92,8 @@ export function ModernCVTemplate({ data }: { data: any }) {
         </ul>
       </div>
       {references.length > 0 && (
-        <div className="border-t border-blue-200 pt-4 mt-4">
-          <div className="font-bold text-blue-700 text-lg mb-2">References</div>
+        <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="font-bold text-gray-700 text-lg mb-2">References</div>
           <ul className="list-disc pl-8 space-y-3 text-left">
             {references.map((ref: any, idx: number) => (
               <li key={idx}>{ref.name} – {ref.title}, {ref.company} ({ref.email})</li>

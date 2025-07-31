@@ -58,11 +58,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ data, onChange }) =
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="linkedIn">LinkedIn Profile</Label>
+        <Label htmlFor="linkedin">LinkedIn Profile</Label>
         <Input
-          id="linkedIn"
-          value={data.linkedIn}
-          onChange={(e) => handleChange('linkedIn', e.target.value)}
+          id="linkedin"
+          value={data.linkedin}
+          onChange={(e) => handleChange('linkedin', e.target.value)}
           placeholder="linkedin.com/in/johndoe"
         />
       </div>

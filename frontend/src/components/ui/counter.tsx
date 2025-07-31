@@ -23,7 +23,7 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   useEffect(() => {
     const animation = animate(count, value, { duration });
     
-    const unsubscribe = rounded.onChange((latest) => {
+    const unsubscribe = rounded.on("change", (latest) => {
       setDisplayValue(latest);
     });
 

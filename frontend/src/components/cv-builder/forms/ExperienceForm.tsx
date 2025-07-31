@@ -9,11 +9,14 @@ import { Plus, Trash2 } from 'lucide-react';
 import { CVData } from '@/lib/cv/types';
 
 interface ExperienceFormProps {
-  data: CVData['experience'];
-  onChange: (data: CVData['experience']) => void;
+  data: CVData['experiences'];
+  onChange: (data: CVData['experiences']) => void;
 }
 
 const ExperienceForm: React.FC<ExperienceFormProps> = ({ data, onChange }) => {
+  // Ensure data is always an array
+  const experienceArray = Array.isArray(data) ? data : [];
+
   const addExperience = () => {
     const newExperience = {
       id: Date.now().toString(),
@@ -22,26 +25,31 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ data, onChange }) => {
       location: '',
       startDate: '',
       endDate: '',
-      current: false,
       description: ''
     };
-    onChange([...data, newExperience]);
+    onChange([...experienceArray, newExperience]);
   };
 
   const removeExperience = (id: string) => {
-    onChange(data.filter(exp => exp.id !== id));
+    onChange(experienceArray.filter(exp => exp.id !== id));
   };
 
   const updateExperience = (id: string, field: string, value: string | boolean) => {
-    onChange(data.map(exp => 
+    onChange(experienceArray.map(exp => 
       exp.id === id ? { ...exp, [field]: value } : exp
     ));
   };
 
+  // Format date to YYYY-MM
+  const formatDateToYYYYMM = (date: string) => {
+    if (!date) return '';
+    return date.slice(0, 7); // Take only YYYY-MM part
+  };
+
   return (
     <div className="space-y-6">
-      {data.map((experience, index) => (
-        <Card key={experience.id} className="relative">
+      {experienceArray.map((experience, index) => (
+        <Card key={experience.id || index} className="relative">
           <CardHeader className="pb-4">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">
@@ -87,7 +95,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ data, onChange }) => {
                 <Label>Start Date *</Label>
                 <Input
                   type="month"
-                  value={experience.startDate}
+                  value={formatDateToYYYYMM(experience.startDate)}
                   onChange={(e) => updateExperience(experience.id, 'startDate', e.target.value)}
                 />
               </div>
@@ -95,7 +103,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ data, onChange }) => {
                 <Label>End Date</Label>
                 <Input
                   type="month"
-                  value={experience.endDate}
+                  value={formatDateToYYYYMM(experience.endDate)}
                   onChange={(e) => updateExperience(experience.id, 'endDate', e.target.value)}
                   disabled={experience.current}
                 />
@@ -128,7 +136,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ data, onChange }) => {
         variant="outline"
       >
         <Plus className="w-4 h-4 mr-2" />
-        Add Work Experience
+        Add Experience
       </Button>
     </div>
   );

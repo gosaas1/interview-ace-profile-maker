@@ -388,12 +388,12 @@ export const cvTemplates: CVTemplate[] = [
     headerThickness: 'thin'
   },
   {
-    id: 'minimalist',
-    name: 'Minimalist',
+    id: 'minimalist-pro',
+    name: 'Minimalist Pro',
     description: 'Minimalist single-column layout with left-aligned sans-serif font. Neutral title and subheadings, slim gray dividers. Clean, understated, and ATS-friendly.',
     category: 'minimalist',
     tier: 'professional',
-    preview: '/templates/minimalist-preview.png',
+    preview: '/templates/minimalist-pro-preview.png',
     layout: 'single-column',
     features: ['ATS-optimized', 'Left-aligned', 'Neutral subheadings', 'Dashed dividers'],
     fontFamily: 'Open Sans',

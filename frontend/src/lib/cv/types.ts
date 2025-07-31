@@ -1,47 +1,95 @@
 ﻿// Core CV Builder Types - Scalable and Type-Safe
 // Following PRD requirements for complete career pipeline
 
+export interface PersonalInfo {
+  fullName: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  title?: string;
+  website?: string;
+  linkedin?: string;
+  github?: string;
+  summary?: string;
+}
+
+export interface Experience {
+  id?: string;
+  company: string;
+  role?: string;
+  position?: string;
+  duration?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string;
+  highlights?: string[];
+}
+
+export interface Education {
+  id?: string;
+  institution: string;
+  degree: string;
+  field?: string;
+  year?: string;
+  gpa?: string;
+  description?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface Skill {
+  id?: string;
+  name: string;
+  level?: string;
+  category?: string;
+}
+
+export interface Certification {
+  id?: string;
+  name: string;
+  issuer?: string;
+  date?: string;
+  description?: string;
+}
+
+export interface Language {
+  id?: string;
+  name?: string;
+  language?: string;
+  level?: string;
+  proficiency?: string;
+}
+
+export interface Reference {
+  id?: string;
+  name: string;
+  title?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface Project {
+  id?: string;
+  name: string;
+  description?: string;
+  technologies?: string[];
+  link?: string;
+  date?: string;
+}
+
 export interface CVData {
-  personalInfo: {
-    fullName: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedIn: string;
-    website: string;
-    summary: string;
-  };
-  experience: Array<{
-    id: string;
-    company: string;
-    position: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    current: boolean;
-    description: string;
-  }>;
-  education: Array<{
-    id: string;
-    institution: string;
-    degree: string;
-    field: string;
-    startDate: string;
-    endDate: string;
-    gpa?: string;
-  }>;
-  skills: string[];
-  certifications: Array<{
-    id: string;
-    name: string;
-    issuer: string;
-    date: string;
-    expiryDate?: string;
-  }>;
-  projects?: Project[];
-  languages?: Language[];
+  personalInfo: PersonalInfo;
+  summary?: string;
+  experiences: Experience[];
+  education: Education[];
+  skills: Skill[];
+  certifications: Certification[];
+  languages: Language[];
+  projects: Project[];
   references?: Reference[];
-  isSampleDatabase?: boolean;
 }
 
 export interface WorkExperience {

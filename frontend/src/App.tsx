@@ -10,6 +10,7 @@ import Index from '@/pages/Index';
 import Dashboard from '@/components/dashboard/Dashboard';
 import CVs from '@/pages/CVs';
 import CVBuilderPage from '@/pages/CVBuilderPage';
+
 import Applications from '@/pages/Applications';
 import Analytics from '@/pages/Analytics';
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -124,6 +125,7 @@ function App() {
               </AppLayout>
             }
           />
+
           <Route
             path="/cv-builder"
             element={

@@ -236,17 +236,43 @@ export const userOperations = {
 // Authentication helper
 export async function verifyAuthToken(token: string) {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Handle Bearer token format
+    const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token;
+
+    // Check if token is in JWT format (should have 3 parts separated by dots)
+    if (!tokenValue || typeof tokenValue !== 'string' || tokenValue.split('.').length !== 3) {
+      return { user: null, error: 'Invalid token format', status: 401 };
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(tokenValue);
     
     if (error) {
       console.error('Auth error:', error);
-      return { user: null, error: error.message };
+      return { user: null, error: error.message, status: 401 };
     }
 
-    return { user, error: null };
-  } catch (error: any) {
-    console.error('Error verifying auth token:', error);
-    return { user: null, error: error.message };
+    if (!user) {
+      return { user: null, error: 'User not found', status: 401 };
+    }
+
+    // Get user's profile data including tier
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    // Merge profile data with user
+    const enrichedUser = {
+      ...user,
+      profile,
+      tier: profile?.tier || 'free'
+    };
+
+    return { user: enrichedUser, error: null };
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return { user: null, error: 'Invalid token', status: 401 };
   }
 }
 

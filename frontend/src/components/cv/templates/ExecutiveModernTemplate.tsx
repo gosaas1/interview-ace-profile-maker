@@ -1,57 +1,107 @@
 // 2025 Best Practice: ATS + Recruiter Optimized, white background, subtle accents only.
 import React from 'react';
+
 export function ExecutiveModernTemplate({ data }: { data: any }) {
+  const { personalInfo = {}, experiences = [], education = [], skills = [], certifications = [], languages = [], references = [] } = data || {};
+  // Defensive check for skills to prevent [object Object] rendering
+  const renderSkills = (skills: any) => {
+    if (!skills) return [];
+    if (Array.isArray(skills)) {
+      return skills.map((skill: any) => {
+        if (typeof skill === 'string') return skill;
+        if (skill && typeof skill === 'object' && skill.name) return skill.name;
+        return String(skill);
+      });
+    }
+    if (typeof skills === 'string') return skills.split(',').map((s: string) => s.trim());
+    return [];
+  };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded shadow border max-w-4xl mx-auto">
-      <div className="space-y-4">
-        <div className="text-2xl font-bold mb-1">{data.personalInfo?.fullName}</div>
-        <div className="text-sm mb-2">{data.personalInfo?.email}</div>
-        <div className="mb-2 italic">{data.personalInfo?.summary}</div>
-        <div className="font-bold mt-4 mb-1 text-blue-700">Skills</div>
+    <div className="bg-white p-8 rounded shadow text-gray-900 max-w-2xl mx-auto space-y-6 font-[Inter]">
+      {/* Personal Info Block - Complete with all contact details */}
+      <div className="mb-4 text-center border-b border-gray-200 pb-2">
+        <div className="text-2xl font-bold mb-1">{personalInfo?.fullName || ''}</div>
+        <div className="text-sm text-gray-700 space-y-1">
+          {personalInfo?.email && <div>{personalInfo.email}</div>}
+          {personalInfo?.phone && <div>{personalInfo.phone}</div>}
+          {personalInfo?.location && <div>{personalInfo.location}</div>}
+          {(personalInfo?.linkedin || personalInfo?.website) && (
+            <div className="flex justify-center gap-4 text-gray-600">
+              {personalInfo?.linkedin && (
+                <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer">
+                  {personalInfo.linkedin}
+                </a>
+              )}
+              {personalInfo?.website && (
+                <a href={personalInfo.website} target="_blank" rel="noopener noreferrer">
+                  {personalInfo.website}
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+        {personalInfo?.summary && (
+          <div className="mt-3 italic text-gray-700">{personalInfo.summary}</div>
+        )}
+      </div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Experience</div>
+        <ul className="list-disc pl-8 space-y-3 text-left">
+          {experiences.map((exp: any, idx: number) => (
+            <li key={idx}>
+              <div className="font-semibold">{exp.position} – {exp.company}</div>
+              <div className="text-xs text-gray-600">{exp.startDate} - {exp.endDate} | {exp.location}</div>
+              <div className="text-xs">{exp.description}</div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Education</div>
+        <ul className="list-disc pl-8 space-y-3 text-left">
+          {education.map((edu: any, idx: number) => (
+            <li key={idx}>
+              <div className="font-semibold">{edu.degree} – {edu.institution}</div>
+              <div className="text-xs text-gray-600">{edu.startDate} - {edu.endDate}</div>
+              <div className="text-xs">{edu.field}</div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Skills</div>
         <div className="flex flex-wrap gap-1 mb-4">
-          {data.skills?.map((skill: string, idx: number) => (
-            <span key={idx} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{skill}</span>
+          {renderSkills(skills).map((skill: string, idx: number) => (
+            <span key={idx} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">{skill}</span>
           ))}
         </div>
-        <div className="font-bold mt-4 mb-1 text-blue-700">Languages</div>
-        <ul className="list-disc pl-5 space-y-1">
-          {data.languages?.map((lang: any) => (
-            <li key={lang.id}>{lang.language} ({lang.proficiency})</li>
+      </div>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Certifications</div>
+        <ul className="list-disc pl-8 space-y-3 text-left">
+          {certifications.map((cert: any, idx: number) => (
+            <li key={idx}>{cert.name} – {cert.issuer} ({cert.date})</li>
           ))}
         </ul>
       </div>
-      <div className="space-y-4">
-        <div className="font-bold text-blue-700">Experience</div>
-        <ul className="list-disc pl-5 space-y-2">
-          {data.experience?.map((exp: any) => (
-            <li key={exp.id}>
-              <div><span className="font-semibold">{exp.position}</span> at {exp.company} <span className="text-xs text-gray-500">({exp.startDate} – {exp.endDate})</span></div>
-              <div className="text-xs text-gray-700 ml-2">{exp.description}</div>
-            </li>
-          ))}
-        </ul>
-        <div className="font-bold text-blue-700">Education</div>
-        <ul className="list-disc pl-5 space-y-2">
-          {data.education?.map((edu: any) => (
-            <li key={edu.id}>
-              {edu.degree} in {edu.field} at {edu.institution} <span className="text-xs text-gray-500">({edu.startDate} – {edu.endDate})</span>
-              {edu.gpa && <span className="ml-2 text-xs">GPA: {edu.gpa}</span>}
-            </li>
-          ))}
-        </ul>
-        <div className="font-bold text-blue-700">Certifications</div>
-        <ul className="list-disc pl-5 space-y-1">
-          {data.certifications?.map((cert: any) => (
-            <li key={cert.id}>{cert.name} ({cert.issuer}, {cert.date})</li>
-          ))}
-        </ul>
-        <div className="font-bold text-blue-700">References</div>
-        <ul className="list-disc pl-5 space-y-1">
-          {data.references?.map((ref: any) => (
-            <li key={ref.id}>{ref.name} - {ref.title}, {ref.company} ({ref.email}, {ref.phone})</li>
+      <div className="border-t border-gray-200 pt-4 mt-4">
+        <div className="font-bold text-gray-700 text-lg mb-2">Languages</div>
+        <ul className="list-disc pl-8 space-y-3 text-left">
+          {languages.map((lang: any, idx: number) => (
+            <li key={idx}>{lang.language} ({lang.proficiency})</li>
           ))}
         </ul>
       </div>
+      {references.length > 0 && (
+        <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="font-bold text-gray-700 text-lg mb-2">References</div>
+          <ul className="list-disc pl-8 space-y-3 text-left">
+            {references.map((ref: any, idx: number) => (
+              <li key={idx}>{ref.name} – {ref.title}, {ref.company} ({ref.email})</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 } 

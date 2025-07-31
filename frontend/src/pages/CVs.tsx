@@ -20,11 +20,25 @@ export const CVs = () => {
   const [analyzingCV, setAnalyzingCV] = useState<CVData | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCVBuilder, setShowCVBuilder] = useState(false);
-  const [editingCV, setEditingCV] = useState<CVData | null>(null);
+
   const [newlyUploadedCVId, setNewlyUploadedCVId] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('🟡 CVs page mounted, loading CVs...');
     loadCVs();
+  }, []);
+
+  // Refresh CVs when the page becomes visible (e.g., after navigation from CV builder)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🟡 Page became visible, refreshing CVs...');
+        loadCVs();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Check for analysis parameter in URL
@@ -43,9 +57,13 @@ export const CVs = () => {
 
   const loadCVs = async () => {
     try {
+      console.log('🟡 Loading CVs from database...');
       const data = await cvOperations.getAllCVs();
+      console.log('🟢 CVs loaded:', data.length, 'CVs found');
+      console.log('🟢 CV data sample:', data[0]); // Log first CV to see structure
       setCvs(data);
     } catch (error: any) {
+      console.error('🔴 Error loading CVs:', error);
       toast.error('Failed to load CVs: ' + error.message);
     } finally {
       setLoading(false);
@@ -69,6 +87,16 @@ export const CVs = () => {
     if (cvToAnalyze) {
       setAnalyzingCV(cvToAnalyze);
     }
+  };
+
+  const handleEditCV = (cv: CVData) => {
+    // Navigate to CV builder with the CV data
+    navigate('/cv-builder', { 
+      state: { 
+        cvId: cv.id,
+        selectedTemplate: cv.template_id || 'basic-modern'
+      } 
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -245,36 +273,73 @@ export const CVs = () => {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
                             <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                              {cv.full_name || 'Untitled CV'}
+                              {(() => {
+                                // Step 1: Parse cv.content defensively
+                                const content = typeof cv.content === 'string' ? JSON.parse(cv.content) : cv.content;
+                                
+                                // Step 2: Robust fallback logic for name
+                                const name = cv.title
+                                  || content?.personalInfo?.fullName
+                                  || content?.full_name
+                                  || 'Untitled CV';
+                                
+                                console.log('🟡 CV display data:', { 
+                                  id: cv.id, 
+                                  title: cv.title, 
+                                  contentName: content?.personalInfo?.fullName,
+                                  contentFullName: content?.full_name,
+                                  finalName: name
+                                });
+                                
+                                return name;
+                              })()}
                             </h3>
                             <div className="flex items-center text-sm text-gray-500 mb-3">
                               <Calendar className="h-4 w-4 mr-1" />
                               {formatDate(cv.created_at)}
                             </div>
-                            {cv.summary && (
-                              <p className="text-sm text-gray-600 line-clamp-3 mb-4">
-                                {cv.summary}
-                              </p>
-                            )}
+                            {(() => {
+                              // Parse content for summary
+                              const content = typeof cv.content === 'string' ? JSON.parse(cv.content) : cv.content;
+                              const summary = cv.summary || content?.personalInfo?.summary || content?.summary;
+                              
+                              return summary ? (
+                                <p className="text-sm text-gray-600 line-clamp-3 mb-4">
+                                  {summary}
+                                </p>
+                              ) : null;
+                            })()}
                           </div>
                         </div>
 
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {cv.experiences && cv.experiences.length > 0 && (
-                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                              {cv.experiences.length} Experience{cv.experiences.length !== 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                          {cv.education && cv.education.length > 0 && (
-                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                              {cv.education.length} Education{cv.education.length !== 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                          {cv.skills && (
-                            <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">
-                              Skills Included
-                            </Badge>
-                          )}
+                          {(() => {
+                            // Parse content for all fields
+                            const content = typeof cv.content === 'string' ? JSON.parse(cv.content) : cv.content;
+                            const experiences = content?.experience || content?.experiences || [];
+                            const education = content?.education || [];
+                            const skills = content?.skills || [];
+                            
+                            return (
+                              <>
+                                {experiences.length > 0 && (
+                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                                    {experiences.length} Experience{experiences.length !== 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                                {education.length > 0 && (
+                                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                                    {education.length} Education{education.length !== 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                                {skills.length > 0 && (
+                                  <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">
+                                    Skills Included
+                                  </Badge>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
 
                         <div className="flex justify-between items-center">
@@ -290,7 +355,7 @@ export const CVs = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setEditingCV(cv)}
+                              onClick={() => handleEditCV(cv)}
                               className="text-gray-600 hover:bg-gray-50"
                             >
                               <Edit className="h-4 w-4" />

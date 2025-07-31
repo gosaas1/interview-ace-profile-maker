@@ -26,17 +26,21 @@ import { ConsultantEliteTemplate } from "./templates/ConsultantEliteTemplate";
 import { ResearchScientistTemplate } from "./templates/ResearchScientistTemplate";
 import { HarvardEliteTemplate } from "./templates/HarvardEliteTemplate";
 import { GlobalExecutiveTemplate } from "./templates/GlobalExecutiveTemplate";
+import { normalizeCVData } from '@/lib/cv/normalize';
+import { CVData } from '@/lib/cv/types';
 
 interface CVPreviewProps {
-  cvData: any;
+  cvData: CVData;
   template: string;
 }
 
 export default function CVPreview({ cvData, template }: CVPreviewProps) {
+  // UNIFIED LOGIC: Always normalize cvData before rendering
+  const normalizedCV = normalizeCVData(cvData);
   const templateObj = getTemplateById(template);
 
   // Map template IDs to components
-  const templateComponentMap: Record<string, React.FC<{ data: any }>> = {
+  const templateComponentMap: Record<string, React.FC<{ data: CVData }>> = {
     'basic-modern': BasicTemplate,
     'minimal-clean': MinimalCleanTemplate,
     'professional-simple': ProfessionalSimpleTemplate,
@@ -74,23 +78,23 @@ export default function CVPreview({ cvData, template }: CVPreviewProps) {
     // Prefer direct ID match
     if (templateComponentMap[templateObj.id]) {
       const Comp = templateComponentMap[templateObj.id];
-      return <Comp data={cvData} />;
+      return <Comp data={normalizedCV} />;
     }
     // Fallback by layout
     switch (templateObj.layout) {
       case 'single-column':
       case 'minimal-borders':
-        return <MinimalCleanTemplate data={cvData} />;
+        return <MinimalCleanTemplate data={normalizedCV} />;
       case 'center-title':
       case 'modern':
       case 'classic':
       case 'creative':
-        return <BasicTemplate data={cvData} />;
+        return <BasicTemplate data={normalizedCV} />;
       case 'right-side':
       case 'two-column':
-        return <ExecutiveModernTemplate data={cvData} />;
+        return <ExecutiveModernTemplate data={normalizedCV} />;
       default:
-        return <BasicTemplate data={cvData} />;
+        return <BasicTemplate data={normalizedCV} />;
     }
   };
 

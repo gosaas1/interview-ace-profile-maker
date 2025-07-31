@@ -106,7 +106,7 @@ const PricingSection = () => {
       popular: false,
       gradient: 'from-yellow-50 to-orange-50',
       buttonStyle: 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white',
-      eliteLink: '/EliteExecutive'
+      eliteLink: '/elite-executive'
     }
   ];
 

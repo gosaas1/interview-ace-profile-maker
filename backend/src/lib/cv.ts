@@ -18,24 +18,28 @@ export interface CVContent {
 }
 
 export function validateCVContent(content: any): content is CVContent {
+  // Parse incoming content as object if needed
+  const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+  const personalInfo = parsed.personalInfo || {};
+  
   // Accept skills as string or array
-  const skillsValid = Array.isArray(content.skills) || typeof content.skills === 'string';
+  const skillsValid = Array.isArray(parsed.skills) || typeof parsed.skills === 'string';
   // Accept certifications as array or string (convert string to array if needed)
-  const certificationsValid = Array.isArray(content.certifications) || typeof content.certifications === 'string' || content.certifications === undefined;
-  // Accept experience and education as arrays (empty or not)
-  const experienceValid = Array.isArray(content.experience);
-  const educationValid = Array.isArray(content.education);
+  const certificationsValid = Array.isArray(parsed.certifications) || typeof parsed.certifications === 'string' || parsed.certifications === undefined;
+  // Accept experience and education as arrays (empty or not) - check both experience and experiences
+  const experienceValid = Array.isArray(parsed.experience) || Array.isArray(parsed.experiences);
+  const educationValid = Array.isArray(parsed.education);
   // Accept all string fields as string or empty string, and allow missing optional fields
   const stringOrEmpty = (v: any) => typeof v === 'string' || v === undefined || v === null;
 
   const valid = (
-    stringOrEmpty(content.full_name) &&
-    stringOrEmpty(content.email) &&
-    stringOrEmpty(content.phone) &&
-    stringOrEmpty(content.location) &&
-    stringOrEmpty(content.linkedin_url) &&
-    stringOrEmpty(content.portfolio_url) &&
-    stringOrEmpty(content.summary) &&
+    (stringOrEmpty(parsed.full_name) || stringOrEmpty(personalInfo.fullName)) &&
+    (stringOrEmpty(parsed.email) || stringOrEmpty(personalInfo.email)) &&
+    (stringOrEmpty(parsed.phone) || stringOrEmpty(personalInfo.phone)) &&
+    (stringOrEmpty(parsed.location) || stringOrEmpty(personalInfo.location)) &&
+    (stringOrEmpty(parsed.linkedin_url) || stringOrEmpty(personalInfo.linkedin)) &&
+    (stringOrEmpty(parsed.portfolio_url) || stringOrEmpty(personalInfo.website)) &&
+    (stringOrEmpty(parsed.summary) || stringOrEmpty(personalInfo.summary)) &&
     experienceValid &&
     educationValid &&
     skillsValid &&
@@ -43,7 +47,7 @@ export function validateCVContent(content: any): content is CVContent {
   );
 
   if (!valid) {
-    console.error('CV validation failed:', { content });
+    console.error('CV validation failed:', { content, parsed, personalInfo });
   }
   return valid;
 }
@@ -52,21 +56,29 @@ export function validateCVContent(content: any): content is CVContent {
 export function normalizeCVContent(content: any): CVContent {
   // Helper to ensure array
   const toArray = (v: any) => Array.isArray(v) ? v : typeof v === 'string' && v.trim() ? v.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+  
+  // Parse incoming content as object if needed
+  const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+  
+  // Handle both flat and nested personalInfo structures
+  const personalInfo = parsed.personalInfo || {};
+  
   return {
-    full_name: typeof content.full_name === 'string' ? content.full_name : '',
-    email: typeof content.email === 'string' ? content.email : '',
-    phone: typeof content.phone === 'string' ? content.phone : '',
-    location: typeof content.location === 'string' ? content.location : '',
-    linkedin_url: typeof content.linkedin_url === 'string' ? content.linkedin_url : '',
-    portfolio_url: typeof content.portfolio_url === 'string' ? content.portfolio_url : '',
-    summary: typeof content.summary === 'string' ? content.summary : '',
-    experience: Array.isArray(content.experience) ? content.experience : [],
-    education: Array.isArray(content.education) ? content.education : [],
-    skills: toArray(content.skills),
-    certifications: toArray(content.certifications),
-    projects: Array.isArray(content.projects) ? content.projects : [],
-    languages: Array.isArray(content.languages) ? content.languages : [],
-    references: Array.isArray(content.references) ? content.references : [],
-    isSampleDatabase: !!content.isSampleDatabase,
+    full_name: parsed.full_name || personalInfo.fullName || '',
+    email: parsed.email || personalInfo.email || '',
+    phone: parsed.phone || personalInfo.phone || '',
+    location: parsed.location || personalInfo.location || '',
+    linkedin_url: parsed.linkedin_url || personalInfo.linkedin || '',
+    portfolio_url: parsed.portfolio_url || personalInfo.website || '',
+    summary: parsed.summary || personalInfo.summary || '',
+    experience: Array.isArray(parsed.experience) ? parsed.experience : 
+                Array.isArray(parsed.experiences) ? parsed.experiences : [],
+    education: Array.isArray(parsed.education) ? parsed.education : [],
+    skills: toArray(parsed.skills),
+    certifications: toArray(parsed.certifications),
+    projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+    languages: Array.isArray(parsed.languages) ? parsed.languages : [],
+    references: Array.isArray(parsed.references) ? parsed.references : [],
+    isSampleDatabase: !!parsed.isSampleDatabase,
   };
 } 

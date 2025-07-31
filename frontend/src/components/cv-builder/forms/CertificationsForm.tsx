@@ -12,6 +12,9 @@ interface CertificationsFormProps {
 }
 
 const CertificationsForm: React.FC<CertificationsFormProps> = ({ data, onChange }) => {
+  // Ensure data is always an array
+  const certificationsArray = Array.isArray(data) ? data : [];
+
   const addCertification = () => {
     const newCertification = {
       id: Date.now().toString(),
@@ -20,22 +23,22 @@ const CertificationsForm: React.FC<CertificationsFormProps> = ({ data, onChange 
       date: '',
       expiryDate: ''
     };
-    onChange([...data, newCertification]);
+    onChange([...certificationsArray, newCertification]);
   };
 
   const removeCertification = (id: string) => {
-    onChange(data.filter(cert => cert.id !== id));
+    onChange(certificationsArray.filter(cert => cert.id !== id));
   };
 
   const updateCertification = (id: string, field: string, value: string) => {
-    onChange(data.map(cert => 
+    onChange(certificationsArray.map(cert => 
       cert.id === id ? { ...cert, [field]: value } : cert
     ));
   };
 
   return (
     <div className="space-y-6">
-      {data.map((certification, index) => (
+      {certificationsArray.map((certification, index) => (
         <Card key={certification.id} className="relative">
           <CardHeader className="pb-4">
             <div className="flex justify-between items-center">

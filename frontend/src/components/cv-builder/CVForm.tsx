@@ -5,7 +5,6 @@ import ExperienceForm from './forms/ExperienceForm';
 import EducationForm from './forms/EducationForm';
 import SkillsForm from './forms/SkillsForm';
 import CertificationsForm from './forms/CertificationsForm';
-import CVPreview from './CVPreview';
 import { CVData } from '@/lib/cv/types';
 
 interface CVFormProps {
@@ -18,8 +17,8 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
     onDataChange({ ...cvData, personalInfo });
   };
 
-  const updateExperience = (experience: CVData['experience']) => {
-    onDataChange({ ...cvData, experience });
+  const updateExperience = (experiences: CVData['experiences']) => {
+    onDataChange({ ...cvData, experiences });
   };
 
   const updateEducation = (education: CVData['education']) => {
@@ -61,7 +60,7 @@ const CVForm: React.FC<CVFormProps> = ({ cvData, onDataChange }) => {
           </CardHeader>
           <CardContent>
             <ExperienceForm
-              data={cvData.experience}
+              data={cvData.experiences}
               onChange={updateExperience}
             />
           </CardContent>
